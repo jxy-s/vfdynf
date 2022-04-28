@@ -18,20 +18,20 @@ injects failures for wait, heap, virtual memory, registry, file, event, section,
 and OLE string APIs. These are the same APIs as LowRes.
 
 The ability to exclude modules in LowRes is limited. DynFault, in contrast, enables
-you to exclude a stack containing symbols matched by a set of regular expressions. 
+you to exclude stacks containing symbols matched by a set of regular expressions. 
 Why is this helpful? I'll provide an example, which was the impetus for me reversing 
 the undocumented parts of verifier to implement this library. 
 [MSVC implemented debug iterators][msvc.dbgit] which are valuable to identify bugs but 
 break `noexcept` contracts. For example, the default `std::string` constructor is marked 
-`noexcept` but with debug iterators enabled an allocation could occur within ti and throw 
+`noexcept` but with debug iterators enabled an allocation could occur within it and throw 
 an exception. The cpp exception handling then can't locate a handler past `noexcept`. The 
 contract is such that if an exception would cross that boundary the implementation should 
 terminate the program. Hopefully you can see the problem with the limited functionality 
-of the randomized LowRes tests. You can't use them with debug iterators. To solve this 
-DynFault has a configuration property that allows you to define a list of regular 
-expressions. When DynFault encounters a stack matching any expression in this list, that 
-stack hash is excluded from fault injection. An an example, this regular expression tries 
-to isolate stacks containing the `std::basic_string`'s default constructor to mitigate this:
+of LowRes (you can't use it with debug iterators). To solve this DynFault has a 
+property that allows you to define a list of regular expressions. When DynFault encounters 
+a stack matching any expression in this list, that stack hash is excluded from fault 
+injection. As an example, this regular expression tries to isolate stacks containing 
+`std::basic_string`'s default constructor:
 
 ```
 \s.*!.*_Alloc_proxy<.*>\s.*!std::basic_string<.*>::basic_string<.*>\s
@@ -59,7 +59,7 @@ KERNEL32.dll!BaseThreadInitThunk
 ntdll.dll!RtlUserThreadStart
 ```
 
-The result of this is you get the best of both worlds - debug iterators and fault injection!
+Enabling the best of both worlds - debug iterators and fault injection!
 
 ## DynFault Properties (Options)
 
@@ -68,7 +68,7 @@ The result of this is you get the best of both worlds - debug iterators and faul
 | GracePeriod        | DWORD       | Delays fault injection until after this period, in milliseconds. |
 | SymbolSearchPath   | String      | Symbol search path used for dynamic fault injection and applying exclusions. |
 | ExclusionsRegex    | MultiString | Excludes stack from fault injection when one of these regular expression matches the stack. |
-| DynamicFaultPeriod | MultiString | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
+| DynamicFaultPeriod | DWORD | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
 
 ## Installation
 
@@ -76,7 +76,7 @@ At this time there is no installer/script to automate installation. Here are the
 manually install the library:
 
 1. copy `vfdynf.dll` to `C:\Windows\System32` (or `SysWOW64` for x86 support on an x64 OS)
-2. add `vfdynf.dll` to the global application verifier settings list provider list (again `WOW6432Node` when appropriate)
+2. add `vfdynf.dll` to the "Application Verifier Global Settings" "Verified Providers" list (again `WOW6432Node` when appropriate)
     - `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{ApplicationVerifierGlobalSettings}`
     - `VerifierProviders`
 
@@ -95,7 +95,7 @@ git submodule update --init --recursive
 MSBuild .\vfdynf.sln
 ```
 
-## Credit
+## Credits
 
 The following are used without modification. Credits to their authors.
 
