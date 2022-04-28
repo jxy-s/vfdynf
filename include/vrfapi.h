@@ -4,7 +4,7 @@
     Author: Johnny Shaw
 */
 #pragma once
-#include <avrfsdk.h>
+#include <minwindef.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -85,8 +85,9 @@ typedef struct _RTL_VERIFIER_PROVIDER_DESCRIPTOR
 
 } RTL_VERIFIER_PROVIDER_DESCRIPTOR, * PRTL_VERIFIER_PROVIDER_DESCRIPTOR;
 
+NTSYSAPI
 NTSTATUS
-WINAPI
+NTAPI
 VerifierRegisterProvider(
     _In_ HMODULE Module,
     _Inout_ PRTL_VERIFIER_PROVIDER_DESCRIPTOR Registeration
@@ -320,8 +321,9 @@ typedef struct _AVRF_LAYER_DESCRIPTOR
 
 } AVRF_LAYER_DESCRIPTOR, * PAVRF_LAYER_DESCRIPTOR;
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierRegisterLayer(
     _In_ HMODULE Module,
     _Inout_ PAVRF_LAYER_DESCRIPTOR Layer
@@ -329,77 +331,88 @@ VerifierRegisterLayer(
 
 #define AVRF_LAYER_FLAG_TLS_SLOT ((UCHAR)(0x01))
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierRegisterLayerEx(
     _In_ HMODULE Module,
     _Inout_ PAVRF_LAYER_DESCRIPTOR Layer,
     _In_ UCHAR Flags
     );
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierUnregisterLayer(
     _In_ HMODULE Module,
     _In_ PAVRF_LAYER_DESCRIPTOR Layer
     );
 
+NTSYSAPI
 PVOID
-WINAPI
+NTAPI
 VerifierGetAppCallerAddress(
     _In_ PVOID ReturnAddress
     );
 
+NTSYSAPI
 BOOLEAN
-WINAPI
+NTAPI
 VerifierShouldFaultInject(
     _In_ DWORD Class,
     _In_ PVOID CallerAddress
     );
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierRegisterFaultInjectProvider(
     _In_ DWORD Count,
     _Out_ PDWORD ClassBase 
     );
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierSetFaultInjectionProbability(
     _In_ DWORD Class,
     _In_ DWORD Probability
     );
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierSetAPIClassName(
     DWORD Class,
     PCWSTR Name
     );
 
+NTSYSAPI
 VOID
-WINAPI
+NTAPI
 VerifierSetFaultInjectionSeed(
     DWORD Seed
     );
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierSuspendFaultInjection(
     DWORD TimeoutMs
     );
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierEnableFaultInjectionTargetRange(
     DWORD Class,
     PVOID StartAddress,
     PVOID EndAddress
     );
 
+NTSYSAPI
 DWORD
-WINAPI
+NTAPI
 VerifierDisableFaultInjectionTargetRange(
     DWORD Class,
     PVOID StartAddress,

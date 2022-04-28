@@ -41,9 +41,68 @@ FaultTypeClass(
     return (g_TypeBase + static_cast<DWORD>(FaultType));
 }
 
+BOOL
+CALLBACK 
+SymbolRegsteredCallback(
+    _In_ HANDLE hProcess,
+    _In_ ULONG ActionCode,
+    _In_opt_ ULONG64 CallbackData,
+    _In_opt_ ULONG64 UserContext
+    )
+{
+    UNREFERENCED_PARAMETER(hProcess);
+    UNREFERENCED_PARAMETER(UserContext);
+
+    switch (ActionCode)
+    {
+        case CBA_DEFERRED_SYMBOL_LOAD_COMPLETE: 
+        {
+            auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_INFO_LEVEL,
+                       "AVRF: loaded symbols %ls\n",
+                       info->FileName);
+            break;
+        }
+        case CBA_DEFERRED_SYMBOL_LOAD_FAILURE: 
+        {
+            auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_ERROR_LEVEL,
+                       "AVRF: failed to loaded symbols %ls\n",
+                       info->FileName);
+            break;
+        }
+        case CBA_DEFERRED_SYMBOL_LOAD_PARTIAL: 
+        {
+            auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_WARNING_LEVEL,
+                       "AVRF: partially loaded symbols %ls\n",
+                       info->FileName);
+            break;
+        }
+        case CBA_SYMBOLS_UNLOADED: 
+        {
+            auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_INFO_LEVEL,
+                       "AVRF: unloaded symbols %ls\n",
+                       info->FileName);
+            break;
+        }
+        default:
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
 static
 void
-InitExclusionsRegex (
+InitExclusionsRegex(
     void
     )
 {
@@ -167,6 +226,13 @@ fault::ShouldFaultInject(
     auto [it, inserted] = g_StackTable.try_emplace(hash);
     if (!inserted)
     {
+        //
+        // We already evaluated this stack.
+        // 1. it's excluded
+        // 2. we should inject a fault of an unseen type
+        // 3. we already injected a fault and shouldn't
+        //
+
         if (it->second.Excluded)
         {
             return false;
@@ -178,9 +244,6 @@ fault::ShouldFaultInject(
             return true;
         }
 
-        //
-        // We already injected a fault for this stash hash, skip it.
-        //
         return false;
     }
 
@@ -192,6 +255,13 @@ fault::ShouldFaultInject(
         it->second.FaultMask = FaultTypeToBit(FaultType);
         return true;
     }
+
+    DbgPrintEx(DPFLTR_VERIFIER_ID,
+               DPFLTR_MASK | 0x10,
+               "AVRF: Cid %04x.%04x stack frame count: %hu\n",
+               HandleToULong(NtCurrentTeb()->ClientId.UniqueProcess),
+               HandleToULong(NtCurrentTeb()->ClientId.UniqueThread),
+               count);
 
     //
     // Classify the stack. Check for overrides by symbols/etc. We build a
@@ -205,16 +275,40 @@ fault::ShouldFaultInject(
     {
         char buffer[sizeof(SYMBOL_INFOW) + ((MAX_SYM_NAME + 1) * sizeof(WCHAR))];
         auto info = reinterpret_cast<PSYMBOL_INFOW>(buffer);
+
+        memset(info, 0, sizeof(*info));
         info->SizeOfStruct = sizeof(SYMBOL_INFOW);
         info->MaxNameLen = MAX_SYM_NAME;
 
         DWORD64 disp;
-        if (SymFromAddrW(NtCurrentProcess(), (DWORD64)frames[i], &disp, info) == FALSE)
+        if (SymFromAddrW(NtCurrentProcess(), 
+                         reinterpret_cast<DWORD64>(frames[i]), 
+                         &disp, 
+                         info) == FALSE)
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to get symbol info!\n");
-            continue;
+            //
+            // Refresh the module list and try again.
+            //
+            SymRefreshModuleList(NtCurrentProcess());
+
+            if (SymFromAddrW(NtCurrentProcess(), 
+                             reinterpret_cast<DWORD64>(frames[i]), 
+                             &disp, 
+                             info) == FALSE)
+            {
+                DbgPrintEx(DPFLTR_VERIFIER_ID,
+                           DPFLTR_WARNING_LEVEL,
+                           "AVRF: failed to get symbol info %p (%lu)\n",
+                           frames[i],
+                           NtCurrentTeb()->LastErrorValue);
+
+                //
+                // Zero the structure, we'll handle this below. The analysis
+                // will be given a frame with only a module name and no symbol.
+                // e.g. "ntdll.dll!"
+                //
+                memset(info, 0, sizeof(*info));
+            }
         }
 
         //
@@ -226,13 +320,15 @@ fault::ShouldFaultInject(
         //
         PVOID ldrCookie;
         ULONG ldrDisp;
-        if (!NT_SUCCESS(LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY,
-                                          &ldrDisp,
-                                          &ldrCookie)))
+        auto status = LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY,
+                                        &ldrDisp,
+                                        &ldrCookie);
+        if (!NT_SUCCESS(status))
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID,
                        DPFLTR_WARNING_LEVEL,
-                       "AVRF: failed to acquire loader lock!\n");
+                       "AVRF: failed to acquire loader lock (0x%08x)!\n",
+                       status);
             g_StackTable.erase(it);
             return false;
         }
@@ -261,6 +357,11 @@ fault::ShouldFaultInject(
             }
             else
             {
+                //
+                // Either dbghelp didn't give us a module base or the call to
+                // resolve the symbol name failed. Identify the module by the
+                // extents.
+                //
                 auto end = Add2Ptr(item->DllBase, item->SizeOfImage);
                 if ((frames[i] >= item->DllBase) && (frames[i] < end))
                 {
@@ -289,17 +390,17 @@ fault::ShouldFaultInject(
             RtlAppendUnicodeStringToString(&symbol, &data->BaseDllName);
         }
 
-        RtlAppendUnicodeToString(&symbol, L"!");
-        RtlAppendUnicodeToString(&symbol, info->Name);
-
         //
         // We're done with the loader lock.
         //
         LdrUnlockLoaderLock(0, ldrCookie);
 
-        DbgPrintEx(DPFLTR_VERIFIER_ID, 
-                   DPFLTR_MASK | 0x10, 
-                   "AVRF: %wZ\n", 
+        RtlAppendUnicodeToString(&symbol, L"!");
+        RtlAppendUnicodeToString(&symbol, info->Name);
+
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_MASK | 0x10,
+                   "AVRF: %wZ\n",
                    &symbol);
 
         stackSymbols.append(symbol.Buffer, symbol.Length / sizeof(WCHAR));
@@ -316,8 +417,8 @@ fault::ShouldFaultInject(
         if (IsStackOverriddenByRegex(stackSymbols))
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_MASK | 0x10,
-                       "AVRF: stack excluded by current frame symbol\n");
+                       DPFLTR_INFO_LEVEL,
+                       "AVRF: stack excluded by regular expression\n");
 
             //
             // Cache the decision for this stack hash.
@@ -345,9 +446,11 @@ fault::ProcessAttach(
     void
     )
 {
+    std::unique_lock lock(g_Lock);
+
     if (g_Properties.SymbolSearchPath[0] == L'\0')
     {
-        if (SymInitializeW(NtCurrentProcess(), nullptr, TRUE) == FALSE)
+        if (SymInitializeW(NtCurrentProcess(), nullptr, FALSE) == FALSE)
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID, 
                        DPFLTR_ERROR_LEVEL, 
@@ -360,7 +463,7 @@ fault::ProcessAttach(
     {
         if (SymInitializeW(NtCurrentProcess(), 
                            g_Properties.SymbolSearchPath, 
-                           TRUE) == FALSE)
+                           FALSE) == FALSE)
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID, 
                        DPFLTR_ERROR_LEVEL, 
@@ -369,6 +472,10 @@ fault::ProcessAttach(
             return false;
         }
     }
+
+    SymSetOptions(SymGetOptions() | SYMOPT_UNDNAME);
+    SymRegisterCallbackW64(NtCurrentProcess(), SymbolRegsteredCallback, 0);
+    SymRefreshModuleList(NtCurrentProcess());
 
     auto err = VerifierRegisterFaultInjectProvider(static_cast<DWORD>(Type::Max),
                                                    &g_TypeBase);
@@ -455,6 +562,11 @@ fault::ProcessDetach(
     void
     )
 {
+    std::unique_lock lock(g_Lock);
+
+    SymCleanup(NtCurrentProcess());
+
     g_StackTable.clear();
+
     g_Initialized = false;
 }
