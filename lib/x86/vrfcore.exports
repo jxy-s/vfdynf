@@ -1,0 +1,72 @@
+Microsoft (R) COFF/PE Dumper Version 14.31.31104.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\Windows\SysWOW64\vrfcore.dll
+
+File Type: DLL
+
+  Section contains the following exports for vrfcore.dll
+
+    00000000 characteristics
+     9DD10C8 time date stamp
+        0.00 version
+           1 ordinal base
+          45 number of functions
+          45 number of names
+
+    ordinal hint RVA      name
+
+          1    0 00003170 AVrfAPILookupCallback
+          3    1 000044D0 VerifierAreStaticDllsInitialized
+          4    2 000045D0 VerifierChainDuplicateHooks
+          5    3 00003E00 VerifierCloseLayerProperties
+          6    4 000047D0 VerifierConfigureStopOptions
+          7    5 00003D60 VerifierCreateLayerProperties
+          8    6 0000ACE0 VerifierDisableFaultInjectionExclusionRange
+          9    7 0000AB60 VerifierDisableFaultInjectionTargetRange
+         10    8 000078C0 VerifierDisableLayer
+         11    9 00007E10 VerifierDisableVerifier
+         12    A 0000AC00 VerifierEnableFaultInjectionExclusionRange
+         13    B 0000AA80 VerifierEnableFaultInjectionTargetRange
+         14    C 00007280 VerifierEnableLayer
+         15    D 00006A50 VerifierGetAppCallerAddress
+          2    E 00004A10 VerifierGetInfoForException
+         16    F 000044A0 VerifierGetLoggingDirectory
+         17   10 00004550 VerifierGetRecursionTlsSlot
+         18   11 00004820 VerifierHandleVerifierStopException
+         19   12 00004780 VerifierIsDllEntryActive
+         20   13 000047B0 VerifierIsInsideVerifierStop
+         21   14 00004300 VerifierIsLayerEnabled
+         22   15 00004750 VerifierLdrGetProcedureAddress
+         23   16 00003CC0 VerifierOpenLayerProperties
+         24   17 00004830 VerifierQueryGlobalProperties
+         25   18 00004020 VerifierQueryLayerBreak
+         26   19 00003FD0 VerifierQueryLayerBreaks
+         27   1A 00003E20 VerifierQueryLayerProperties
+         28   1B 00003F60 VerifierQueryLayerProperty
+         29   1C 000070E0 VerifierQueryRegisteredLayers
+         30   1D 0000A7E0 VerifierRegisterFaultInjectProvider
+         31   1E 00006C20 VerifierRegisterLayer
+         32   1F 00006C40 VerifierRegisterLayerEx
+         33   20 00009D00 VerifierRegisterProvider
+         34   21 0000AD80 VerifierResetFaultInjectionAddressRanges
+         35   22 0000AE30 VerifierSetAPIClassName
+         36   23 0000A960 VerifierSetFaultInjectionProbability
+         37   24 0000A9E0 VerifierSetFaultInjectionSeed
+         38   25 00004140 VerifierSetLayerBreak
+         39   26 00004410 VerifierSetLayerProperty
+         40   27 0000A860 VerifierShouldFaultInject
+         41   28 00003630 VerifierStopMessageEx
+         42   29 0000AA10 VerifierSuspendFaultInjection
+         43   2A 00009480 VerifierTlsGetValue
+         44   2B 000094C0 VerifierTlsSetValue
+         45   2C 00006C60 VerifierUnregisterLayer
+
+  Summary
+
+        C000 .data
+        1000 .idata
+        1000 .reloc
+       19000 .rsrc
+        C000 .text

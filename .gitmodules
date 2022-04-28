@@ -1,0 +1,3 @@
+[submodule "ext/submodules/phnt"]
+	path = ext/submodules/phnt
+	url = https://github.com/processhacker/phnt

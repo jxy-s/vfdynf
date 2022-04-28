@@ -1,0 +1,54 @@
+Microsoft (R) COFF/PE Dumper Version 14.31.31104.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+
+Dump of file C:\Windows\System32\verifier.dll
+
+File Type: DLL
+
+  Section contains the following exports for VERIFIER.dll
+
+    00000000 characteristics
+    5F1ECFD8 time date stamp
+        0.00 version
+           1 ordinal base
+          26 number of functions
+          26 number of names
+
+    ordinal hint RVA      name
+
+          1    0 00009700 AVrfAPILookupCallback
+          2    1 0000A750 VerifierAddFreeMemoryCallback
+          3    2 0000A7D0 VerifierCheckPageHeapAllocation
+          4    3 0000A880 VerifierCreateRpcPageHeap
+          5    4 0000A8C0 VerifierDeleteFreeMemoryCallback
+          6    5 0000A990 VerifierDestroyRpcPageHeap
+          7    6 00001F50 VerifierDisableFaultInjectionExclusionRange
+          8    7 00002020 VerifierDisableFaultInjectionTargetRange
+          9    8 00002100 VerifierEnableFaultInjectionExclusionRange
+         10    9 000021C0 VerifierEnableFaultInjectionTargetRange
+         11    A 0000A9D0 VerifierEnumerateResource
+         12    B 0000AB00 VerifierForceNormalHeap
+         13    C 0000AB70 VerifierGetInfoForException
+         14    D 0000AC10 VerifierGetMemoryForDump
+         15    E 0000ACB0 VerifierGetPropertyValueByName
+         16    F 0000ACC0 VerifierGetProviderHelper
+         17   10 0000AD40 VerifierIsAddressInAnyPageHeap
+         18   11 0000AEC0 VerifierIsCurrentThreadHoldingLocks
+         19   12 0000AF00 VerifierIsDllEntryActive
+         20   13 0000AF40 VerifierIsPerUserSettingsEnabled
+         21   14 0000AF60 VerifierQueryRuntimeFlags
+         22   15 000071A0 VerifierRedirectStopFunctions
+         23   16 000022B0 VerifierSetFaultInjectionProbability
+         24   17 00008BE0 VerifierSetFlags
+         25   18 0000AFC0 VerifierSetRuntimeFlags
+         26   19 000071C0 VerifierStopMessage
+
+  Summary
+
+       1B000 .data
+        2000 .pdata
+        A000 .rdata
+        1000 .reloc
+       22000 .rsrc
+       2B000 .text
