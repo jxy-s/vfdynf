@@ -9,7 +9,7 @@ namespace layer
 AVRF_LAYER_DESCRIPTOR g_Descriptor
 {
     &provider::g_Descriptor,
-    L"{D41D391A-D897-4956-953F-ED66B3861169}",
+    L"{d41d391a-d897-4956-953f-ed66b3861169}",
     L"DynFault",
     1,
     0,

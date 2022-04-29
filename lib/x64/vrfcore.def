@@ -1,5 +1,4 @@
 EXPORTS
-    AVrfAPILookupCallback
     VerifierAreStaticDllsInitialized
     VerifierChainDuplicateHooks
     VerifierCloseLayerProperties
@@ -13,7 +12,6 @@ EXPORTS
     VerifierEnableFaultInjectionTargetRange
     VerifierEnableLayer
     VerifierGetAppCallerAddress
-    VerifierGetInfoForException
     VerifierGetLoggingDirectory
     VerifierGetRecursionTlsSlot
     VerifierHandleVerifierStopException
@@ -44,4 +42,3 @@ EXPORTS
     VerifierTlsGetValue
     VerifierTlsSetValue
     VerifierUnregisterLayer
- 
