@@ -1,7 +1,7 @@
 # Application Verifier Dynamic Fault Injection
 
-`vfdynf.dll` is an application verifier provider that implements 
-unique-stack systematic fault injection to simulate low resource scenarios.
+`vfdynf.dll` is an application verifier provider that implements unique-stack 
+based systematic fault injection to simulate low resource scenarios.
 
 ![](appvw.png)
 
@@ -68,7 +68,10 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | GracePeriod        | DWORD       | Delays fault injection until after this period, in milliseconds. |
 | SymbolSearchPath   | String      | Symbol search path used for dynamic fault injection and applying exclusions. |
 | ExclusionsRegex    | MultiString | Excludes stack from fault injection when one of these regular expression matches the stack. |
-| DynamicFaultPeriod | DWORD | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
+| DynamicFaultPeriod | DWORD       | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
+| EnableFaultMask    | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole. |
+| FaultProbability   | DWORD       | Probability that a fault will be injected (0 - 1000000). |
+| FaultSeed          | DWORD       | Seed used for fault randomization. |
 
 ## Installation
 
