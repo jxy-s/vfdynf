@@ -22,16 +22,6 @@ std::vector<std::wregex> g_ExclusionsRegex;
 
 inline
 static
-uint64_t
-FaultTypeToBit(
-    Type FaultType
-    )
-{
-    return (1ull << (uint32_t)FaultType);
-}
-
-inline
-static
 DWORD
 FaultTypeClass(
     Type FaultType
@@ -195,6 +185,14 @@ fault::ShouldFaultInject(
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_WARNING_LEVEL,
                    "AVRF: caller address is null\n");
+        return false;
+    }
+
+    if ((g_Properties.EnableFaultMask & fault::FaultTypeToBit(FaultType)) == 0)
+    {
+        //
+        // Fault type is not enabled.
+        //
         return false;
     }
 
@@ -522,18 +520,26 @@ fault::ProcessAttach(
                                             Add2Ptr(nullptr, MAXULONG_PTR));
 
     //
-    // Set maximum probability so VerifierShouldInjectFault always triggers.
-    // The dynamic stack-based fault injection will get better coverage than
-    // randomly injecting faults.
+    // By default the system doesn't rely on probability for fault injection.
+    // However, there are properties to set the probability and seed if desired.
     //
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Wait), MAXDWORD);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Heap), MAXDWORD);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::VMem), MAXDWORD);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Reg), MAXDWORD);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::File), MAXDWORD);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Event), MAXDWORD);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Section), MAXDWORD);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Ole), MAXDWORD);
+
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Wait), 
+                                         g_Properties.FaultProbability);
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Heap),
+                                         g_Properties.FaultProbability);
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::VMem),
+                                         g_Properties.FaultProbability);
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Reg),
+                                         g_Properties.FaultProbability);
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::File),
+                                         g_Properties.FaultProbability);
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Event),
+                                         g_Properties.FaultProbability);
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Section),
+                                         g_Properties.FaultProbability);
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Ole),
+                                         g_Properties.FaultProbability);
 
     VerifierSetAPIClassName(FaultTypeClass(Type::Wait), L"Wait APIs");
     VerifierSetAPIClassName(FaultTypeClass(Type::Heap), L"Heap APIs");
@@ -544,10 +550,7 @@ fault::ProcessAttach(
     VerifierSetAPIClassName(FaultTypeClass(Type::Section), L"Section APIs");
     VerifierSetAPIClassName(FaultTypeClass(Type::Ole), L"OLE String APIs");
 
-    //
-    // Again we don't rely on randomness, set the seed to 0.
-    //
-    VerifierSetFaultInjectionSeed(0);
+    VerifierSetFaultInjectionSeed(g_Properties.FaultSeed);
 
     DbgPrintEx(DPFLTR_VERIFIER_ID,
                DPFLTR_INFO_LEVEL,
