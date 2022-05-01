@@ -22,6 +22,17 @@ enum class Type : uint32_t
 
 static_assert(static_cast<uint32_t>(Type::Max) < 64, "type is used in 64bit bit field");
 
+constexpr
+inline
+static
+uint64_t
+FaultTypeToBit(
+    Type FaultType
+    )
+{
+    return (1ull << (uint32_t)FaultType);
+}
+
 bool
 ShouldFaultInject(
     _In_ Type FaultType,

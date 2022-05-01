@@ -42,6 +42,30 @@ AVRF_PROPERTY_DESCRIPTOR g_Descriptors[]
         L"Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking.",
         nullptr
     },
+    {
+        AVRF_PROPERTY_QWORD,
+        L"EnableFaultMask",
+        &g_Properties.EnableFaultMask,
+        sizeof(g_Properties.EnableFaultMask),
+        L"Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole.",
+        nullptr
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"FaultProbability",
+        &g_Properties.FaultProbability,
+        sizeof(g_Properties.FaultProbability),
+        L"Probability that a fault will be injected (0 - 1000000).",
+        nullptr
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"FaultSeed",
+        &g_Properties.FaultSeed,
+        sizeof(g_Properties.FaultSeed),
+        L"Seed used for fault randomization.",
+        nullptr
+    },
     { AVRF_PROPERTY_NONE, nullptr, nullptr, 0, nullptr, nullptr }
 };
 

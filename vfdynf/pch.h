@@ -12,6 +12,9 @@
 #include <oleauto.h>
 #include <assert.h>
 
+#undef min
+#undef max
+
 #include <type_traits>
 #include <string>
 #include <regex>

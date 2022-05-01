@@ -16,7 +16,7 @@ AVRF_LAYER_DESCRIPTOR g_Descriptor
     nullptr,
     props::g_Descriptors,
     nullptr,
-    nullptr,
+    L"Unique-stack based systematic fault injection to simulate low resource scenarios.",
     L"Dynamic Fault Injection",
     0,
     0,
