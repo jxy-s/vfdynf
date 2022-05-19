@@ -63,7 +63,7 @@ AVRF_PROPERTY_DESCRIPTOR g_Descriptors[]
         L"FaultSeed",
         &g_Properties.FaultSeed,
         sizeof(g_Properties.FaultSeed),
-        L"Seed used for fault randomization.",
+        L"Seed used for fault randomization. A value of zero will generate a random seed.",
         nullptr
     },
     { AVRF_PROPERTY_NONE, nullptr, nullptr, 0, nullptr, nullptr }
