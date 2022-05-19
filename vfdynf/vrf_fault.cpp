@@ -550,7 +550,20 @@ fault::ProcessAttach(
     VerifierSetAPIClassName(FaultTypeClass(Type::Section), L"Section APIs");
     VerifierSetAPIClassName(FaultTypeClass(Type::Ole), L"OLE String APIs");
 
-    VerifierSetFaultInjectionSeed(g_Properties.FaultSeed);
+    if (g_Properties.FaultSeed == 0)
+    {
+        auto seed = HandleToULong(NtCurrentThreadId()) ^ NtGetTickCount();
+        auto rand = RtlRandomEx(&seed);
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_INFO_LEVEL,
+                   "AVRF: generated and using random fault injection seed %lu\n",
+                   rand);
+        VerifierSetFaultInjectionSeed(rand);
+    }
+    else
+    {
+        VerifierSetFaultInjectionSeed(g_Properties.FaultSeed);
+    }
 
     DbgPrintEx(DPFLTR_VERIFIER_ID,
                DPFLTR_INFO_LEVEL,
