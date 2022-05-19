@@ -71,7 +71,7 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | DynamicFaultPeriod | DWORD       | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
 | EnableFaultMask    | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole. |
 | FaultProbability   | DWORD       | Probability that a fault will be injected (0 - 1000000). |
-| FaultSeed          | DWORD       | Seed used for fault randomization. |
+| FaultSeed          | DWORD       | Seed used for fault randomization. A value of zero will generate a random seed. |
 
 ## Installation
 
