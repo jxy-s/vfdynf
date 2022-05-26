@@ -1,0 +1,15 @@
+LIBRARY
+EXPORTS
+    VerifierRegisterProvider
+    VerifierRegisterLayer
+    VerifierRegisterLayerEx
+    VerifierUnregisterLayer
+    VerifierGetAppCallerAddress
+    VerifierShouldFaultInject
+    VerifierRegisterFaultInjectProvider
+    VerifierSetFaultInjectionProbability
+    VerifierSetAPIClassName
+    VerifierSetFaultInjectionSeed
+    VerifierSuspendFaultInjection
+    VerifierEnableFaultInjectionTargetRange
+    VerifierDisableFaultInjectionTargetRange
