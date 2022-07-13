@@ -120,7 +120,7 @@ VerifierUnregisterLayer(
 
 NTSYSAPI
 PVOID
-NTAPI
+CDECL
 VerifierGetAppCallerAddress(
     _In_ PVOID ReturnAddress
     )
