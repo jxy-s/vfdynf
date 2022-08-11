@@ -240,6 +240,32 @@ VerifierDisableFaultInjectionTargetRange(
     return ERROR_NOINTERFACE;
 }
 
+NTSYSAPI
+PVOID
+NTAPI
+VerifierTlsGetValue(
+    _In_ DWORD TlsIndex
+    )
+{
+    UNREFERENCED_PARAMETER(TlsIndex);
+
+    return NULL;
+}
+
+NTSYSAPI
+BOOL
+NTAPI
+VerifierTlsSetValue(
+    _In_ DWORD TlsIndex,
+    _In_opt_ PVOID TlsValue
+    )
+{
+    UNREFERENCED_PARAMETER(TlsIndex);
+    UNREFERENCED_PARAMETER(TlsValue);
+
+    return FALSE;
+}
+
 BOOL 
 APIENTRY
 DllMain(

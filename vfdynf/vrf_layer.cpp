@@ -34,7 +34,7 @@ SetRecursionCount(
     assert(g_Descriptor.TlsIndex != TLS_OUT_OF_INDEXES);
 
     auto tls = reinterpret_cast<PVOID>(0ull + static_cast<ULONG_PTR>(Value));
-    TlsSetValue(g_Descriptor.TlsIndex, tls);
+    VerifierTlsSetValue(g_Descriptor.TlsIndex, tls);
 }
 
 }
@@ -46,7 +46,7 @@ layer::GetRecursionCount(
 {
     assert(g_Descriptor.TlsIndex != TLS_OUT_OF_INDEXES);
 
-    auto tls = TlsGetValue(g_Descriptor.TlsIndex);
+    auto tls = VerifierTlsGetValue(g_Descriptor.TlsIndex);
     return static_cast<uint32_t>(reinterpret_cast<ULONG_PTR>(tls));
 }
 
