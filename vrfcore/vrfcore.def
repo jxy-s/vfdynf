@@ -13,3 +13,5 @@ EXPORTS
     VerifierSuspendFaultInjection
     VerifierEnableFaultInjectionTargetRange
     VerifierDisableFaultInjectionTargetRange
+    VerifierTlsGetValue
+    VerifierTlsSetValue

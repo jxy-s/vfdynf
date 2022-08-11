@@ -89,7 +89,6 @@ via the command line or in the user interface.
 ## Building
 
 The repo uses submodules, after cloning be sure to init and update the submodules. 
-Project file are targeted to Visual Studio 2022.
 
 ```
 git clone https://github.com/jxy-s/vfdynf
