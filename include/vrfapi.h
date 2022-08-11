@@ -419,6 +419,21 @@ VerifierDisableFaultInjectionTargetRange(
     PVOID EndAddress
     );
 
+NTSYSAPI
+PVOID
+NTAPI
+VerifierTlsGetValue(
+    _In_ DWORD TlsIndex
+    );
+
+NTSYSAPI
+BOOL
+NTAPI
+VerifierTlsSetValue(
+    _In_ DWORD TlsIndex,
+    _In_opt_ PVOID TlsValue
+    );
+
 #ifdef __cplusplus
 }
 #endif // __cplusplus

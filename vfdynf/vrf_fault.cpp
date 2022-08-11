@@ -12,23 +12,28 @@ struct StackEntry
     uint64_t FaultMask;
 };
 
-DWORD g_TypeBase = MAXDWORD;
-bool g_Initialized = false;
-std::mutex g_Lock;
-uint64_t g_LastClear = 0;
-std::unordered_map<uint32_t, StackEntry> g_StackTable;
-std::once_flag g_ExclusionsRegexOnce;
-std::vector<std::wregex> g_ExclusionsRegex;
+struct GlobalContext 
+{
+    DWORD TypeBase = MAXDWORD;
+    std::mutex Lock;
+    uint64_t LastClear = 0;
+    std::unordered_map<uint32_t, StackEntry> StackTable;
+    std::once_flag ExclusionsRegexOnce;
+    std::vector<std::wregex> ExclusionsRegex;
+};
+
+static GlobalContext* g_Context = nullptr;
 
 inline
 static
 DWORD
 FaultTypeClass(
-    Type FaultType
+    _In_ Type FaultType,
+    _In_ GlobalContext* Context
     )
 {
-    assert(g_TypeBase != MAXDWORD);
-    return (g_TypeBase + static_cast<DWORD>(FaultType));
+    assert(Context->TypeBase != MAXDWORD);
+    return (Context->TypeBase + static_cast<DWORD>(FaultType));
 }
 
 BOOL
@@ -116,10 +121,10 @@ InitExclusionsRegex(
 
         try
         {
-            g_ExclusionsRegex.emplace_back(expr.Buffer, 
-                                           expr.Length / sizeof(WCHAR),
-                                           std::wregex::ECMAScript | 
-                                               std::wregex::optimize);
+            g_Context->ExclusionsRegex.emplace_back(expr.Buffer,
+                                                    expr.Length / sizeof(WCHAR),
+                                                    (std::wregex::ECMAScript |
+                                                     std::wregex::optimize));
         }
         catch (const std::exception& exc)
         {
@@ -140,9 +145,9 @@ IsStackOverriddenByRegex(
     _In_ const std::wstring& StackSymbols 
     )
 {
-    std::call_once(g_ExclusionsRegexOnce, InitExclusionsRegex);
+    std::call_once(g_Context->ExclusionsRegexOnce, InitExclusionsRegex);
 
-    for (const auto& entry : g_ExclusionsRegex)
+    for (const auto& entry : g_Context->ExclusionsRegex)
     {
         try
         {
@@ -172,7 +177,7 @@ fault::ShouldFaultInject(
     _In_ _Maybenull_ void* CallerAddress
     ) noexcept try
 {
-    if (!g_Initialized)
+    if (!g_Context)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_WARNING_LEVEL,
@@ -196,7 +201,7 @@ fault::ShouldFaultInject(
         return false;
     }
 
-    if (VerifierShouldFaultInject(FaultTypeClass(FaultType), 
+    if (VerifierShouldFaultInject(FaultTypeClass(FaultType, g_Context), 
                                   CallerAddress) == FALSE)
     {
         return false;
@@ -206,22 +211,22 @@ fault::ShouldFaultInject(
     void* frames[250];
     WORD count = RtlCaptureStackBackTrace(2, ARRAYSIZE(frames), frames, &hash);
 
-    std::unique_lock lock(g_Lock);
+    std::unique_lock lock(g_Context->Lock);
 
     if (g_Properties.DynamicFaultPeroid > 0)
     {
-        if (g_LastClear == 0)
+        if (g_Context->LastClear == 0)
         {
-            g_LastClear = NtGetTickCount64();
+            g_Context->LastClear = NtGetTickCount64();
         }
-        else if ((g_LastClear + g_Properties.DynamicFaultPeroid) <= NtGetTickCount64())
+        else if ((g_Context->LastClear + g_Properties.DynamicFaultPeroid) <= NtGetTickCount64())
         {
-            g_LastClear = NtGetTickCount64();
-            g_StackTable.clear();
+            g_Context->LastClear = NtGetTickCount64();
+            g_Context->StackTable.clear();
         }
     }
 
-    auto [it, inserted] = g_StackTable.try_emplace(hash);
+    auto [it, inserted] = g_Context->StackTable.try_emplace(hash);
     if (!inserted)
     {
         //
@@ -327,7 +332,7 @@ fault::ShouldFaultInject(
                        DPFLTR_WARNING_LEVEL,
                        "AVRF: failed to acquire loader lock (0x%08x)!\n",
                        status);
-            g_StackTable.erase(it);
+            g_Context->StackTable.erase(it);
             return false;
         }
         if (ldrDisp != LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED)
@@ -335,7 +340,7 @@ fault::ShouldFaultInject(
             DbgPrintEx(DPFLTR_VERIFIER_ID,
                        DPFLTR_WARNING_LEVEL,
                        "AVRF: loader lock is busy!\n");
-            g_StackTable.erase(it);
+            g_Context->StackTable.erase(it);
             return false;
         }
 
@@ -444,7 +449,36 @@ fault::ProcessAttach(
     void
     )
 {
-    std::unique_lock lock(g_Lock);
+    if (g_Context)
+    {
+        return true;
+    }
+
+    std::unique_ptr<GlobalContext> context;
+
+    try
+    {
+        context = std::make_unique<GlobalContext>();
+        if (context == nullptr)
+        {
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_ERROR_LEVEL,
+                       "AVRF: initialization failed!\n");
+
+            __debugbreak();
+            return false;
+        }
+    }
+    catch (const std::exception& exc)
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: exception (%s) raised during initialization!\n",
+                   exc.what());
+
+        __debugbreak();
+        return false;
+    }
 
     if (g_Properties.SymbolSearchPath[0] == L'\0')
     {
@@ -476,7 +510,7 @@ fault::ProcessAttach(
     SymRefreshModuleList(NtCurrentProcess());
 
     auto err = VerifierRegisterFaultInjectProvider(static_cast<DWORD>(Type::Max),
-                                                   &g_TypeBase);
+                                                   &context->TypeBase);
     if (err != ERROR_SUCCESS)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID, 
@@ -494,28 +528,28 @@ fault::ProcessAttach(
     //
     // We ask for everything and handle excluding ranges ourself.
     //
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Wait), 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Wait, context.get()), 
                                             nullptr, 
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Heap),
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Heap, context.get()),
                                             nullptr, 
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::VMem),
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::VMem, context.get()),
                                             nullptr, 
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Reg), 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Reg, context.get()), 
                                             nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::File),
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::File, context.get()),
                                             nullptr, 
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Event), 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Event, context.get()), 
                                             nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Section),
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Section, context.get()),
                                             nullptr, 
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Ole), 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Ole, context.get()), 
                                             nullptr, 
                                             Add2Ptr(nullptr, MAXULONG_PTR));
 
@@ -524,31 +558,32 @@ fault::ProcessAttach(
     // However, there are properties to set the probability and seed if desired.
     //
 
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Wait), 
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Wait, context.get()), 
                                          g_Properties.FaultProbability);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Heap),
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Heap, context.get()),
                                          g_Properties.FaultProbability);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::VMem),
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::VMem, context.get()),
                                          g_Properties.FaultProbability);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Reg),
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Reg, context.get()),
                                          g_Properties.FaultProbability);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::File),
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::File, context.get()),
                                          g_Properties.FaultProbability);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Event),
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Event, context.get()),
                                          g_Properties.FaultProbability);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Section),
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Section, context.get()),
                                          g_Properties.FaultProbability);
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Ole),
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Ole, context.get()),
                                          g_Properties.FaultProbability);
 
-    VerifierSetAPIClassName(FaultTypeClass(Type::Wait), L"Wait APIs");
-    VerifierSetAPIClassName(FaultTypeClass(Type::Heap), L"Heap APIs");
-    VerifierSetAPIClassName(FaultTypeClass(Type::VMem), L"Virtual Memory APIs");
-    VerifierSetAPIClassName(FaultTypeClass(Type::Reg), L"Registry APIs");
-    VerifierSetAPIClassName(FaultTypeClass(Type::File), L"File APIs");
-    VerifierSetAPIClassName(FaultTypeClass(Type::Event), L"Event APIs");
-    VerifierSetAPIClassName(FaultTypeClass(Type::Section), L"Section APIs");
-    VerifierSetAPIClassName(FaultTypeClass(Type::Ole), L"OLE String APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::Wait, context.get()), L"Wait APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::Heap, context.get()), L"Heap APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::VMem, context.get()), L"Virtual Memory APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::Reg, context.get()), L"Registry APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::File, context.get()), L"File APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::Event, context.get()), L"Event APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::Section, context.get()), L"Section APIs");
+    VerifierSetAPIClassName(FaultTypeClass(Type::Ole, context.get()), L"OLE String APIs");
+
 
     if (g_Properties.FaultSeed == 0)
     {
@@ -569,7 +604,7 @@ fault::ProcessAttach(
                DPFLTR_INFO_LEVEL,
                "AVRF: dynamic fault injection initialized\n");
 
-    g_Initialized = true;
+    g_Context = context.release();
     return true;
 }
 
@@ -578,11 +613,8 @@ fault::ProcessDetach(
     void
     )
 {
-    std::unique_lock lock(g_Lock);
+    std::unique_ptr<GlobalContext> context(g_Context);
+    g_Context = nullptr;
 
     SymCleanup(NtCurrentProcess());
-
-    g_StackTable.clear();
-
-    g_Initialized = false;
 }
