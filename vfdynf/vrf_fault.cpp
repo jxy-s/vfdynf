@@ -18,7 +18,7 @@ struct GlobalContext
     std::mutex Lock;
     uint64_t LastClear = 0;
     std::unordered_map<uint32_t, StackEntry> StackTable;
-    std::once_flag ExclusionsRegexOnce;
+    bool ExclusionsRegexInitialized = false;
     std::vector<std::wregex> ExclusionsRegex;
 };
 
@@ -96,18 +96,18 @@ SymbolRegsteredCallback(
 }
 
 static
-void
+bool
 InitExclusionsRegex(
-    void
-    )
+    _In_ GlobalContext* Context
+    ) noexcept
 {
     //
     // The exclusions regular expressions is a REG_MULTI_SZ from the properties
     // verifier loads on our behalf. Parse each block of the multi terminated
     // string into the regex vector. We do this so we don't have to construct
-    // the regex object every time. This is called once during the first
-    // evaluation.
+    // the regex object every time.
     //
+    assert(!Context->ExclusionsRegexInitialized);
 
     size_t offset = 0;
     for (;;)
@@ -121,10 +121,10 @@ InitExclusionsRegex(
 
         try
         {
-            g_Context->ExclusionsRegex.emplace_back(expr.Buffer,
-                                                    expr.Length / sizeof(WCHAR),
-                                                    (std::wregex::ECMAScript |
-                                                     std::wregex::optimize));
+            Context->ExclusionsRegex.emplace_back(expr.Buffer,
+                                                  expr.Length / sizeof(WCHAR),
+                                                  (std::wregex::ECMAScript |
+                                                   std::wregex::optimize));
         }
         catch (const std::exception& exc)
         {
@@ -133,10 +133,14 @@ InitExclusionsRegex(
                        "AVRF: exception (%s) raised processing regex!\n",
                        exc.what());
             __debugbreak();
+            return false;
         }
 
         offset += ((expr.Length / sizeof(WCHAR)) + 1);
     }
+
+    Context->ExclusionsRegexInitialized = true;
+    return true;
 }
 
 static
@@ -145,7 +149,7 @@ IsStackOverriddenByRegex(
     _In_ const std::wstring& StackSymbols 
     )
 {
-    std::call_once(g_Context->ExclusionsRegexOnce, InitExclusionsRegex);
+    assert(g_Context->ExclusionsRegexInitialized);
 
     for (const auto& entry : g_Context->ExclusionsRegex)
     {
@@ -475,6 +479,16 @@ fault::ProcessAttach(
                    DPFLTR_ERROR_LEVEL,
                    "AVRF: exception (%s) raised during initialization!\n",
                    exc.what());
+
+        __debugbreak();
+        return false;
+    }
+
+    if (!InitExclusionsRegex(context.get()))
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: failed to initialized exclusions regex!\n");
 
         __debugbreak();
         return false;
