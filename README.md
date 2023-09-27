@@ -101,12 +101,12 @@ MSBuild .\vfdynf.sln
 
 The following are used without modification. Credits to their authors.
 
-- [Process Hacker Native API Headers][github.phnt]
+- [System Informer Native API Headers][github.phnt]
 Collection of Native API header files. Gathered from Microsoft header files and
 symbol files, as well as a lot of reverse engineering and guessing.
 
 [//]: # (Hyperlink IDs)
-[github.phnt]: https://github.com/processhacker/phnt
+[github.phnt]: https://github.com/winsiderss/phnt/
 [msvc.dbgit]: https://docs.microsoft.com/en-us/cpp/standard-library/debug-iterator-support?view=msvc-170
 
 And, Grandfather Derpington ;)
