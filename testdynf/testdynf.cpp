@@ -1,5 +1,5 @@
 /*
-    Copyright (c) Johnny Shaw. All rights reserved. 
+    Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <Windows.h>
 #include <iostream>

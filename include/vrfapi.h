@@ -65,7 +65,7 @@ typedef struct _RTL_VERIFIER_PROVIDER_DESCRIPTOR
     PRTL_VERIFIER_DLL_DESCRIPTOR ProviderDlls;
     RTL_VERIFIER_DLL_LOAD_CALLBACK ProviderDllLoadCallback;
     RTL_VERIFIER_DLL_UNLOAD_CALLBACK ProviderDllUnloadCallback;
-    
+
     //
     // Filled by verifier engine
     //
@@ -282,13 +282,13 @@ RtlApplicationVerifierStop(
     );
 
 typedef
-DWORD 
+DWORD
 (NTAPI * AVRF_ENABLE_CALLBACK)(
     DWORD Unknown/*???*/
     );
 
 typedef
-DWORD 
+DWORD
 (NTAPI * AVRF_PROPERTY_DESCRIPTOR_CALLBACK)(
     _In_ PAVRF_PROPERTY_DESCRIPTOR Descriptor
     );
@@ -368,7 +368,7 @@ DWORD
 NTAPI
 VerifierRegisterFaultInjectProvider(
     _In_ DWORD Count,
-    _Out_ PDWORD ClassBase 
+    _Out_ PDWORD ClassBase
     );
 
 NTSYSAPI

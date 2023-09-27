@@ -1,9 +1,9 @@
 /*
-    Copyright (c) Johnny Shaw. All rights reserved. 
+    Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <pch.h>
 
-namespace layer 
+namespace layer
 {
 
 AVRF_LAYER_DESCRIPTOR g_Descriptor
