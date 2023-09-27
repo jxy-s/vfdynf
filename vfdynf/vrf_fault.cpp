@@ -1,9 +1,9 @@
 /*
-    Copyright (c) Johnny Shaw. All rights reserved. 
+    Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <pch.h>
 
-namespace fault 
+namespace fault
 {
 
 struct StackEntry
@@ -12,7 +12,7 @@ struct StackEntry
     uint64_t FaultMask;
 };
 
-struct GlobalContext 
+struct GlobalContext
 {
     DWORD TypeBase = MAXDWORD;
     std::mutex Lock;
@@ -37,7 +37,7 @@ FaultTypeClass(
 }
 
 BOOL
-CALLBACK 
+CALLBACK
 SymbolRegsteredCallback(
     _In_ HANDLE hProcess,
     _In_ ULONG ActionCode,
@@ -50,7 +50,7 @@ SymbolRegsteredCallback(
 
     switch (ActionCode)
     {
-        case CBA_DEFERRED_SYMBOL_LOAD_COMPLETE: 
+        case CBA_DEFERRED_SYMBOL_LOAD_COMPLETE:
         {
             auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
             DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -59,7 +59,7 @@ SymbolRegsteredCallback(
                        info->FileName);
             break;
         }
-        case CBA_DEFERRED_SYMBOL_LOAD_FAILURE: 
+        case CBA_DEFERRED_SYMBOL_LOAD_FAILURE:
         {
             auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
             DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -68,7 +68,7 @@ SymbolRegsteredCallback(
                        info->FileName);
             break;
         }
-        case CBA_DEFERRED_SYMBOL_LOAD_PARTIAL: 
+        case CBA_DEFERRED_SYMBOL_LOAD_PARTIAL:
         {
             auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
             DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -77,7 +77,7 @@ SymbolRegsteredCallback(
                        info->FileName);
             break;
         }
-        case CBA_SYMBOLS_UNLOADED: 
+        case CBA_SYMBOLS_UNLOADED:
         {
             auto info = reinterpret_cast<PIMAGEHLP_DEFERRED_SYMBOL_LOADW64>(CallbackData);
             DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -146,7 +146,7 @@ InitExclusionsRegex(
 static
 bool
 IsStackOverriddenByRegex(
-    _In_ const std::wstring& StackSymbols 
+    _In_ const std::wstring& StackSymbols
     )
 {
     assert(g_Context->ExclusionsRegexInitialized);
@@ -205,7 +205,7 @@ fault::ShouldFaultInject(
         return false;
     }
 
-    if (VerifierShouldFaultInject(FaultTypeClass(FaultType, g_Context), 
+    if (VerifierShouldFaultInject(FaultTypeClass(FaultType, g_Context),
                                   CallerAddress) == FALSE)
     {
         return false;
@@ -288,9 +288,9 @@ fault::ShouldFaultInject(
         info->MaxNameLen = MAX_SYM_NAME;
 
         DWORD64 disp;
-        if (SymFromAddrW(NtCurrentProcess(), 
-                         reinterpret_cast<DWORD64>(frames[i]), 
-                         &disp, 
+        if (SymFromAddrW(NtCurrentProcess(),
+                         reinterpret_cast<DWORD64>(frames[i]),
+                         &disp,
                          info) == FALSE)
         {
             //
@@ -298,9 +298,9 @@ fault::ShouldFaultInject(
             //
             SymRefreshModuleList(NtCurrentProcess());
 
-            if (SymFromAddrW(NtCurrentProcess(), 
-                             reinterpret_cast<DWORD64>(frames[i]), 
-                             &disp, 
+            if (SymFromAddrW(NtCurrentProcess(),
+                             reinterpret_cast<DWORD64>(frames[i]),
+                             &disp,
                              info) == FALSE)
             {
                 DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -498,8 +498,8 @@ fault::ProcessAttach(
     {
         if (SymInitializeW(NtCurrentProcess(), nullptr, FALSE) == FALSE)
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID, 
-                       DPFLTR_ERROR_LEVEL, 
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "AVRF: failed to initialize symbols (%lu)\n",
                        NtCurrentTeb()->LastErrorValue);
             return false;
@@ -507,12 +507,12 @@ fault::ProcessAttach(
     }
     else
     {
-        if (SymInitializeW(NtCurrentProcess(), 
-                           g_Properties.SymbolSearchPath, 
+        if (SymInitializeW(NtCurrentProcess(),
+                           g_Properties.SymbolSearchPath,
                            FALSE) == FALSE)
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID, 
-                       DPFLTR_ERROR_LEVEL, 
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_ERROR_LEVEL,
                        "AVRF: failed to initialize symbols (%lu)\n",
                        NtCurrentTeb()->LastErrorValue);
             return false;
@@ -527,8 +527,8 @@ fault::ProcessAttach(
                                                    &context->TypeBase);
     if (err != ERROR_SUCCESS)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID, 
-                   DPFLTR_ERROR_LEVEL, 
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
                    "AVRF: failed to register fault injection provider (%lu)\n",
                    err);
         return false;
@@ -542,29 +542,29 @@ fault::ProcessAttach(
     //
     // We ask for everything and handle excluding ranges ourself.
     //
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Wait, context.get()), 
-                                            nullptr, 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Wait, context.get()),
+                                            nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
     VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Heap, context.get()),
-                                            nullptr, 
+                                            nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
     VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::VMem, context.get()),
-                                            nullptr, 
+                                            nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Reg, context.get()), 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Reg, context.get()),
                                             nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
     VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::File, context.get()),
-                                            nullptr, 
+                                            nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Event, context.get()), 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Event, context.get()),
                                             nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
     VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Section, context.get()),
-                                            nullptr, 
+                                            nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
-    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Ole, context.get()), 
-                                            nullptr, 
+    VerifierEnableFaultInjectionTargetRange(FaultTypeClass(Type::Ole, context.get()),
+                                            nullptr,
                                             Add2Ptr(nullptr, MAXULONG_PTR));
 
     //
@@ -572,7 +572,7 @@ fault::ProcessAttach(
     // However, there are properties to set the probability and seed if desired.
     //
 
-    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Wait, context.get()), 
+    VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Wait, context.get()),
                                          g_Properties.FaultProbability);
     VerifierSetFaultInjectionProbability(FaultTypeClass(Type::Heap, context.get()),
                                          g_Properties.FaultProbability);

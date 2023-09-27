@@ -1,9 +1,9 @@
 /*
-    Copyright (c) Johnny Shaw. All rights reserved. 
+    Copyright (c) Johnny Shaw. All rights reserved.
 
-    This project/file is necessary to generate an appropriate library for 
-    vfdynf to link against. You could use lib.exe to generate a .lib file. 
-    However for x86 name type undecoration is not documented for lib.exe. 
+    This project/file is necessary to generate an appropriate library for
+    vfdynf to link against. You could use lib.exe to generate a .lib file.
+    However for x86 name type undecoration is not documented for lib.exe.
     And I haven't spent enough time to figure out how to get the compiler tool
     chain to split to an appropriate .lib from just a .def file.
 
@@ -17,7 +17,7 @@
   DLL name     : vrfcore.dll
   Symbol name  : _VerifierTlsGetValue@4
   Type         : code
-  Name type    : undecorate 
+  Name type    : undecorate
   Hint         : 42
   Name         : VerifierTlsGetValue
 
@@ -43,15 +43,15 @@
   EXPORTS
       VerifierTlsGetValue = _VerifierTlsGetValue@4
 
-    This also doesn't work the way I'd like it to. There are other online 
+    This also doesn't work the way I'd like it to. There are other online
     resources that came to the same conclusion. There is also some third party
     tools to do it - but the appear to be antiquated and don't work. It's
     probably time for the community to put together a new tool that generates
     a .lib from the .dll/.def that actually works correctly.
 
     So, all that said, this is a "stub" vrfcore.dll just so that vfdynf can
-    link against it. 
-    
+    link against it.
+
     *** DO NOT INSTALL THIS AS A REAPLCEMENT FOR vrfcore.dll ON YOUR SYSTEM ***
 
 */
@@ -126,7 +126,7 @@ VerifierGetAppCallerAddress(
     )
 {
     UNREFERENCED_PARAMETER(ReturnAddress);
-    
+
     return NULL;
 }
 
@@ -140,7 +140,7 @@ VerifierShouldFaultInject(
 {
     UNREFERENCED_PARAMETER(Class);
     UNREFERENCED_PARAMETER(CallerAddress);
-    
+
     return FALSE;
 }
 
@@ -149,7 +149,7 @@ DWORD
 NTAPI
 VerifierRegisterFaultInjectProvider(
     _In_ DWORD Count,
-    _Out_ PDWORD ClassBase 
+    _Out_ PDWORD ClassBase
     )
 {
     UNREFERENCED_PARAMETER(Count);
@@ -266,7 +266,7 @@ VerifierTlsSetValue(
     return FALSE;
 }
 
-BOOL 
+BOOL
 APIENTRY
 DllMain(
     HMODULE Module,

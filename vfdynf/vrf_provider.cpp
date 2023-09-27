@@ -1,5 +1,5 @@
 /*
-    Copyright (c) Johnny Shaw. All rights reserved. 
+    Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <pch.h>
 
@@ -61,8 +61,8 @@ provider::ProcessAttach(
     _In_ HMODULE Module
     )
 {
-    auto err = VerifierRegisterLayerEx(Module, 
-                                       &layer::g_Descriptor, 
+    auto err = VerifierRegisterLayerEx(Module,
+                                       &layer::g_Descriptor,
                                        AVRF_LAYER_FLAG_TLS_SLOT);
     if (err != ERROR_SUCCESS)
     {

@@ -1,6 +1,6 @@
 # Application Verifier Dynamic Fault Injection
 
-`vfdynf.dll` is an application verifier provider that implements unique-stack 
+`vfdynf.dll` is an application verifier provider that implements unique-stack
 based systematic fault injection to simulate low resource scenarios.
 
 ![](appvw.png)
@@ -10,27 +10,27 @@ The integration also works with the command line (the `TEST` type is `DynFault`)
 appverif DynFault ... -for TARGET ... [-with [TEST.]PROPERTY=VALUE ...]
 ```
 
-"Dynamic Fault Injection" (DynFault) is a replacement for "Low Resource Simulation" 
-(LowRes) tests. LowRes is a probability-based (randomized) fault injection. 
-In contrast, DynFault tracks stack hashes when determining where to inject faults. 
-This provides better coverage when simulating low resource scenarios. DynFault 
-injects failures for wait, heap, virtual memory, registry, file, event, section, 
+"Dynamic Fault Injection" (DynFault) is a replacement for "Low Resource Simulation"
+(LowRes) tests. LowRes is a probability-based (randomized) fault injection.
+In contrast, DynFault tracks stack hashes when determining where to inject faults.
+This provides better coverage when simulating low resource scenarios. DynFault
+injects failures for wait, heap, virtual memory, registry, file, event, section,
 and OLE string APIs. These are the same APIs as LowRes.
 
 The ability to exclude modules in LowRes is limited. DynFault, in contrast, enables
-you to exclude stacks containing symbols matched by a set of regular expressions. 
-Why is this helpful? I'll provide an example, which was the impetus for me reversing 
-the undocumented parts of verifier to implement this library. 
-[MSVC implemented debug iterators][msvc.dbgit] which are valuable to identify bugs but 
-break `noexcept` contracts. For example, the default `std::string` constructor is marked 
-`noexcept` but with debug iterators enabled an allocation could occur within it and throw 
-an exception. The cpp exception handling then can't locate a handler past `noexcept`. The 
-contract is such that if an exception would cross that boundary the implementation should 
-terminate the program. Hopefully you can see the problem with the limited functionality 
-of LowRes (you can't use it with debug iterators). To solve this DynFault has a 
-property that allows you to define a list of regular expressions. When DynFault encounters 
-a stack matching any expression in this list, that stack hash is excluded from fault 
-injection. As an example, this regular expression tries to isolate stacks containing 
+you to exclude stacks containing symbols matched by a set of regular expressions.
+Why is this helpful? I'll provide an example, which was the impetus for me reversing
+the undocumented parts of verifier to implement this library.
+[MSVC implemented debug iterators][msvc.dbgit] which are valuable to identify bugs but
+break `noexcept` contracts. For example, the default `std::string` constructor is marked
+`noexcept` but with debug iterators enabled an allocation could occur within it and throw
+an exception. The cpp exception handling then can't locate a handler past `noexcept`. The
+contract is such that if an exception would cross that boundary the implementation should
+terminate the program. Hopefully you can see the problem with the limited functionality
+of LowRes (you can't use it with debug iterators). To solve this DynFault has a
+property that allows you to define a list of regular expressions. When DynFault encounters
+a stack matching any expression in this list, that stack hash is excluded from fault
+injection. As an example, this regular expression tries to isolate stacks containing
 `std::basic_string`'s default constructor:
 
 ```
@@ -75,7 +75,7 @@ Enabling the best of both worlds - debug iterators and fault injection!
 
 ## Installation
 
-At this time there is no installer/script to automate installation. Here are the instructions to 
+At this time there is no installer/script to automate installation. Here are the instructions to
 manually install the library:
 
 1. copy `vfdynf.dll` to `C:\Windows\System32` (or `SysWOW64` for x86 support on an x64 OS)
@@ -83,12 +83,12 @@ manually install the library:
     - `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{ApplicationVerifierGlobalSettings}`
     - `VerifierProviders`
 
-At this point `vfdynf.dll` is "registered" with application verifier and it should show up in the options 
+At this point `vfdynf.dll` is "registered" with application verifier and it should show up in the options
 via the command line or in the user interface.
 
 ## Building
 
-The repo uses submodules, after cloning be sure to init and update the submodules. 
+The repo uses submodules, after cloning be sure to init and update the submodules.
 
 ```
 git clone https://github.com/jxy-s/vfdynf
@@ -101,8 +101,8 @@ MSBuild .\vfdynf.sln
 
 The following are used without modification. Credits to their authors.
 
-- [Process Hacker Native API Headers][github.phnt]   
-Collection of Native API header files. Gathered from Microsoft header files and 
+- [Process Hacker Native API Headers][github.phnt]
+Collection of Native API header files. Gathered from Microsoft header files and
 symbol files, as well as a lot of reverse engineering and guessing.
 
 [//]: # (Hyperlink IDs)

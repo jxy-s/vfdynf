@@ -1,9 +1,9 @@
 /*
-    Copyright (c) Johnny Shaw. All rights reserved. 
+    Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <pch.h>
 
-BOOL 
+BOOL
 WINAPI
 DllMain(
     _In_ HMODULE Module,

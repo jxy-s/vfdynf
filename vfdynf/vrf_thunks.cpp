@@ -1,9 +1,9 @@
 /*
-    Copyright (c) Johnny Shaw. All rights reserved. 
+    Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <pch.h>
 
-#define THUNK(x) { #x, nullptr, Hook_##x } 
+#define THUNK(x) { #x, nullptr, Hook_##x }
 
 namespace thunks
 {
