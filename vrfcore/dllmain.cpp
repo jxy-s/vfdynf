@@ -55,8 +55,11 @@
     *** DO NOT INSTALL THIS AS A REAPLCEMENT FOR vrfcore.dll ON YOUR SYSTEM ***
 
 */
-#include <phnt_windows.h>
-#include <phnt.h>
+#define WIN32LEAN_AND_MEAN
+#define WIN32_NO_STATUS
+#include <Windows.h>
+#undef WIN32_NO_STATUS
+#include <ntstatus.h>
 #include <vrfapi.h>
 
 NTSYSAPI

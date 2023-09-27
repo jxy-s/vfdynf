@@ -6,4 +6,7 @@
   <ItemGroup>
     <None Include="vrfcore.def" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\vrfapi.h" />
+  </ItemGroup>
 </Project>
