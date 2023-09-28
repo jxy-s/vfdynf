@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="pcre2_vfdynf.c" />
+    <ClCompile Include="..\ext\pcre2\pcre2_auto_possess.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_chartables.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_compile.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_config.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_convert.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_dfa_match.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_extuni.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_find_bracket.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_jit_compile.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_maketables.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_match.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_match_data.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_newline.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_ord2utf.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_pattern_info.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_script_run.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_serialize.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_string_utils.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_study.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_substitute.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_substring.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_tables.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_ucd.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_valid_utf.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_xclass.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_context.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_error.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ext\pcre2\pcre2_ucptables.c">
+      <Filter>pcre2</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\pcre2_vfdynf.h" />
+    <ClInclude Include="..\ext\pcre2\config.h">
+      <Filter>pcre2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\pcre2\pcre2.h">
+      <Filter>pcre2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\pcre2\pcre2_internal.h">
+      <Filter>pcre2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\pcre2\pcre2_ucp.h">
+      <Filter>pcre2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\pcre2\pcre2_intmodedep.h">
+      <Filter>pcre2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\pcre2\pcre2_jit_neon_inc.h">
+      <Filter>pcre2</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ext\pcre2\pcre2_jit_simd_inc.h">
+      <Filter>pcre2</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="pcre2">
+      <UniqueIdentifier>{cc911d4e-1f58-4a95-981b-0726d5231fa2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

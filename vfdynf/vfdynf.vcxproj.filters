@@ -1,38 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="pch.cpp" />
-    <ClCompile Include="vrf_fault.cpp" />
-    <ClCompile Include="vrf_props.cpp" />
-    <ClCompile Include="hook_file.cpp" />
-    <ClCompile Include="vrf_thunks.cpp" />
-    <ClCompile Include="hook_heap.cpp" />
-    <ClCompile Include="hook_ole.cpp" />
-    <ClCompile Include="hook_event.cpp" />
-    <ClCompile Include="hook_wait.cpp" />
-    <ClCompile Include="hook_reg.cpp" />
-    <ClCompile Include="hook_vmem.cpp" />
-    <ClCompile Include="hook_section.cpp" />
-    <ClCompile Include="vrf_callbacks.cpp" />
-    <ClCompile Include="vrf_layer.cpp" />
-    <ClCompile Include="vrf_provider.cpp" />
+    <ClCompile Include="dllmain.c" />
+    <ClCompile Include="fault.c" />
+    <ClCompile Include="stacktrk.c" />
+    <ClCompile Include="hooks.c" />
+    <ClCompile Include="crt_vfdynf.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="vrf_fault.hpp" />
-    <ClInclude Include="vrf_props.hpp" />
-    <ClInclude Include="hook_file.hpp" />
-    <ClInclude Include="vrf_thunks.hpp" />
-    <ClInclude Include="hook_heap.hpp" />
-    <ClInclude Include="hook_ole.hpp" />
-    <ClInclude Include="hook_event.hpp" />
-    <ClInclude Include="hook_wait.hpp" />
-    <ClInclude Include="hook_reg.hpp" />
-    <ClInclude Include="hook_vmem.hpp" />
-    <ClInclude Include="hook_section.hpp" />
-    <ClInclude Include="vrf_callbacks.hpp" />
-    <ClInclude Include="vrf_layer.hpp" />
-    <ClInclude Include="vrf_provider.hpp" />
+    <ClInclude Include="vfdynf.h" />
   </ItemGroup>
 </Project>
