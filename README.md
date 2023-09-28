@@ -105,8 +105,17 @@ The following are used without modification. Credits to their authors.
 Collection of Native API header files. Gathered from Microsoft header files and
 symbol files, as well as a lot of reverse engineering and guessing.
 
+- [PCRE2 - Perl-Compatible Regular Expressions][github.pcre2]
+The PCRE2 library is a set of C functions that implement regular expression
+pattern matching using the same syntax and semantics as Perl 5. PCRE2 has its
+own native API, as well as a set of wrapper functions that correspond to the
+POSIX regular expression API. The PCRE2 library is free, even for building
+proprietary software. It comes in three forms, for processing 8-bit, 16-bit,
+or 32-bit code units, in either literal or UTF encoding.
+
 [//]: # (Hyperlink IDs)
 [github.phnt]: https://github.com/winsiderss/phnt/
+[github.pcre2]: https://github.com/PCRE2Project/pcre2
 [msvc.dbgit]: https://docs.microsoft.com/en-us/cpp/standard-library/debug-iterator-support?view=msvc-170
 
 And, Grandfather Derpington ;)

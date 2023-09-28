@@ -158,6 +158,8 @@ VerifierRegisterFaultInjectProvider(
     UNREFERENCED_PARAMETER(Count);
     UNREFERENCED_PARAMETER(ClassBase);
 
+    *ClassBase = 0;
+
     return ERROR_NOINTERFACE;
 }
 
