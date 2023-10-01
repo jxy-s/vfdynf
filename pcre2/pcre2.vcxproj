@@ -165,7 +165,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>HAVE_CONFIG_H;PCRE2_STATIC=1;PCRE2_CODE_UNIT_WIDTH=16;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
@@ -176,9 +175,8 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)include\;$(SolutionDir)ext\submodules\phnt\;$(SolutionDir)ext\pcre2\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4115;4324;4389;4244;4206;4701;4702;4704;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -194,7 +192,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>HAVE_CONFIG_H;PCRE2_STATIC=1;PCRE2_CODE_UNIT_WIDTH=16;WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
@@ -205,9 +202,8 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)include\;$(SolutionDir)ext\submodules\phnt\;$(SolutionDir)ext\pcre2\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4115;4324;4389;4244;4206;4701;4702;4704;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -225,7 +221,6 @@
       <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>HAVE_CONFIG_H;PCRE2_STATIC=1;PCRE2_CODE_UNIT_WIDTH=16;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
@@ -236,7 +231,6 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)include\;$(SolutionDir)ext\submodules\phnt\;$(SolutionDir)ext\pcre2\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4115;4324;4389;4244;4206;4701;4702;4704;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -256,7 +250,6 @@
       <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>HAVE_CONFIG_H;PCRE2_STATIC=1;PCRE2_CODE_UNIT_WIDTH=16;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
@@ -267,7 +260,6 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)include\;$(SolutionDir)ext\submodules\phnt\;$(SolutionDir)ext\pcre2\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4115;4324;4389;4244;4206;4701;4702;4704;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -285,7 +277,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>HAVE_CONFIG_H;PCRE2_STATIC=1;PCRE2_CODE_UNIT_WIDTH=16;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
@@ -296,9 +287,8 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)include\;$(SolutionDir)ext\submodules\phnt\;$(SolutionDir)ext\pcre2\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4115;4324;4389;4244;4206;4701;4702;4704;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
       <SupportJustMyCode>false</SupportJustMyCode>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -316,7 +306,6 @@
       <WarningLevel>Level4</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>HAVE_CONFIG_H;PCRE2_STATIC=1;PCRE2_CODE_UNIT_WIDTH=16;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>
@@ -327,7 +316,6 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir)include\;$(SolutionDir)ext\submodules\phnt\;$(SolutionDir)ext\pcre2\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4115;4324;4389;4244;4206;4701;4702;4704;4706;%(DisableSpecificWarnings)</DisableSpecificWarnings>
-      <BufferSecurityCheck>false</BufferSecurityCheck>
     </ClCompile>
     <Link>
       <SubSystem>

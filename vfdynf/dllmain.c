@@ -298,6 +298,8 @@ BOOL WINAPI DllMain(
         }
         case DLL_PROCESS_ATTACH:
         {
+            __security_init_cookie();
+
             if (!AVrfpProviderProcessAttach(Module))
             {
                 return FALSE;
