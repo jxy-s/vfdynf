@@ -55,7 +55,7 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"EnableFaultMask",
         &AVrfProperties.EnableFaultMask,
         sizeof(AVrfProperties.EnableFaultMask),
-        L"Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole.",
+        L"Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage.",
         NULL
     },
     {
@@ -261,6 +261,15 @@ BOOLEAN AVrfpProviderProcessAttach(
         return FALSE;
     }
 
+    if (!AVrfExceptProcessAttach())
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: failed to set exception handler");
+        __debugbreak();
+        return FALSE;
+    }
+
     recursionCount = AVrfLayerGetRecursionCount();
     AVrfLayerSetRecursionCount(recursionCount + 1);
 
@@ -276,6 +285,8 @@ VOID AVrfpProviderProcessDetach(
     )
 {
     AVrfFaultProcessDetach();
+
+    AVrfExceptProcessDetach();
 
     VerifierUnregisterLayer(Module, &AVrfpLayerDescriptor);
 }
