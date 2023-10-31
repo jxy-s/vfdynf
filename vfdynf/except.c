@@ -13,7 +13,7 @@ typedef struct _VFDYNF_GUARD_PAGE_ENTRY
 
 typedef struct _VFDYNF_EXCEPT_CONTEXT
 {
-    BOOLEAN Initialized;
+    PVOID Handle;
     RTL_CRITICAL_SECTION CriticalSection;
     ULONG GuardEntryCount;
     VFDYNF_GUARD_PAGE_ENTRY GuardEntries[VFDYNF_GUARD_PAGE_COUNT];
@@ -21,7 +21,7 @@ typedef struct _VFDYNF_EXCEPT_CONTEXT
 
 static VFDYNF_EXCEPT_CONTEXT AVrfpExceptContext =
 {
-    .Initialized = FALSE,
+    .Handle = NULL,
     .CriticalSection = { 0 },
     .GuardEntryCount = 0,
     .GuardEntries = { 0 },
@@ -148,16 +148,24 @@ BOOLEAN AVrfExceptProcessAttach(
 {
     NTSTATUS status;
 
+    if (AVrfpExceptContext.Handle)
+    {
+        return TRUE;
+    }
+
     status = RtlInitializeCriticalSection(&AVrfpExceptContext.CriticalSection);
     if (!NT_SUCCESS(status))
     {
         return FALSE;
     }
 
-    AVrfpExceptContext.Initialized = TRUE;
+    AVrfpExceptContext.Handle =
+        RtlAddVectoredExceptionHandler(ULONG_MAX, AVrfpVectoredExceptionHandler);
 
-    if (!RtlAddVectoredExceptionHandler(ULONG_MAX, AVrfpVectoredExceptionHandler))
+    if (!AVrfpExceptContext.Handle)
     {
+        RtlDeleteCriticalSection(&AVrfpExceptContext.CriticalSection);
+
         return FALSE;
     }
 
@@ -168,12 +176,14 @@ VOID AVrfExceptProcessDetach(
     VOID
     )
 {
-    if (!AVrfpExceptContext.Initialized)
+    if (!AVrfpExceptContext.Handle)
     {
         return;
     }
 
+    RtlRemoveVectoredExceptionHandler(AVrfpExceptContext.Handle);
+
     RtlDeleteCriticalSection(&AVrfpExceptContext.CriticalSection);
 
-    AVrfpExceptContext.Initialized = FALSE;
+    AVrfpExceptContext.Handle = NULL;
 }
