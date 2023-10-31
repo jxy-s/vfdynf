@@ -300,6 +300,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crt_vfdynf.c" />
+    <ClCompile Include="except.c" />
     <ClCompile Include="hooks.c" />
     <ClCompile Include="stacktrk.c" />
     <ClCompile Include="dllmain.c" />

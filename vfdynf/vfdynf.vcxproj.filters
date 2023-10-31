@@ -6,6 +6,7 @@
     <ClCompile Include="stacktrk.c" />
     <ClCompile Include="hooks.c" />
     <ClCompile Include="crt_vfdynf.c" />
+    <ClCompile Include="except.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vfdynf.h" />

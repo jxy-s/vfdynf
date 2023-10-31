@@ -643,6 +643,7 @@ BOOLEAN AVrfFaultProcessAttach(
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_EVENT);
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_SECTION);
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_OLE);
+    AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_INPAGE);
 
     //
     // By default the system doesn't rely on probability for fault injection.
@@ -656,6 +657,7 @@ BOOLEAN AVrfFaultProcessAttach(
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_EVENT);
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_SECTION);
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_OLE);
+    AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_INPAGE);
 
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_WAIT), L"Wait APIs");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_HEAP), L"Heap APIs");
@@ -665,6 +667,7 @@ BOOLEAN AVrfFaultProcessAttach(
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_EVENT), L"Event APIs");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_SECTION), L"Section APIs");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_OLE), L"OLE String APIs");
+    VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_INPAGE), L"Section In-Page");
 
     if (!AVrfProperties.FaultSeed)
     {

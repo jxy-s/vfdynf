@@ -70,8 +70,9 @@ typedef struct _VFDYNF_PROPERTIES
 #define VFDYNF_FAULT_TYPE_EVENT    0x00000020ul
 #define VFDYNF_FAULT_TYPE_SECTION  0x00000040ul
 #define VFDYNF_FAULT_TYPE_OLE      0x00000080ul
+#define VFDYNF_FAULT_TYPE_INPAGE   0x00000100ul
 
-#define VFDYNF_FAULT_TYPE_COUNT    8ul
+#define VFDYNF_FAULT_TYPE_COUNT    9ul
 
 #define VFDYNF_FAULT_VALID_MASK (VFDYNF_FAULT_TYPE_WAIT                      |\
                                  VFDYNF_FAULT_TYPE_HEAP                      |\
@@ -80,7 +81,8 @@ typedef struct _VFDYNF_PROPERTIES
                                  VFDYNF_FAULT_TYPE_FILE                      |\
                                  VFDYNF_FAULT_TYPE_EVENT                     |\
                                  VFDYNF_FAULT_TYPE_SECTION                   |\
-                                 VFDYNF_FAULT_TYPE_OLE)
+                                 VFDYNF_FAULT_TYPE_OLE                       |\
+                                 VFDYNF_FAULT_TYPE_INPAGE)
 
 // dllmain.c
 
@@ -99,6 +101,20 @@ ULONG AVrfLayerGetRecursionCount(
 extern RTL_VERIFIER_DLL_DESCRIPTOR AVrfDllDescriptors[];
 
 BOOLEAN AVrfHookProcessAttach(
+    VOID
+    );
+
+// except.c
+
+VOID AVrfGuardToConvertToInPageError(
+    _In_ PVOID Address
+    );
+
+BOOLEAN AVrfExceptProcessAttach(
+    VOID
+    );
+
+VOID AVrfExceptProcessDetach(
     VOID
     );
 

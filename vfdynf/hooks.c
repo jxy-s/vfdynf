@@ -1375,21 +1375,32 @@ Hook_NtMapViewOfSection(
     _In_ ULONG Win32Protect
     )
 {
+    NTSTATUS status;
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         return STATUS_NO_MEMORY;
     }
 
-    return Orig_NtMapViewOfSection(SectionHandle,
-                                   ProcessHandle,
-                                   BaseAddress,
-                                   ZeroBits,
-                                   CommitSize,
-                                   SectionOffset,
-                                   ViewSize,
-                                   InheritDisposition,
-                                   AllocationType,
-                                   Win32Protect);
+    status = Orig_NtMapViewOfSection(SectionHandle,
+                                     ProcessHandle,
+                                     BaseAddress,
+                                     ZeroBits,
+                                     CommitSize,
+                                     SectionOffset,
+                                     ViewSize,
+                                     InheritDisposition,
+                                     AllocationType,
+                                     Win32Protect);
+
+    if (NT_SUCCESS(status) &&
+        (ProcessHandle == NtCurrentProcess()) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(*BaseAddress);
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -1406,20 +1417,31 @@ Hook_NtMapViewOfSectionEx(
     _In_ ULONG ExtendedParameterCount
     )
 {
+    NTSTATUS status;
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         return STATUS_NO_MEMORY;
     }
 
-    return Orig_NtMapViewOfSectionEx(SectionHandle,
-                                     ProcessHandle,
-                                     BaseAddress,
-                                     SectionOffset,
-                                     ViewSize,
-                                     AllocationType,
-                                     Win32Protect,
-                                     ExtendedParameters,
-                                     ExtendedParameterCount);
+    status = Orig_NtMapViewOfSectionEx(SectionHandle,
+                                       ProcessHandle,
+                                       BaseAddress,
+                                       SectionOffset,
+                                       ViewSize,
+                                       AllocationType,
+                                       Win32Protect,
+                                       ExtendedParameters,
+                                       ExtendedParameterCount);
+
+    if (NT_SUCCESS(status) &&
+        (ProcessHandle == NtCurrentProcess()) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(*BaseAddress);
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -2822,17 +2844,26 @@ Hook_Kernel32_MapViewOfFile(
     _In_ SIZE_T dwNumberOfBytesToMap
     )
 {
+    LPVOID result;
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
-    return Orig_Kernel32_MapViewOfFile(hFileMappingObject,
-                                       dwDesiredAccess,
-                                       dwFileOffsetHigh,
-                                       dwFileOffsetLow,
-                                       dwNumberOfBytesToMap);
+    result = Orig_Kernel32_MapViewOfFile(hFileMappingObject,
+                                         dwDesiredAccess,
+                                         dwFileOffsetHigh,
+                                         dwFileOffsetLow,
+                                         dwNumberOfBytesToMap);
+
+    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(result);
+    }
+
+    return result;
 }
 
 LPVOID
@@ -2846,18 +2877,27 @@ Hook_Kernel32_MapViewOfFileEx(
     _In_opt_ LPVOID lpBaseAddress
     )
 {
+    LPVOID result;
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
-    return Orig_Kernel32_MapViewOfFileEx(hFileMappingObject,
-                                         dwDesiredAccess,
-                                         dwFileOffsetHigh,
-                                         dwFileOffsetLow,
-                                         dwNumberOfBytesToMap,
-                                         lpBaseAddress);
+    result = Orig_Kernel32_MapViewOfFileEx(hFileMappingObject,
+                                           dwDesiredAccess,
+                                           dwFileOffsetHigh,
+                                           dwFileOffsetLow,
+                                           dwNumberOfBytesToMap,
+                                           lpBaseAddress);
+
+    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(result);
+    }
+
+    return result;
 }
 
 LPVOID
@@ -3002,17 +3042,26 @@ Hook_KernelBase_MapViewOfFile(
     _In_ SIZE_T dwNumberOfBytesToMap
     )
 {
+    LPVOID result;
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
-    return Orig_KernelBase_MapViewOfFile(hFileMappingObject,
-                                         dwDesiredAccess,
-                                         dwFileOffsetHigh,
-                                         dwFileOffsetLow,
-                                         dwNumberOfBytesToMap);
+    result = Orig_KernelBase_MapViewOfFile(hFileMappingObject,
+                                           dwDesiredAccess,
+                                           dwFileOffsetHigh,
+                                           dwFileOffsetLow,
+                                           dwNumberOfBytesToMap);
+
+    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(result);
+    }
+
+    return result;
 }
 
 LPVOID
@@ -3026,18 +3075,27 @@ Hook_KernelBase_MapViewOfFileEx(
     _In_opt_ LPVOID lpBaseAddress
     )
 {
+    LPVOID result;
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
-    return Orig_KernelBase_MapViewOfFileEx(hFileMappingObject,
-                                           dwDesiredAccess,
-                                           dwFileOffsetHigh,
-                                           dwFileOffsetLow,
-                                           dwNumberOfBytesToMap,
-                                           lpBaseAddress);
+    result = Orig_KernelBase_MapViewOfFileEx(hFileMappingObject,
+                                             dwDesiredAccess,
+                                             dwFileOffsetHigh,
+                                             dwFileOffsetLow,
+                                             dwNumberOfBytesToMap,
+                                             lpBaseAddress);
+
+    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(result);
+    }
+
+    return result;
 }
 
 LPVOID
