@@ -69,7 +69,7 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | SymbolSearchPath   | String      | Symbol search path used for dynamic fault injection and applying exclusions. |
 | ExclusionsRegex    | MultiString | Excludes stack from fault injection when one of these regular expression matches the stack. |
 | DynamicFaultPeriod | DWORD       | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
-| EnableFaultMask    | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole. |
+| EnableFaultMask    | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage. |
 | FaultProbability   | DWORD       | Probability that a fault will be injected (0 - 1000000). |
 | FaultSeed          | DWORD       | Seed used for fault randomization. A value of zero will generate a random seed. |
 
