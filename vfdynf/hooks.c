@@ -249,6 +249,21 @@ NtMapViewOfSectionEx, (
 
 VFDYNF_DECLARE_HOOK(
 NTSTATUS,
+NtUnmapViewOfSection, (
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NtUnmapViewOfSectionEx, (
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress,
+    _In_ ULONG Flags
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
 NtAllocateVirtualMemory, (
     _In_ HANDLE ProcessHandle,
     _Inout_ _At_(*BaseAddress, _Readable_bytes_(*RegionSize) _Writable_bytes_(*RegionSize) _Post_readable_byte_size_(*RegionSize)) PVOID* BaseAddress,
@@ -562,6 +577,19 @@ MapViewOfFileEx, (
     ));
 
 VFDYNF_DECLARE_HOOK_K32BASE(
+BOOL,
+UnmapViewOfFile, (
+    _In_ LPCVOID lpBaseAddress
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASE(
+BOOL,
+UnmapViewOfFileEx, (
+    _In_ PVOID BaseAddress,
+    _In_ ULONG UnmapFlags
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASE(
 LPVOID,
 VirtualAlloc, (
     _In_opt_ LPVOID lpAddress,
@@ -603,6 +631,8 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpNtdll[] =
     VFDYNF_THUNK(NtOpenSection),
     VFDYNF_THUNK(NtMapViewOfSection),
     VFDYNF_THUNK(NtMapViewOfSectionEx),
+    VFDYNF_THUNK(NtUnmapViewOfSection),
+    VFDYNF_THUNK(NtUnmapViewOfSectionEx),
     { NULL, 0, NULL }
 };
 
@@ -640,6 +670,8 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpKernel32[] =
     VFDYNF_THUNK_EX("OpenFileMappingA", Kernel32_OpenFileMappingA),
     VFDYNF_THUNK_EX("MapViewOfFile", Kernel32_MapViewOfFile),
     VFDYNF_THUNK_EX("MapViewOfFileEx", Kernel32_MapViewOfFileEx),
+    VFDYNF_THUNK_EX("UnmapViewOfFile", Kernel32_UnmapViewOfFile),
+    VFDYNF_THUNK_EX("UnmapViewOfFileEx", Kernel32_UnmapViewOfFileEx),
     VFDYNF_THUNK_EX("VirtualAlloc", Kernel32_VirtualAlloc),
     VFDYNF_THUNK_EX("VirtualAllocEx", Kernel32_VirtualAllocEx),
     { NULL, 0, NULL }
@@ -679,6 +711,8 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpKernelBase[] =
     VFDYNF_THUNK_EX("OpenFileMappingA", KernelBase_OpenFileMappingA),
     VFDYNF_THUNK_EX("MapViewOfFile", KernelBase_MapViewOfFile),
     VFDYNF_THUNK_EX("MapViewOfFileEx", KernelBase_MapViewOfFileEx),
+    VFDYNF_THUNK_EX("UnmapViewOfFile", KernelBase_UnmapViewOfFile),
+    VFDYNF_THUNK_EX("UnmapViewOfFileEx", KernelBase_UnmapViewOfFileEx),
     VFDYNF_THUNK_EX("VirtualAlloc", KernelBase_VirtualAlloc),
     VFDYNF_THUNK_EX("VirtualAllocEx", KernelBase_VirtualAllocEx),
     { NULL, 0, NULL }
@@ -775,6 +809,8 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook(AVrfpNtdll, NtOpenSection);
     AVrfLinkHook(AVrfpNtdll, NtMapViewOfSection);
     AVrfLinkHook(AVrfpNtdll, NtMapViewOfSectionEx);
+    AVrfLinkHook(AVrfpNtdll, NtUnmapViewOfSection);
+    AVrfLinkHook(AVrfpNtdll, NtUnmapViewOfSectionEx);
 
     AVrfLinkHook(AVrfpKernel32, Kernel32_GlobalAlloc);
     AVrfLinkHook(AVrfpKernel32, Kernel32_GlobalReAlloc);
@@ -808,6 +844,8 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook(AVrfpKernel32, Kernel32_OpenFileMappingA);
     AVrfLinkHook(AVrfpKernel32, Kernel32_MapViewOfFile);
     AVrfLinkHook(AVrfpKernel32, Kernel32_MapViewOfFileEx);
+    AVrfLinkHook(AVrfpKernel32, Kernel32_UnmapViewOfFile);
+    AVrfLinkHook(AVrfpKernel32, Kernel32_UnmapViewOfFileEx);
     AVrfLinkHook(AVrfpKernel32, Kernel32_VirtualAlloc);
     AVrfLinkHook(AVrfpKernel32, Kernel32_VirtualAllocEx);
 
@@ -843,6 +881,8 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook(AVrfpKernelBase, KernelBase_OpenFileMappingA);
     AVrfLinkHook(AVrfpKernelBase, KernelBase_MapViewOfFile);
     AVrfLinkHook(AVrfpKernelBase, KernelBase_MapViewOfFileEx);
+    AVrfLinkHook(AVrfpKernelBase, KernelBase_UnmapViewOfFile);
+    AVrfLinkHook(AVrfpKernelBase, KernelBase_UnmapViewOfFileEx);
     AVrfLinkHook(AVrfpKernelBase, KernelBase_VirtualAlloc);
     AVrfLinkHook(AVrfpKernelBase, KernelBase_VirtualAllocEx);
 
@@ -1442,6 +1482,37 @@ Hook_NtMapViewOfSectionEx(
     }
 
     return status;
+}
+
+NTSTATUS
+NTAPI
+Hook_NtUnmapViewOfSection(
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress
+    )
+{
+    if ((ProcessHandle == NtCurrentProcess()) && BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_NtUnmapViewOfSection(ProcessHandle, BaseAddress);
+}
+
+NTSTATUS
+NTAPI
+Hook_NtUnmapViewOfSectionEx(
+    _In_ HANDLE ProcessHandle,
+    _In_opt_ PVOID BaseAddress,
+    _In_ ULONG Flags
+    )
+{
+    if ((ProcessHandle == NtCurrentProcess()) && BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_NtUnmapViewOfSectionEx(ProcessHandle, BaseAddress, Flags);
 }
 
 NTSTATUS
@@ -2900,6 +2971,35 @@ Hook_Kernel32_MapViewOfFileEx(
     return result;
 }
 
+BOOL
+WINAPI
+Hook_Kernel32_UnmapViewOfFile(
+    _In_ PVOID BaseAddress
+    )
+{
+    if (BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_Kernel32_UnmapViewOfFile(BaseAddress);
+}
+
+BOOL
+WINAPI
+Hook_Kernel32_UnmapViewOfFileEx(
+    _In_ PVOID BaseAddress,
+    _In_ ULONG UnmapFlags
+    )
+{
+    if (BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_Kernel32_UnmapViewOfFileEx(BaseAddress, UnmapFlags);
+}
+
 LPVOID
 WINAPI
 Hook_Kernel32_VirtualAlloc(
@@ -3096,6 +3196,35 @@ Hook_KernelBase_MapViewOfFileEx(
     }
 
     return result;
+}
+
+BOOL
+WINAPI
+Hook_KernelBase_UnmapViewOfFile(
+    _In_ PVOID BaseAddress
+    )
+{
+    if (BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_KernelBase_UnmapViewOfFile(BaseAddress);
+}
+
+BOOL
+WINAPI
+Hook_KernelBase_UnmapViewOfFileEx(
+    _In_ PVOID BaseAddress,
+    _In_ ULONG UnmapFlags
+    )
+{
+    if (BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_KernelBase_UnmapViewOfFileEx(BaseAddress, UnmapFlags);
 }
 
 LPVOID
