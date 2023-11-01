@@ -74,6 +74,78 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"Seed used for fault randomization. A value of zero will generate a random seed.",
         NULL
     },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"WaitExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_WAIT],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_WAIT]),
+        L"Excludes stack from wait fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"HeapExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_HEAP],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_HEAP]),
+        L"Excludes stack from heap fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"VMemExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_VMEM],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_VMEM]),
+        L"Excludes stack from virtual memory fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"RegExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_REG],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_REG]),
+        L"Excludes stack from registry fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"FileExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FILE],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FILE]),
+        L"Excludes stack from file fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"EventExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_EVENT],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_EVENT]),
+        L"Excludes stack from event fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"SectionExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_SECTION],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_SECTION]),
+        L"Excludes stack from section fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"OleExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_OLE],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_OLE]),
+        L"Excludes stack from OLE fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"InPageExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_INPAGE],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_INPAGE]),
+        L"Excludes stack from section in-page fault injection when one of these regular expression matches the stack.",
+        NULL
+    },
     { AVRF_PROPERTY_NONE, NULL, NULL, 0, NULL, NULL }
 };
 
