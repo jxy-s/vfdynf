@@ -3,6 +3,12 @@
 */
 #include <vfdynf.h>
 
+typedef struct _VFDYNF_EXCLUSION_REGEX
+{
+    ULONG Count;
+    PPCRE2_CONTEXT Regex;
+} VFDYNF_EXCLUSION_REGEX, *PVFDYNF_EXCLUSION_REGEX;
+
 typedef struct _VFDYNF_FAULT_CONTEXT
 {
     BOOLEAN Initialized;
@@ -11,8 +17,8 @@ typedef struct _VFDYNF_FAULT_CONTEXT
     ULONG64 LastClear;
     AVRF_STACK_TABLE StackTable;
     BOOLEAN ExclusionsRegexInitialized;
-    ULONG ExclusionsRegexCount;
-    PPCRE2_CONTEXT ExclusionsRegex;
+    VFDYNF_EXCLUSION_REGEX Exclusions;
+    VFDYNF_EXCLUSION_REGEX TypeExclusions[VFDYNF_FAULT_TYPE_COUNT];
     BYTE SymInfoBuffer[sizeof(SYMBOL_INFOW) + ((MAX_SYM_NAME + 1) * sizeof(WCHAR))];
     WCHAR SymbolBuffer[MAX_SYM_NAME + 1 + MAX_PATH];
     WCHAR StackSymbolBuffer[UNICODE_STRING_MAX_CHARS];
@@ -26,23 +32,31 @@ static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
     .LastClear = 0,
     .StackTable = { 0 },
     .ExclusionsRegexInitialized = FALSE,
-    .ExclusionsRegex = NULL,
+    .Exclusions = { 0 },
+    .TypeExclusions = { 0 },
     .SymInfoBuffer = { 0 },
     .SymbolBuffer = { 0 },
     .StackSymbolBuffer = { 0 },
 };
 
-ULONG AVrfpFaultTypeClass(
+ULONG AVrfpFaultTypeIndex(
     _In_ ULONG FaultType
     )
 {
     ULONG index;
 
-    AVFR_ASSERT(AVrfpFaultContext.TypeBase != ULONG_MAX);
-
     BitScanReverse(&index, FaultType);
 
-    return (AVrfpFaultContext.TypeBase + index);
+    return index;
+}
+
+ULONG AVrfpFaultTypeClass(
+    _In_ ULONG FaultType
+    )
+{
+    AVFR_ASSERT(AVrfpFaultContext.TypeBase != ULONG_MAX);
+
+    return (AVrfpFaultContext.TypeBase + AVrfpFaultTypeIndex(FaultType));
 }
 
 BOOL CALLBACK AVrfpSymbolRegsteredCallback(
@@ -102,20 +116,13 @@ BOOL CALLBACK AVrfpSymbolRegsteredCallback(
     return TRUE;
 }
 
-BOOLEAN AVrfpInitExclusionsRegex(
-    VOID
+BOOLEAN AVrfpInitExclusionsRegexInternal(
+    _In_ PWCHAR Pattern,
+    _Out_ PVFDYNF_EXCLUSION_REGEX Exclusion
     )
 {
     ULONG offset;
     ULONG count;
-
-    //
-    // The exclusions regular expressions is a REG_MULTI_SZ from the properties
-    // verifier loads on our behalf. Parse each block of the multi terminated
-    // string into the regex vector. We do this so we don't have to construct
-    // the regex object every time.
-    //
-    AVFR_ASSERT(!AVrfpFaultContext.ExclusionsRegexInitialized);
 
     offset = 0;
     count = 0;
@@ -123,7 +130,7 @@ BOOLEAN AVrfpInitExclusionsRegex(
     {
         UNICODE_STRING pattern;
 
-        RtlInitUnicodeString(&pattern, &AVrfProperties.ExclusionsRegex[offset]);
+        RtlInitUnicodeString(&pattern, &Pattern[offset]);
         if (!pattern.Length)
         {
             break;
@@ -134,11 +141,18 @@ BOOLEAN AVrfpInitExclusionsRegex(
         offset += ((pattern.Length / sizeof(WCHAR)) + 1);
     }
 
-    AVrfpFaultContext.ExclusionsRegexCount = count;
-    AVrfpFaultContext.ExclusionsRegex = RtlAllocateHeap(RtlProcessHeap(),
-                                                        0,
-                                                        count * sizeof(PCRE2_CONTEXT));
-    if (!AVrfpFaultContext.ExclusionsRegex)
+    if (!count)
+    {
+        Exclusion->Count = 0;
+        Exclusion->Regex = NULL;
+        return TRUE;
+    }
+
+    Exclusion->Count = count;
+    Exclusion->Regex = RtlAllocateHeap(RtlProcessHeap(),
+                                       0,
+                                       count * sizeof(PCRE2_CONTEXT));
+    if (!Exclusion->Regex)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_ERROR_LEVEL,
@@ -155,7 +169,7 @@ BOOLEAN AVrfpInitExclusionsRegex(
         UNICODE_STRING pattern;
         PCRE2_CONTEXT pcre2;
 
-        RtlInitUnicodeString(&pattern, &AVrfProperties.ExclusionsRegex[offset]);
+        RtlInitUnicodeString(&pattern, &Pattern[offset]);
         if (!pattern.Length)
         {
             break;
@@ -172,26 +186,83 @@ BOOLEAN AVrfpInitExclusionsRegex(
             return FALSE;
         }
 
-        AVFR_ASSERT(count < AVrfpFaultContext.ExclusionsRegexCount);
+        AVFR_ASSERT(count < Exclusion->Count);
 
-        AVrfpFaultContext.ExclusionsRegex[count++] = pcre2;
+        Exclusion->Regex[count++] = pcre2;
 
         offset += ((pattern.Length / sizeof(WCHAR)) + 1);
     }
 
-    AVrfpFaultContext.ExclusionsRegexInitialized = TRUE;
     return TRUE;
 }
 
-BOOLEAN AVrfpIsStackOverriddenByRegex(
-    _In_ PUNICODE_STRING StackSymbols
+BOOLEAN AVrfpInitExclusionsRegex(
+    VOID
     )
 {
+
+    //
+    // The exclusions regular expressions is a REG_MULTI_SZ from the properties
+    // verifier loads on our behalf. Parse each block of the multi terminated
+    // string into the regex vector. We do this so we don't have to construct
+    // the regex object every time.
+    //
+    AVFR_ASSERT(!AVrfpFaultContext.ExclusionsRegexInitialized);
+
+    if (!AVrfpInitExclusionsRegexInternal(AVrfProperties.ExclusionsRegex,
+                                          &AVrfpFaultContext.Exclusions))
+    {
+        return FALSE;
+    }
+
+    for (ULONG i = 0; i < VFDYNF_FAULT_TYPE_COUNT; i++)
+    {
+        if (!AVrfpInitExclusionsRegexInternal(AVrfProperties.TypeExclusionsRegex[i],
+                                              &AVrfpFaultContext.TypeExclusions[i]))
+        {
+            return FALSE;
+        }
+    }
+
+    AVrfpFaultContext.ExclusionsRegexInitialized = TRUE;
+
+    return TRUE;
+}
+
+BOOLEAN AVrfpHasAnyExclusionExpressions(
+    _In_ ULONG FaultType
+    )
+{
+    if ((AVrfProperties.ExclusionsRegex[0]) != L'\0' ||
+        (AVrfProperties.TypeExclusionsRegex[AVrfpFaultTypeIndex(FaultType)] != L'\0'))
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOLEAN AVrfpIsStackOverriddenByRegex(
+    _In_ PUNICODE_STRING StackSymbols,
+    _In_ ULONG FaultType
+    )
+{
+    PVFDYNF_EXCLUSION_REGEX typeExclusions;
+
     AVFR_ASSERT(AVrfpFaultContext.ExclusionsRegexInitialized);
 
-    for (size_t i = 0; i < AVrfpFaultContext.ExclusionsRegexCount; i++)
+    for (ULONG i = 0; i < AVrfpFaultContext.Exclusions.Count; i++)
     {
-        if (Pcre2Match(&AVrfpFaultContext.ExclusionsRegex[i], StackSymbols))
+        if (Pcre2Match(&AVrfpFaultContext.Exclusions.Regex[i], StackSymbols))
+        {
+            return TRUE;
+        }
+    }
+
+    typeExclusions = &AVrfpFaultContext.TypeExclusions[AVrfpFaultTypeIndex(FaultType)];
+    for (ULONG i = 0; i < typeExclusions->Count; i++)
+    {
+        if (Pcre2Match(&typeExclusions->Regex[i], StackSymbols))
         {
             return TRUE;
         }
@@ -303,7 +374,7 @@ BOOLEAN AvrfShouldFaultInject(
         goto Exit;
     }
 
-    if (AVrfProperties.ExclusionsRegex[0] == L'\0')
+    if (!AVrfpHasAnyExclusionExpressions(FaultType))
     {
         //
         // There are no exclusion expressions, skip the work below.
@@ -516,7 +587,7 @@ BOOLEAN AvrfShouldFaultInject(
         //
         stackSymbols.Length -= sizeof(WCHAR);
 
-        if (AVrfpIsStackOverriddenByRegex(&stackSymbols))
+        if (AVrfpIsStackOverriddenByRegex(&stackSymbols, FaultType))
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID,
                        DPFLTR_INFO_LEVEL,
@@ -721,10 +792,25 @@ VOID AVrfFaultProcessDetach(
 
     RtlDeleteCriticalSection(&AVrfpFaultContext.CriticalSection);
 
-    if (AVrfpFaultContext.ExclusionsRegex)
+    if (AVrfpFaultContext.Exclusions.Regex)
     {
-        RtlFreeHeap(RtlProcessHeap(), 0, AVrfpFaultContext.ExclusionsRegex);
-        AVrfpFaultContext.ExclusionsRegex = NULL;
+        RtlFreeHeap(RtlProcessHeap(), 0, AVrfpFaultContext.Exclusions.Regex);
+        AVrfpFaultContext.Exclusions.Regex = NULL;
+        AVrfpFaultContext.Exclusions.Count = 0;
+    }
+
+    for (ULONG i = 0; i < VFDYNF_FAULT_TYPE_COUNT; i++)
+    {
+        PVFDYNF_EXCLUSION_REGEX entry;
+
+        entry = &AVrfpFaultContext.TypeExclusions[i];
+
+        if (entry->Regex)
+        {
+            RtlFreeHeap(RtlProcessHeap(), 0, entry->Regex);
+            entry->Regex = NULL;
+            entry->Count = 0;
+        }
     }
 
     AVrfFreeStackTable(&AVrfpFaultContext.StackTable);

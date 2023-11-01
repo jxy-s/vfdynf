@@ -51,28 +51,27 @@
 #define AVFR_ASSERT(_exp) ((void)0)
 #endif
 
-typedef struct _VFDYNF_PROPERTIES
-{
-    ULONG GracePeriod;
-    WCHAR SymbolSearchPath[1024];
-    WCHAR ExclusionsRegex[64 * 1024];
-    ULONG DynamicFaultPeroid;
-    ULONG64 EnableFaultMask;
-    ULONG FaultProbability;
-    ULONG FaultSeed;
-} VFDYNF_PROPERTIES, *PVFDYNF_PROPERTIES;
+#define VFDYNF_FAULT_TYPE_WAIT           0x00000001ul
+#define VFDYNF_FAULT_TYPE_HEAP           0x00000002ul
+#define VFDYNF_FAULT_TYPE_VMEM           0x00000004ul
+#define VFDYNF_FAULT_TYPE_REG            0x00000008ul
+#define VFDYNF_FAULT_TYPE_FILE           0x00000010ul
+#define VFDYNF_FAULT_TYPE_EVENT          0x00000020ul
+#define VFDYNF_FAULT_TYPE_SECTION        0x00000040ul
+#define VFDYNF_FAULT_TYPE_OLE            0x00000080ul
+#define VFDYNF_FAULT_TYPE_INPAGE         0x00000100ul
 
-#define VFDYNF_FAULT_TYPE_WAIT     0x00000001ul
-#define VFDYNF_FAULT_TYPE_HEAP     0x00000002ul
-#define VFDYNF_FAULT_TYPE_VMEM     0x00000004ul
-#define VFDYNF_FAULT_TYPE_REG      0x00000008ul
-#define VFDYNF_FAULT_TYPE_FILE     0x00000010ul
-#define VFDYNF_FAULT_TYPE_EVENT    0x00000020ul
-#define VFDYNF_FAULT_TYPE_SECTION  0x00000040ul
-#define VFDYNF_FAULT_TYPE_OLE      0x00000080ul
-#define VFDYNF_FAULT_TYPE_INPAGE   0x00000100ul
+#define VFDYNF_FAULT_TYPE_INDEX_WAIT     0ul
+#define VFDYNF_FAULT_TYPE_INDEX_HEAP     1ul
+#define VFDYNF_FAULT_TYPE_INDEX_VMEM     2ul
+#define VFDYNF_FAULT_TYPE_INDEX_REG      3ul
+#define VFDYNF_FAULT_TYPE_INDEX_FILE     4ul
+#define VFDYNF_FAULT_TYPE_INDEX_EVENT    5ul
+#define VFDYNF_FAULT_TYPE_INDEX_SECTION  6ul
+#define VFDYNF_FAULT_TYPE_INDEX_OLE      7ul
+#define VFDYNF_FAULT_TYPE_INDEX_INPAGE   8ul
 
-#define VFDYNF_FAULT_TYPE_COUNT    9ul
+#define VFDYNF_FAULT_TYPE_COUNT          9ul
 
 #define VFDYNF_FAULT_VALID_MASK (VFDYNF_FAULT_TYPE_WAIT                      |\
                                  VFDYNF_FAULT_TYPE_HEAP                      |\
@@ -83,6 +82,20 @@ typedef struct _VFDYNF_PROPERTIES
                                  VFDYNF_FAULT_TYPE_SECTION                   |\
                                  VFDYNF_FAULT_TYPE_OLE                       |\
                                  VFDYNF_FAULT_TYPE_INPAGE)
+
+#define VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH (16 * 1024)
+
+typedef struct _VFDYNF_PROPERTIES
+{
+    ULONG GracePeriod;
+    WCHAR SymbolSearchPath[1024];
+    WCHAR ExclusionsRegex[VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH];
+    ULONG DynamicFaultPeroid;
+    ULONG64 EnableFaultMask;
+    ULONG FaultProbability;
+    ULONG FaultSeed;
+    WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH];
+} VFDYNF_PROPERTIES, *PVFDYNF_PROPERTIES;
 
 // dllmain.c
 
