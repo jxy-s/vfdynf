@@ -110,6 +110,10 @@ VOID AVrfGuardToConvertToInPageError(
     _In_ PVOID Address
     );
 
+VOID AVrfForgetGuardForInPageError(
+    _In_ PVOID Address
+    );
+
 BOOLEAN AVrfExceptProcessAttach(
     VOID
     );

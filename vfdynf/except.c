@@ -123,6 +123,13 @@ BOOLEAN AVrfpIsGuardedAddress(
 #pragma prefast(pop)
 }
 
+VOID AVrfForgetGuardForInPageError(
+    _In_ PVOID Address
+    )
+{
+    AVrfpIsGuardedAddress(Address);
+}
+
 LONG NTAPI AVrfpVectoredExceptionHandler(
     PEXCEPTION_POINTERS ExceptionInfo
     )
