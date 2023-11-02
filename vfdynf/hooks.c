@@ -913,22 +913,7 @@ BOOLEAN AVrfpHookShouldFaultInject(
     _In_opt_ _Maybenull_ PVOID CallerAddress
     )
 {
-    BOOLEAN result;
-    ULONG recursionCount;
-
-    result = FALSE;
-
-    recursionCount = AVrfLayerGetRecursionCount();
-    if (!recursionCount)
-    {
-        AVrfLayerSetRecursionCount(recursionCount + 1);
-
-        result = AvrfShouldFaultInject(FaultType, CallerAddress);
-
-        AVrfLayerSetRecursionCount(recursionCount);
-    }
-
-    return result;
+    return AvrfShouldFaultInject(FaultType, CallerAddress);
 }
 
 #define AVrfHookShouldFaultInject(type) \
