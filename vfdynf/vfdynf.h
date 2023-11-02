@@ -101,14 +101,6 @@ typedef struct _VFDYNF_PROPERTIES
 
 extern VFDYNF_PROPERTIES AVrfProperties;
 
-VOID AVrfLayerSetRecursionCount(
-    _In_ ULONG Value
-    );
-
-ULONG AVrfLayerGetRecursionCount(
-    VOID
-    );
-
 // hooks.c
 
 extern RTL_VERIFIER_DLL_DESCRIPTOR AVrfDllDescriptors[];

@@ -234,24 +234,6 @@ static AVRF_LAYER_DESCRIPTOR AVrfpLayerDescriptor =
     AVrfpValidateCallback
 };
 
-VOID AVrfLayerSetRecursionCount(
-    _In_ ULONG Value
-    )
-{
-    AVFR_ASSERT(AVrfpLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES);
-
-    VerifierTlsSetValue(AVrfpLayerDescriptor.TlsIndex, ULongToPtr(Value));
-}
-
-ULONG AVrfLayerGetRecursionCount(
-    VOID
-    )
-{
-    AVFR_ASSERT(AVrfpLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES);
-
-    return PtrToUlong(VerifierTlsGetValue(AVrfpLayerDescriptor.TlsIndex));
-}
-
 BOOLEAN AVrfpProviderProcessVerifier(
     _In_ HMODULE Module,
     _In_opt_ PVOID Reserved
@@ -289,13 +271,11 @@ BOOLEAN AVrfpProviderProcessAttach(
     _In_ HMODULE Module
     )
 {
-    BOOLEAN result;
-    ULONG recursionCount;
     ULONG err;
 
     err = VerifierRegisterLayerEx(Module,
                                   &AVrfpLayerDescriptor,
-                                  AVRF_LAYER_FLAG_TLS_SLOT);
+                                  0);
     if (err != ERROR_SUCCESS)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -313,15 +293,6 @@ BOOLEAN AVrfpProviderProcessAttach(
     if (!AVrfpLoadedAsVerifier)
     {
         return TRUE;
-    }
-
-    if (AVrfpLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: did not receive TLS slot from verifier");
-        __debugbreak();
-        return FALSE;
     }
 
     if (!AVrfHookProcessAttach())
@@ -342,14 +313,16 @@ BOOLEAN AVrfpProviderProcessAttach(
         return FALSE;
     }
 
-    recursionCount = AVrfLayerGetRecursionCount();
-    AVrfLayerSetRecursionCount(recursionCount + 1);
+    if (!AVrfFaultProcessAttach())
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: failed to setup fault injection");
+        __debugbreak();
+        return FALSE;
+    }
 
-    result = AVrfFaultProcessAttach();
-
-    AVrfLayerSetRecursionCount(recursionCount);
-
-    return result;
+    return TRUE;
 }
 
 VOID AVrfpProviderProcessDetach(
