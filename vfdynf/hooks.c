@@ -1100,6 +1100,19 @@ Hook_RtlAllocateHeap(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        if (FlagOn(Flags, HEAP_GENERATE_EXCEPTIONS))
+        {
+            EXCEPTION_RECORD exceptionRecord;
+
+            exceptionRecord.ExceptionCode = (DWORD)STATUS_NO_MEMORY;
+            exceptionRecord.ExceptionFlags = 0;
+            exceptionRecord.ExceptionRecord = NULL;
+            exceptionRecord.ExceptionAddress = VerifierGetAppCallerAddress(_ReturnAddress());
+            exceptionRecord.NumberParameters = 0;
+
+            RtlRaiseException(&exceptionRecord);
+        }
+
         return NULL;
     }
 
@@ -1117,6 +1130,19 @@ Hook_RtlReAllocateHeap(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        if (FlagOn(Flags, HEAP_GENERATE_EXCEPTIONS))
+        {
+            EXCEPTION_RECORD exceptionRecord;
+
+            exceptionRecord.ExceptionCode = (DWORD)STATUS_NO_MEMORY;
+            exceptionRecord.ExceptionFlags = 0;
+            exceptionRecord.ExceptionRecord = NULL;
+            exceptionRecord.ExceptionAddress = VerifierGetAppCallerAddress(_ReturnAddress());
+            exceptionRecord.NumberParameters = 0;
+
+            RtlRaiseException(&exceptionRecord);
+        }
+
         return NULL;
     }
 
@@ -1132,6 +1158,7 @@ Hook_Kernel32_GlobalAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1148,6 +1175,7 @@ Hook_Kernel32_GlobalReAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1163,6 +1191,7 @@ Hook_Kernel32_LocalAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1179,6 +1208,7 @@ Hook_Kernel32_LocalReAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1194,6 +1224,7 @@ Hook_KernelBase_GlobalAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1210,6 +1241,7 @@ Hook_KernelBase_GlobalReAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1225,6 +1257,7 @@ Hook_KernelBase_LocalAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1241,6 +1274,7 @@ Hook_KernelBase_LocalReAlloc(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
         return NULL;
     }
 
@@ -1513,7 +1547,7 @@ Hook_NtAllocateVirtualMemory(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_VMEM))
     {
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_NO_MEMORY;
     }
 
     return Orig_NtAllocateVirtualMemory(ProcessHandle,
@@ -1538,7 +1572,7 @@ Hook_NtAllocateVirtualMemoryEx(
 {
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_VMEM))
     {
-        return STATUS_UNSUCCESSFUL;
+        return STATUS_NO_MEMORY;
     }
 
     return Orig_NtAllocateVirtualMemoryEx(ProcessHandle,
@@ -1558,7 +1592,8 @@ Hook_NtWaitForSingleObject(
     _In_opt_ PLARGE_INTEGER Timeout
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if (Timeout && (Timeout->QuadPart != 0) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return STATUS_TIMEOUT;
     }
@@ -1576,7 +1611,8 @@ Hook_NtWaitForMultipleObjects(
     _In_opt_ PLARGE_INTEGER Timeout
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if (Timeout && (Timeout->QuadPart != 0) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return STATUS_TIMEOUT;
     }
@@ -1703,7 +1739,9 @@ Hook_Kernel32_WaitForSingleObject(
     _In_ DWORD dwMilliseconds
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }
@@ -1719,7 +1757,9 @@ Hook_Kernel32_WaitForSingleObjectEx(
     _In_ BOOL bAlertable
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }
@@ -1738,7 +1778,9 @@ Hook_Kernel32_WaitForMultipleObjects(
     _In_ DWORD dwMilliseconds
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }
@@ -1759,7 +1801,9 @@ Hook_Kernel32_WaitForMultipleObjectsEx(
     _In_ BOOL bAlertable
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }
@@ -1778,7 +1822,9 @@ Hook_KernelBase_WaitForSingleObject(
     _In_ DWORD dwMilliseconds
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }
@@ -1794,7 +1840,9 @@ Hook_KernelBase_WaitForSingleObjectEx(
     _In_ BOOL bAlertable
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }
@@ -1813,7 +1861,9 @@ Hook_KernelBase_WaitForMultipleObjects(
     _In_ DWORD dwMilliseconds
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }
@@ -1834,7 +1884,9 @@ Hook_KernelBase_WaitForMultipleObjectsEx(
     _In_ BOOL bAlertable
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
+    if ((dwMilliseconds != 0) &&
+        (dwMilliseconds != INFINITE) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
         return WAIT_TIMEOUT;
     }

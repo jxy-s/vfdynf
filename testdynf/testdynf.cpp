@@ -5,6 +5,77 @@
 #include <iostream>
 #include <assert.h>
 
+void DoStlTest(uint32_t Id)
+{
+    std::string stuff;
+
+    try
+    {
+        stuff.assign(
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation "
+            "super long string that will require a reallocation ");
+    }
+    catch (const std::bad_alloc&)
+    {
+        printf("[%lu] caught allocation failure\n", Id);
+    }
+}
+
+void DoHeapExceptionTest(uint32_t Id)
+{
+    PVOID memory;
+
+    __try
+    {
+        memory = HeapAlloc(GetProcessHeap(),
+                           HEAP_GENERATE_EXCEPTIONS,
+                           0x1000 * 2);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        printf("[%lu] caught heap allocate exception\n", Id);
+        memory = NULL;
+    }
+
+    if (memory)
+    {
+        HeapFree(GetProcessHeap(), 0, memory);
+    }
+}
+
 INT InPageExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
 {
     if (ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_IN_PAGE_ERROR)
@@ -86,53 +157,12 @@ Exit:
 
 void DoTest(uint32_t Id)
 {
-    std::string stuff;
-    try
-    {
-        stuff.assign(
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation "
-            "super long string that will require a reallocation ");
-    }
-    catch (const std::bad_alloc&)
-    {
-        printf("[%lu] caught allocation failure\n", Id);
-    }
+    DoStlTest(Id);
+    DoHeapExceptionTest(Id);
+    DoInPageTest(Id);
 }
 
-#define RECUSE_TEST(x)                                                        \
+#define RECURSE_TEST(x)                                                       \
     void DoTestRecurse##x(uint32_t RecuseTo, uint32_t Id)                     \
     {                                                                         \
         if (RecuseTo > 0)                                                     \
@@ -143,22 +173,21 @@ void DoTest(uint32_t Id)
         DoTest(Id);                                                           \
     }
 
-RECUSE_TEST(0);
-RECUSE_TEST(1);
-RECUSE_TEST(2);
-RECUSE_TEST(3);
-RECUSE_TEST(4);
-RECUSE_TEST(5);
-RECUSE_TEST(6);
-RECUSE_TEST(7);
-RECUSE_TEST(8);
-RECUSE_TEST(9);
+RECURSE_TEST(0);
+RECURSE_TEST(1);
+RECURSE_TEST(2);
+RECURSE_TEST(3);
+RECURSE_TEST(4);
+RECURSE_TEST(5);
+RECURSE_TEST(6);
+RECURSE_TEST(7);
+RECURSE_TEST(8);
+RECURSE_TEST(9);
 
 #define LOOP_LIMIT               10
 #define ENABLE_TEST_TYPE_DEFAULT 1
 #define ENABLE_TEST_TYPE_RECURSE 1
 #define ENABLE_TEST_TYPE_STRESS  1
-#define ENABLE_TEST_IN_PAGE      1
 
 #define DO_RECURSE_TEST(x) DoTestRecurse##x(i, i + (LOOP_LIMIT * x))
 
@@ -201,16 +230,6 @@ void DoTestStress()
     puts("------------------------------------------------------------------");
 }
 
-void DoTestInPage()
-{
-    puts("----IN-PAGE-------------------------------------------------------");
-    for (uint32_t i = 0; i < LOOP_LIMIT; i++)
-    {
-        DoInPageTest(i);
-    }
-    puts("------------------------------------------------------------------");
-}
-
 int main(int argc, const char* argv[])
 {
     UNREFERENCED_PARAMETER(argc);
@@ -228,10 +247,6 @@ int main(int argc, const char* argv[])
 
 #if ENABLE_TEST_TYPE_STRESS
         DoTestStress();
-#endif
-
-#if ENABLE_TEST_IN_PAGE
-        DoTestInPage();
 #endif
     }
 
