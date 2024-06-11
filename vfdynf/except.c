@@ -97,6 +97,7 @@ BOOLEAN AVrfpIsGuardedAddress(
     for (ULONG i = 0; i < AVrfpExceptContext.GuardEntryCount; i++)
     {
         PVFDYNF_GUARD_PAGE_ENTRY entry;
+        ULONG length;
 
         entry = &AVrfpExceptContext.GuardEntries[i];
 
@@ -110,9 +111,15 @@ BOOLEAN AVrfpIsGuardedAddress(
 
         AVrfpExceptContext.GuardEntryCount--;
 
-        RtlMoveMemory(entry,
-                      entry + 1,
-                      AVrfpExceptContext.GuardEntryCount * sizeof(*entry));
+        length = ((AVrfpExceptContext.GuardEntryCount - i) * sizeof(*entry));
+
+        RtlMoveMemory(entry, entry + 1, length);
+
+        //
+        // Continue to ensure we clean up any other guard page entries for
+        // the given address. The pages for the region are no longer guarded.
+        // So make sure we clean up any other stale entires.
+        //
     }
 
 #pragma prefast(push) // the lock is acquired and released correctly
