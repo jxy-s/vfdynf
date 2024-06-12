@@ -111,6 +111,11 @@ BOOLEAN AVrfHookProcessAttach(
 
 // except.c
 
+_Must_inspect_result_
+BOOLEAN AVrfShouldSubjectMemoryToInPageError(
+    _In_ PVOID Address
+    );
+
 VOID AVrfGuardToConvertToInPageError(
     _In_ PVOID Address
     );
