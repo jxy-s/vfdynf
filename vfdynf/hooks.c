@@ -1454,6 +1454,7 @@ Hook_NtMapViewOfSection(
 
     if (NT_SUCCESS(status) &&
         (ProcessHandle == NtCurrentProcess()) &&
+        AVrfShouldSubjectMemoryToInPageError(*BaseAddress) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(*BaseAddress);
@@ -1495,6 +1496,7 @@ Hook_NtMapViewOfSectionEx(
 
     if (NT_SUCCESS(status) &&
         (ProcessHandle == NtCurrentProcess()) &&
+        AVrfShouldSubjectMemoryToInPageError(BaseAddress) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(*BaseAddress);
@@ -2966,7 +2968,9 @@ Hook_Kernel32_MapViewOfFile(
                                          dwFileOffsetLow,
                                          dwNumberOfBytesToMap);
 
-    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (result &&
+        AVrfShouldSubjectMemoryToInPageError(result) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(result);
     }
@@ -3000,7 +3004,9 @@ Hook_Kernel32_MapViewOfFileEx(
                                            dwNumberOfBytesToMap,
                                            lpBaseAddress);
 
-    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (result &&
+        AVrfShouldSubjectMemoryToInPageError(result) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(result);
     }
@@ -3193,7 +3199,9 @@ Hook_KernelBase_MapViewOfFile(
                                            dwFileOffsetLow,
                                            dwNumberOfBytesToMap);
 
-    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (result &&
+        AVrfShouldSubjectMemoryToInPageError(result) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(result);
     }
@@ -3227,7 +3235,9 @@ Hook_KernelBase_MapViewOfFileEx(
                                              dwNumberOfBytesToMap,
                                              lpBaseAddress);
 
-    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (result &&
+        AVrfShouldSubjectMemoryToInPageError(result) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(result);
     }

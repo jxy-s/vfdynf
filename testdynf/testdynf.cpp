@@ -86,7 +86,7 @@ INT InPageExceptionFilter(LPEXCEPTION_POINTERS ExceptionInfo)
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
-void DoInPageTest(uint32_t Id)
+void DoInPageTestDataFile(uint32_t Id)
 {
     HANDLE file;
     HANDLE section;
@@ -105,7 +105,7 @@ void DoInPageTest(uint32_t Id)
                        NULL);
     if (file == INVALID_HANDLE_VALUE)
     {
-        printf("[%lu] failed to open file\n", Id);
+        printf("[%lu] failed to open data file\n", Id);
         goto Exit;
     }
 
@@ -117,14 +117,14 @@ void DoInPageTest(uint32_t Id)
                                  NULL);
     if (!section)
     {
-        printf("[%lu] failed to create section\n", Id);
+        printf("[%lu] failed to create data section\n", Id);
         goto Exit;
     }
 
     address = MapViewOfFile(section, FILE_MAP_READ, 0, 0, 0);
     if (!address)
     {
-        printf("[%lu] failed to map section\n", Id);
+        printf("[%lu] failed to map data section\n", Id);
         goto Exit;
     }
 
@@ -134,7 +134,7 @@ void DoInPageTest(uint32_t Id)
     }
     __except (InPageExceptionFilter(GetExceptionInformation()))
     {
-        printf("[%lu] caught in-page failure\n", Id);
+        printf("[%lu] caught in-page failure for data file\n", Id);
     }
 
 Exit:
@@ -153,6 +153,211 @@ Exit:
     {
         CloseHandle(file);
     }
+}
+
+void DoInPageTestImageFile(uint32_t Id)
+{
+    HANDLE file;
+    HANDLE section;
+    PVOID address;
+    BYTE buffer[512];
+
+    section = NULL;
+    address = NULL;
+
+    file = CreateFileW(L"C:\\Windows\\System32\\notepad.exe",
+                       GENERIC_READ,
+                       FILE_SHARE_READ,
+                       NULL,
+                       OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        printf("[%lu] failed to open image file\n", Id);
+        goto Exit;
+    }
+
+    section = CreateFileMappingW(file,
+                                 NULL,
+                                 PAGE_READONLY | SEC_IMAGE,
+                                 0,
+                                 0,
+                                 NULL);
+    if (!section)
+    {
+        printf("[%lu] failed to create image section\n", Id);
+        goto Exit;
+    }
+
+    address = MapViewOfFile(section, FILE_MAP_READ, 0, 0, 0);
+    if (!address)
+    {
+        printf("[%lu] failed to map image section\n", Id);
+        goto Exit;
+    }
+
+    __try
+    {
+        memcpy(buffer, address, sizeof(buffer));
+    }
+    __except (InPageExceptionFilter(GetExceptionInformation()))
+    {
+        //
+        // N.B. we choose to not inject in-page errors for image files
+        //
+        printf("[%lu] FAILURE, caught in-page failure for image file\n", Id);
+        DebugBreak();
+    }
+
+Exit:
+
+    if (address)
+    {
+        UnmapViewOfFile(address);
+    }
+
+    if (section)
+    {
+        CloseHandle(section);
+    }
+
+    if (file != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(file);
+    }
+}
+
+
+void DoInPageTestImageFileNoExecute(uint32_t Id)
+{
+    HANDLE file;
+    HANDLE section;
+    PVOID address;
+    BYTE buffer[512];
+
+    section = NULL;
+    address = NULL;
+
+    file = CreateFileW(L"C:\\Windows\\System32\\notepad.exe",
+                       GENERIC_READ,
+                       FILE_SHARE_READ,
+                       NULL,
+                       OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        printf("[%lu] failed to open image (no execute) file\n", Id);
+        goto Exit;
+    }
+
+    section = CreateFileMappingW(file,
+                                 NULL,
+                                 PAGE_READONLY | SEC_IMAGE_NO_EXECUTE,
+                                 0,
+                                 0,
+                                 NULL);
+    if (!section)
+    {
+        printf("[%lu] failed to create image (no execute) section\n", Id);
+        goto Exit;
+    }
+
+    address = MapViewOfFile(section, FILE_MAP_READ, 0, 0, 0);
+    if (!address)
+    {
+        printf("[%lu] failed to map image (no execute) section\n", Id);
+        goto Exit;
+    }
+
+    __try
+    {
+        memcpy(buffer, address, sizeof(buffer));
+    }
+    __except (InPageExceptionFilter(GetExceptionInformation()))
+    {
+        printf("[%lu] caught in-page failure for image (no execute) file\n", Id);
+    }
+
+Exit:
+
+    if (address)
+    {
+        UnmapViewOfFile(address);
+    }
+
+    if (section)
+    {
+        CloseHandle(section);
+    }
+
+    if (file != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(file);
+    }
+}
+
+void DoInPageTestPagingFile(uint32_t Id)
+{
+    HANDLE section;
+    PVOID address;
+    BYTE buffer[512];
+
+    section = NULL;
+    address = NULL;
+
+    section = CreateFileMappingW(INVALID_HANDLE_VALUE,
+                                 NULL,
+                                 PAGE_READWRITE | SEC_COMMIT,
+                                 0,
+                                 0x4000,
+                                 L"TestVFDYNFSection");
+    if (!section)
+    {
+        printf("[%lu] failed to create paging file section\n", Id);
+        goto Exit;
+    }
+
+    address = MapViewOfFile(section, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
+    if (!address)
+    {
+        printf("[%lu] failed to map paging file section\n", Id);
+        goto Exit;
+    }
+
+    __try
+    {
+        memcpy(buffer, address, sizeof(buffer));
+    }
+    __except (InPageExceptionFilter(GetExceptionInformation()))
+    {
+        //
+        // N.B. we should not inject in-page failures for paging file mappings
+        //
+        printf("[%lu] FAILURE, caught in-page failure for paging file\n", Id);
+        DebugBreak();
+    }
+
+Exit:
+
+    if (address)
+    {
+        UnmapViewOfFile(address);
+    }
+
+    if (section)
+    {
+        CloseHandle(section);
+    }
+}
+
+void DoInPageTest(uint32_t Id)
+{
+    DoInPageTestDataFile(Id);
+    DoInPageTestImageFile(Id);
+    DoInPageTestImageFileNoExecute(Id);
+    DoInPageTestPagingFile(Id);
 }
 
 void DoTest(uint32_t Id)
