@@ -137,7 +137,9 @@ VOID AVrfGuardToConvertToInPageError(
         return;
     }
 
-    RtlEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
+    status = RtlEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
+
+    AVRF_ASSERT(NT_SUCCESS(status));
 
     if (AVrfpExceptContext.GuardEntryCount < VFDYNF_GUARD_PAGE_COUNT)
     {
@@ -156,22 +158,21 @@ VOID AVrfGuardToConvertToInPageError(
         __debugbreak();
     }
 
-#pragma prefast(push) // the lock is acquired and released correctly
-#pragma prefast(disable : 26117)
-#pragma prefast(disable : 26115)
     RtlLeaveCriticalSection(&AVrfpExceptContext.CriticalSection);
-#pragma prefast(pop)
 }
 
 BOOLEAN AVrfpIsGuardedAddress(
     _In_ PVOID Address
     )
 {
+    NTSTATUS status;
     BOOLEAN result;
 
     result = FALSE;
 
-    RtlEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
+    status = RtlEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
+
+    AVRF_ASSERT(NT_SUCCESS(status));
 
     for (ULONG i = 0; i < AVrfpExceptContext.GuardEntryCount; i++)
     {
@@ -201,12 +202,9 @@ BOOLEAN AVrfpIsGuardedAddress(
         //
     }
 
-#pragma prefast(push) // the lock is acquired and released correctly
-#pragma prefast(disable : 26117)
-#pragma prefast(disable : 26115)
     RtlLeaveCriticalSection(&AVrfpExceptContext.CriticalSection);
+
     return result;
-#pragma prefast(pop)
 }
 
 VOID AVrfForgetGuardForInPageError(

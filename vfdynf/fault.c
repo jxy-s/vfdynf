@@ -54,7 +54,7 @@ ULONG AVrfpFaultTypeClass(
     _In_ ULONG FaultType
     )
 {
-    AVFR_ASSERT(AVrfpFaultContext.TypeBase != ULONG_MAX);
+    AVRF_ASSERT(AVrfpFaultContext.TypeBase != ULONG_MAX);
 
     return (AVrfpFaultContext.TypeBase + AVrfpFaultTypeIndex(FaultType));
 }
@@ -186,7 +186,7 @@ BOOLEAN AVrfpInitExclusionsRegexInternal(
             return FALSE;
         }
 
-        AVFR_ASSERT(count < Exclusion->Count);
+        AVRF_ASSERT(count < Exclusion->Count);
 
         Exclusion->Regex[count++] = pcre2;
 
@@ -207,7 +207,7 @@ BOOLEAN AVrfpInitExclusionsRegex(
     // string into the regex vector. We do this so we don't have to construct
     // the regex object every time.
     //
-    AVFR_ASSERT(!AVrfpFaultContext.ExclusionsRegexInitialized);
+    AVRF_ASSERT(!AVrfpFaultContext.ExclusionsRegexInitialized);
 
     if (!AVrfpInitExclusionsRegexInternal(AVrfProperties.ExclusionsRegex,
                                           &AVrfpFaultContext.Exclusions))
@@ -249,7 +249,7 @@ BOOLEAN AVrfpIsStackOverriddenByRegex(
 {
     PVFDYNF_EXCLUSION_REGEX typeExclusions;
 
-    AVFR_ASSERT(AVrfpFaultContext.ExclusionsRegexInitialized);
+    AVRF_ASSERT(AVrfpFaultContext.ExclusionsRegexInitialized);
 
     for (ULONG i = 0; i < AVrfpFaultContext.Exclusions.Count; i++)
     {
