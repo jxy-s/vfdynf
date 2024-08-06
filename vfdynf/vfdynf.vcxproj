@@ -296,12 +296,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="hooks.h" />
     <ClInclude Include="vfdynf.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crt_vfdynf.c" />
     <ClCompile Include="except.c" />
     <ClCompile Include="hooks.c" />
+    <ClCompile Include="hooks_event.c" />
+    <ClCompile Include="hooks_file.c" />
+    <ClCompile Include="hooks_heap.c" />
+    <ClCompile Include="hooks_ole.c" />
+    <ClCompile Include="hooks_reg.c" />
+    <ClCompile Include="hooks_section.c" />
+    <ClCompile Include="hooks_vmem.c" />
+    <ClCompile Include="hooks_wait.c" />
     <ClCompile Include="stacktrk.c" />
     <ClCompile Include="dllmain.c" />
     <ClCompile Include="fault.c" />
