@@ -46,9 +46,9 @@
 #endif DPFLTR_MASK
 
 #ifdef _DEBUG
-#define AVFR_ASSERT(_exp) _Analysis_assume_(_exp); if (!(_exp)) __debugbreak()
+#define AVRF_ASSERT(_exp) _Analysis_assume_(_exp); if (!(_exp)) __debugbreak()
 #else
-#define AVFR_ASSERT(_exp) ((void)0)
+#define AVRF_ASSERT(_exp) ((void)0)
 #endif
 
 #define VFDYNF_FAULT_TYPE_WAIT           0x00000001ul
