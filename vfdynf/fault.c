@@ -271,7 +271,7 @@ BOOLEAN AVrfpIsStackOverriddenByRegex(
     return FALSE;
 }
 
-BOOLEAN AvrfShouldFaultInject(
+BOOLEAN AVrfShouldFaultInject(
     _In_ ULONG FaultType,
     _In_opt_ _Maybenull_ PVOID CallerAddress
     )
