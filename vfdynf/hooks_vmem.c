@@ -56,7 +56,8 @@ Hook_NtAllocateVirtualMemoryEx(
 
 LPVOID
 WINAPI
-Hook_KernelBase_VirtualAlloc(
+Hook_Common_VirtualAlloc(
+    _In_ PFunc_VirtualAlloc Orig_VirtualAlloc,
     _In_opt_ LPVOID lpAddress,
     _In_ SIZE_T dwSize,
     _In_ DWORD flAllocationType,
@@ -69,15 +70,13 @@ Hook_KernelBase_VirtualAlloc(
         return NULL;
     }
 
-    return Orig_KernelBase_VirtualAlloc(lpAddress,
-                                        dwSize,
-                                        flAllocationType,
-                                        flProtect);
+    return Orig_VirtualAlloc(lpAddress, dwSize, flAllocationType, flProtect);
 }
 
 LPVOID
 WINAPI
-Hook_KernelBase_VirtualAllocEx(
+Hook_Common_VirtualAllocEx(
+    _In_ PFunc_VirtualAllocEx Orig_VirtualAllocEx,
     _In_ HANDLE hProcess,
     _In_opt_ LPVOID lpAddress,
     _In_ SIZE_T dwSize,
@@ -91,9 +90,82 @@ Hook_KernelBase_VirtualAllocEx(
         return NULL;
     }
 
-    return Orig_KernelBase_VirtualAllocEx(hProcess,
-                                          lpAddress,
-                                          dwSize,
-                                          flAllocationType,
-                                          flProtect);
+    return Orig_VirtualAllocEx(hProcess,
+                               lpAddress,
+                               dwSize,
+                               flAllocationType,
+                               flProtect);
+}
+
+LPVOID
+WINAPI
+Hook_Kernel32_VirtualAlloc(
+    _In_opt_ LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD flAllocationType,
+    _In_ DWORD flProtect
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   VirtualAlloc,
+                                   lpAddress,
+                                   dwSize,
+                                   flAllocationType,
+                                   flProtect);
+}
+
+LPVOID
+WINAPI
+Hook_Kernel32_VirtualAllocEx(
+    _In_ HANDLE hProcess,
+    _In_opt_ LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD flAllocationType,
+    _In_ DWORD flProtect
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   VirtualAllocEx,
+                                   hProcess,
+                                   lpAddress,
+                                   dwSize,
+                                   flAllocationType,
+                                   flProtect);
+}
+
+
+LPVOID
+WINAPI
+Hook_KernelBase_VirtualAlloc(
+    _In_opt_ LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD flAllocationType,
+    _In_ DWORD flProtect
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   VirtualAlloc,
+                                   lpAddress,
+                                   dwSize,
+                                   flAllocationType,
+                                   flProtect);
+}
+
+LPVOID
+WINAPI
+Hook_KernelBase_VirtualAllocEx(
+    _In_ HANDLE hProcess,
+    _In_opt_ LPVOID lpAddress,
+    _In_ SIZE_T dwSize,
+    _In_ DWORD flAllocationType,
+    _In_ DWORD flProtect
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   VirtualAllocEx,
+                                   hProcess,
+                                   lpAddress,
+                                   dwSize,
+                                   flAllocationType,
+                                   flProtect);
 }

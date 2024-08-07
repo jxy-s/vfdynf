@@ -65,7 +65,8 @@ Hook_RtlReAllocateHeap(
 
 HGLOBAL
 WINAPI
-Hook_Kernel32_GlobalAlloc(
+Hook_Common_GlobalAlloc(
+    _In_ PFunc_GlobalAlloc Orig_GlobalAlloc,
     _In_ UINT uFlags,
     _In_ SIZE_T dwBytes
     )
@@ -76,7 +77,73 @@ Hook_Kernel32_GlobalAlloc(
         return NULL;
     }
 
-    return Orig_Kernel32_GlobalAlloc(uFlags, dwBytes);
+    return Orig_GlobalAlloc(uFlags, dwBytes);
+}
+
+HGLOBAL
+WINAPI
+Hook_Common_GlobalReAlloc(
+    _In_ PFunc_GlobalReAlloc Orig_GlobalReAlloc,
+    _Frees_ptr_ HGLOBAL hMem,
+    _In_ SIZE_T dwBytes,
+    _In_ UINT uFlags
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_GlobalReAlloc(hMem, dwBytes, uFlags);
+}
+
+HLOCAL
+WINAPI
+Hook_Common_LocalAlloc(
+    _In_ PFunc_LocalAlloc Orig_LocalAlloc,
+    _In_ UINT uFlags,
+    _In_ SIZE_T uBytes
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_LocalAlloc(uFlags, uBytes);
+}
+
+HLOCAL
+WINAPI
+Hook_Common_LocalReAlloc(
+    _In_ PFunc_LocalReAlloc Orig_LocalReAlloc,
+    _Frees_ptr_opt_ HLOCAL hMem,
+    _In_ SIZE_T uBytes,
+    _In_ UINT uFlags
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_LocalReAlloc(hMem, uBytes, uFlags);
+}
+
+HGLOBAL
+WINAPI
+Hook_Kernel32_GlobalAlloc(
+    _In_ UINT uFlags,
+    _In_ SIZE_T dwBytes
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   GlobalAlloc,
+                                   uFlags,
+                                   dwBytes);
 }
 
 HGLOBAL
@@ -87,13 +154,11 @@ Hook_Kernel32_GlobalReAlloc(
     _In_ UINT uFlags
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_GlobalReAlloc(hMem, dwBytes, uFlags);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   GlobalReAlloc,
+                                   hMem,
+                                   dwBytes,
+                                   uFlags);
 }
 
 HLOCAL
@@ -103,13 +168,10 @@ Hook_Kernel32_LocalAlloc(
     _In_ SIZE_T uBytes
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_LocalAlloc(uFlags, uBytes);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   LocalAlloc,
+                                   uFlags,
+                                   uBytes);
 }
 
 HLOCAL
@@ -120,13 +182,11 @@ Hook_Kernel32_LocalReAlloc(
     _In_ UINT uFlags
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_LocalReAlloc(hMem, uBytes, uFlags);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   LocalReAlloc,
+                                   hMem,
+                                   uBytes,
+                                   uFlags);
 }
 
 HGLOBAL
@@ -136,13 +196,10 @@ Hook_KernelBase_GlobalAlloc(
     _In_ SIZE_T dwBytes
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_GlobalAlloc(uFlags, dwBytes);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   GlobalAlloc,
+                                   uFlags,
+                                   dwBytes);
 }
 
 HGLOBAL
@@ -153,13 +210,11 @@ Hook_KernelBase_GlobalReAlloc(
     _In_ UINT uFlags
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_GlobalReAlloc(hMem, dwBytes, uFlags);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   GlobalReAlloc,
+                                   hMem,
+                                   dwBytes,
+                                   uFlags);
 }
 
 HLOCAL
@@ -169,13 +224,10 @@ Hook_KernelBase_LocalAlloc(
     _In_ SIZE_T uBytes
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_LocalAlloc(uFlags, uBytes);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   LocalAlloc,
+                                   uFlags,
+                                   uBytes);
 }
 
 HLOCAL
@@ -186,11 +238,9 @@ Hook_KernelBase_LocalReAlloc(
     _In_ UINT uFlags
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_LocalReAlloc(hMem, uBytes, uFlags);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   LocalReAlloc,
+                                   hMem,
+                                   uBytes,
+                                   uFlags);
 }

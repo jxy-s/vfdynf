@@ -195,7 +195,8 @@ Hook_NtUnmapViewOfSectionEx(
 
 HANDLE
 WINAPI
-Hook_Kernel32_CreateFileMappingW(
+Hook_Common_CreateFileMappingW(
+    _In_ PFunc_CreateFileMappingW Orig_CreateFileMappingW,
     _In_ HANDLE hFile,
     _In_opt_ LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
     _In_ DWORD flProtect,
@@ -210,12 +211,202 @@ Hook_Kernel32_CreateFileMappingW(
         return NULL;
     }
 
-    return Orig_Kernel32_CreateFileMappingW(hFile,
-                                            lpFileMappingAttributes,
-                                            flProtect,
-                                            dwMaximumSizeHigh,
-                                            dwMaximumSizeLow,
-                                            lpName);
+    return Orig_CreateFileMappingW(hFile,
+                                   lpFileMappingAttributes,
+                                   flProtect,
+                                   dwMaximumSizeHigh,
+                                   dwMaximumSizeLow,
+                                   lpName);
+}
+
+HANDLE
+WINAPI
+Hook_Common_CreateFileMappingA(
+    _In_ PFunc_CreateFileMappingA Orig_CreateFileMappingA,
+    _In_ HANDLE hFile,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
+    _In_ DWORD flProtect,
+    _In_ DWORD dwMaximumSizeHigh,
+    _In_ DWORD dwMaximumSizeLow,
+    _In_opt_ LPCSTR lpName
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_CreateFileMappingA(hFile,
+                                   lpFileMappingAttributes,
+                                   flProtect,
+                                   dwMaximumSizeHigh,
+                                   dwMaximumSizeLow,
+                                   lpName);
+}
+
+HANDLE
+WINAPI
+Hook_Common_OpenFileMappingW(
+    _In_ PFunc_OpenFileMappingW Orig_OpenFileMappingW,
+    _In_ DWORD dwDesiredAccess,
+    _In_ BOOL bInheritHandle,
+    _In_ LPCWSTR lpName
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_OpenFileMappingW(dwDesiredAccess,
+                                 bInheritHandle,
+                                 lpName);
+}
+
+HANDLE
+WINAPI
+Hook_Common_OpenFileMappingA(
+    _In_ PFunc_OpenFileMappingA Orig_OpenFileMappingA,
+    _In_ DWORD dwDesiredAccess,
+    _In_ BOOL bInheritHandle,
+    _In_ LPCSTR lpName
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_OpenFileMappingA(dwDesiredAccess,
+                                 bInheritHandle,
+                                 lpName);
+}
+
+LPVOID
+WINAPI
+Hook_Common_MapViewOfFile(
+    _In_ PFunc_MapViewOfFile Orig_MapViewOfFile,
+    _In_ HANDLE hFileMappingObject,
+    _In_ DWORD dwDesiredAccess,
+    _In_ DWORD dwFileOffsetHigh,
+    _In_ DWORD dwFileOffsetLow,
+    _In_ SIZE_T dwNumberOfBytesToMap
+    )
+{
+    LPVOID result;
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    result = Orig_MapViewOfFile(hFileMappingObject,
+                                dwDesiredAccess,
+                                dwFileOffsetHigh,
+                                dwFileOffsetLow,
+                                dwNumberOfBytesToMap);
+
+    if (result &&
+        AVrfShouldSubjectMemoryToInPageError(result) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(result);
+    }
+
+    return result;
+}
+
+LPVOID
+WINAPI
+Hook_Common_MapViewOfFileEx(
+    _In_ PFunc_MapViewOfFileEx Orig_MapViewOfFileEx,
+    _In_ HANDLE hFileMappingObject,
+    _In_ DWORD dwDesiredAccess,
+    _In_ DWORD dwFileOffsetHigh,
+    _In_ DWORD dwFileOffsetLow,
+    _In_ SIZE_T dwNumberOfBytesToMap,
+    _In_opt_ LPVOID lpBaseAddress
+    )
+{
+    LPVOID result;
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    result = Orig_MapViewOfFileEx(hFileMappingObject,
+                                  dwDesiredAccess,
+                                  dwFileOffsetHigh,
+                                  dwFileOffsetLow,
+                                  dwNumberOfBytesToMap,
+                                  lpBaseAddress);
+
+    if (result &&
+        AVrfShouldSubjectMemoryToInPageError(result) &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    {
+        AVrfGuardToConvertToInPageError(result);
+    }
+
+    return result;
+}
+
+BOOL
+WINAPI
+Hook_Common_UnmapViewOfFile(
+    _In_ PFunc_UnmapViewOfFile Orig_UnmapViewOfFile,
+    _In_ PVOID BaseAddress
+    )
+{
+    if (BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_UnmapViewOfFile(BaseAddress);
+}
+
+BOOL
+WINAPI
+Hook_Common_UnmapViewOfFileEx(
+    _In_ PFunc_UnmapViewOfFileEx Orig_UnmapViewOfFileEx,
+    _In_ PVOID BaseAddress,
+    _In_ ULONG UnmapFlags
+    )
+{
+    if (BaseAddress)
+    {
+        AVrfForgetGuardForInPageError(BaseAddress);
+    }
+
+    return Orig_UnmapViewOfFileEx(BaseAddress, UnmapFlags);
+}
+
+HANDLE
+WINAPI
+Hook_Kernel32_CreateFileMappingW(
+    _In_ HANDLE hFile,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
+    _In_ DWORD flProtect,
+    _In_ DWORD dwMaximumSizeHigh,
+    _In_ DWORD dwMaximumSizeLow,
+    _In_opt_ LPCWSTR lpName
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   CreateFileMappingW,
+                                   hFile,
+                                   lpFileMappingAttributes,
+                                   flProtect,
+                                   dwMaximumSizeHigh,
+                                   dwMaximumSizeLow,
+                                   lpName);
 }
 
 HANDLE
@@ -229,18 +420,14 @@ Hook_Kernel32_CreateFileMappingA(
     _In_opt_ LPCSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_CreateFileMappingA(hFile,
-                                            lpFileMappingAttributes,
-                                            flProtect,
-                                            dwMaximumSizeHigh,
-                                            dwMaximumSizeLow,
-                                            lpName);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   CreateFileMappingA,
+                                   hFile,
+                                   lpFileMappingAttributes,
+                                   flProtect,
+                                   dwMaximumSizeHigh,
+                                   dwMaximumSizeLow,
+                                   lpName);
 }
 
 HANDLE
@@ -251,15 +438,11 @@ Hook_Kernel32_OpenFileMappingW(
     _In_ LPCWSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_OpenFileMappingW(dwDesiredAccess,
-                                          bInheritHandle,
-                                          lpName);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   OpenFileMappingW,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
 
 HANDLE
@@ -270,15 +453,11 @@ Hook_Kernel32_OpenFileMappingA(
     _In_ LPCSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_OpenFileMappingA(dwDesiredAccess,
-                                          bInheritHandle,
-                                          lpName);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   OpenFileMappingA,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
 
 LPVOID
@@ -291,28 +470,13 @@ Hook_Kernel32_MapViewOfFile(
     _In_ SIZE_T dwNumberOfBytesToMap
     )
 {
-    LPVOID result;
-
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    result = Orig_Kernel32_MapViewOfFile(hFileMappingObject,
-                                         dwDesiredAccess,
-                                         dwFileOffsetHigh,
-                                         dwFileOffsetLow,
-                                         dwNumberOfBytesToMap);
-
-    if (result &&
-        AVrfShouldSubjectMemoryToInPageError(result) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
-    {
-        AVrfGuardToConvertToInPageError(result);
-    }
-
-    return result;
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   MapViewOfFile,
+                                   hFileMappingObject,
+                                   dwDesiredAccess,
+                                   dwFileOffsetHigh,
+                                   dwFileOffsetLow,
+                                   dwNumberOfBytesToMap);
 }
 
 LPVOID
@@ -326,29 +490,14 @@ Hook_Kernel32_MapViewOfFileEx(
     _In_opt_ LPVOID lpBaseAddress
     )
 {
-    LPVOID result;
-
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    result = Orig_Kernel32_MapViewOfFileEx(hFileMappingObject,
-                                           dwDesiredAccess,
-                                           dwFileOffsetHigh,
-                                           dwFileOffsetLow,
-                                           dwNumberOfBytesToMap,
-                                           lpBaseAddress);
-
-    if (result &&
-        AVrfShouldSubjectMemoryToInPageError(result) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
-    {
-        AVrfGuardToConvertToInPageError(result);
-    }
-
-    return result;
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   MapViewOfFileEx,
+                                   hFileMappingObject,
+                                   dwDesiredAccess,
+                                   dwFileOffsetHigh,
+                                   dwFileOffsetLow,
+                                   dwNumberOfBytesToMap,
+                                   lpBaseAddress);
 }
 
 BOOL
@@ -357,12 +506,9 @@ Hook_Kernel32_UnmapViewOfFile(
     _In_ PVOID BaseAddress
     )
 {
-    if (BaseAddress)
-    {
-        AVrfForgetGuardForInPageError(BaseAddress);
-    }
-
-    return Orig_Kernel32_UnmapViewOfFile(BaseAddress);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   UnmapViewOfFile,
+                                   BaseAddress);
 }
 
 BOOL
@@ -372,56 +518,10 @@ Hook_Kernel32_UnmapViewOfFileEx(
     _In_ ULONG UnmapFlags
     )
 {
-    if (BaseAddress)
-    {
-        AVrfForgetGuardForInPageError(BaseAddress);
-    }
-
-    return Orig_Kernel32_UnmapViewOfFileEx(BaseAddress, UnmapFlags);
-}
-
-LPVOID
-WINAPI
-Hook_Kernel32_VirtualAlloc(
-    _In_opt_ LPVOID lpAddress,
-    _In_ SIZE_T dwSize,
-    _In_ DWORD flAllocationType,
-    _In_ DWORD flProtect
-    )
-{
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_VirtualAlloc(lpAddress,
-                                      dwSize,
-                                      flAllocationType,
-                                      flProtect);
-}
-
-LPVOID
-WINAPI
-Hook_Kernel32_VirtualAllocEx(
-    _In_ HANDLE hProcess,
-    _In_opt_ LPVOID lpAddress,
-    _In_ SIZE_T dwSize,
-    _In_ DWORD flAllocationType,
-    _In_ DWORD flProtect
-    )
-{
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_VirtualAllocEx(hProcess,
-                                        lpAddress,
-                                        dwSize,
-                                        flAllocationType,
-                                        flProtect);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   UnmapViewOfFileEx,
+                                   BaseAddress,
+                                   UnmapFlags);
 }
 
 HANDLE
@@ -435,18 +535,14 @@ Hook_KernelBase_CreateFileMappingW(
     _In_opt_ LPCWSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_CreateFileMappingW(hFile,
-                                              lpFileMappingAttributes,
-                                              flProtect,
-                                              dwMaximumSizeHigh,
-                                              dwMaximumSizeLow,
-                                              lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   CreateFileMappingW,
+                                   hFile,
+                                   lpFileMappingAttributes,
+                                   flProtect,
+                                   dwMaximumSizeHigh,
+                                   dwMaximumSizeLow,
+                                   lpName);
 }
 
 HANDLE
@@ -460,18 +556,14 @@ Hook_KernelBase_CreateFileMappingA(
     _In_opt_ LPCSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_CreateFileMappingA(hFile,
-                                              lpFileMappingAttributes,
-                                              flProtect,
-                                              dwMaximumSizeHigh,
-                                              dwMaximumSizeLow,
-                                              lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   CreateFileMappingA,
+                                   hFile,
+                                   lpFileMappingAttributes,
+                                   flProtect,
+                                   dwMaximumSizeHigh,
+                                   dwMaximumSizeLow,
+                                   lpName);
 }
 
 HANDLE
@@ -482,15 +574,11 @@ Hook_KernelBase_OpenFileMappingW(
     _In_ LPCWSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_OpenFileMappingW(dwDesiredAccess,
-                                            bInheritHandle,
-                                            lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   OpenFileMappingW,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
 
 HANDLE
@@ -501,15 +589,11 @@ Hook_KernelBase_OpenFileMappingA(
     _In_ LPCSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_OpenFileMappingA(dwDesiredAccess,
-                                            bInheritHandle,
-                                            lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   OpenFileMappingA,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
 
 LPVOID
@@ -522,28 +606,13 @@ Hook_KernelBase_MapViewOfFile(
     _In_ SIZE_T dwNumberOfBytesToMap
     )
 {
-    LPVOID result;
-
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    result = Orig_KernelBase_MapViewOfFile(hFileMappingObject,
-                                           dwDesiredAccess,
-                                           dwFileOffsetHigh,
-                                           dwFileOffsetLow,
-                                           dwNumberOfBytesToMap);
-
-    if (result &&
-        AVrfShouldSubjectMemoryToInPageError(result) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
-    {
-        AVrfGuardToConvertToInPageError(result);
-    }
-
-    return result;
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   MapViewOfFile,
+                                   hFileMappingObject,
+                                   dwDesiredAccess,
+                                   dwFileOffsetHigh,
+                                   dwFileOffsetLow,
+                                   dwNumberOfBytesToMap);
 }
 
 LPVOID
@@ -557,29 +626,14 @@ Hook_KernelBase_MapViewOfFileEx(
     _In_opt_ LPVOID lpBaseAddress
     )
 {
-    LPVOID result;
-
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    result = Orig_KernelBase_MapViewOfFileEx(hFileMappingObject,
-                                             dwDesiredAccess,
-                                             dwFileOffsetHigh,
-                                             dwFileOffsetLow,
-                                             dwNumberOfBytesToMap,
-                                             lpBaseAddress);
-
-    if (result &&
-        AVrfShouldSubjectMemoryToInPageError(result) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
-    {
-        AVrfGuardToConvertToInPageError(result);
-    }
-
-    return result;
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   MapViewOfFileEx,
+                                   hFileMappingObject,
+                                   dwDesiredAccess,
+                                   dwFileOffsetHigh,
+                                   dwFileOffsetLow,
+                                   dwNumberOfBytesToMap,
+                                   lpBaseAddress);
 }
 
 BOOL
@@ -588,12 +642,9 @@ Hook_KernelBase_UnmapViewOfFile(
     _In_ PVOID BaseAddress
     )
 {
-    if (BaseAddress)
-    {
-        AVrfForgetGuardForInPageError(BaseAddress);
-    }
-
-    return Orig_KernelBase_UnmapViewOfFile(BaseAddress);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   UnmapViewOfFile,
+                                   BaseAddress);
 }
 
 BOOL
@@ -603,10 +654,8 @@ Hook_KernelBase_UnmapViewOfFileEx(
     _In_ ULONG UnmapFlags
     )
 {
-    if (BaseAddress)
-    {
-        AVrfForgetGuardForInPageError(BaseAddress);
-    }
-
-    return Orig_KernelBase_UnmapViewOfFileEx(BaseAddress, UnmapFlags);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   UnmapViewOfFileEx,
+                                   BaseAddress,
+                                   UnmapFlags);
 }
