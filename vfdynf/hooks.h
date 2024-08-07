@@ -7,31 +7,39 @@
     AVrfShouldFaultInject(type, VerifierGetAppCallerAddress(_ReturnAddress()))
 
 #ifdef VFDYNF_HOOKS_PRIVATE
-#define VFDYNF_HOOK_QUAL
 #define VFDYNF_ORIG_QUAL
 #define VFDYNF_ORIG_INIT = NULL
 #else
-#define VFDYNF_HOOK_QUAL
 #define VFDYNF_ORIG_QUAL extern
 #define VFDYNF_ORIG_INIT
 #endif
 
+#define VFDYNF_DECLAR_HOOK_TYPEDEF(ret, conv, name, params)                   \
+    typedef ret conv Func_##name params;                                      \
+    typedef Func_##name* PFunc_##name;
+
 #define VFDYNF_DECLARE_HOOK(ret, conv, name, params)                          \
-    VFDYNF_HOOK_QUAL ret conv Hook_##name params;                             \
-    VFDYNF_ORIG_QUAL ret (conv *Orig_##name) params VFDYNF_ORIG_INIT;
+    ret conv Hook_##name params;                             \
+    VFDYNF_ORIG_QUAL ret (conv *Orig_##name) params VFDYNF_ORIG_INIT;         \
+    VFDYNF_DECLAR_HOOK_TYPEDEF(ret, conv, name, params)
 
 #define VFDYNF_DECLARE_HOOK_EX(mod, conv, ret, name, params)                  \
-    VFDYNF_HOOK_QUAL ret conv Hook_##mod##_##name params;                     \
+    ret conv Hook_##mod##_##name params;                                      \
     VFDYNF_ORIG_QUAL ret (conv *Orig_##mod##_##name) params VFDYNF_ORIG_INIT;
 
 #define VFDYNF_DECLARE_HOOK_K32BASE(ret, conv, name, params)                  \
     VFDYNF_DECLARE_HOOK_EX(Kernel32, conv, ret, name, params);                \
-    VFDYNF_DECLARE_HOOK_EX(KernelBase, conv, ret, name, params)
+    VFDYNF_DECLARE_HOOK_EX(KernelBase, conv, ret, name, params)               \
+    VFDYNF_DECLAR_HOOK_TYPEDEF(ret, conv, name, params)
 
 #define VFDYNF_DECLARE_HOOK_K32BASEADV(ret, conv, name, params)               \
     VFDYNF_DECLARE_HOOK_EX(Kernel32, conv, ret, name, params);                \
     VFDYNF_DECLARE_HOOK_EX(KernelBase, conv, ret, name, params);              \
-    VFDYNF_DECLARE_HOOK_EX(Advapi32, conv, ret, name, params)
+    VFDYNF_DECLARE_HOOK_EX(Advapi32, conv, ret, name, params)                 \
+    VFDYNF_DECLAR_HOOK_TYPEDEF(ret, conv, name, params)
+
+#define VFDYNF_LINK_COMMON_HOOK(mod, name, ...)                               \
+    Hook_Common_##name(Orig_##mod##_##name, __VA_ARGS__)
 
 VFDYNF_DECLARE_HOOK(
 NTSTATUS,

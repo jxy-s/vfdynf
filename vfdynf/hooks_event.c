@@ -44,7 +44,8 @@ Hook_NtOpenEvent(
 
 HANDLE
 WINAPI
-Hook_Kernel32_CreateEventA(
+Hook_Common_CreateEventA(
+    _In_ PFunc_CreateEventA Orig_CreateEventA,
     _In_opt_ LPSECURITY_ATTRIBUTES lpEventAttributes,
     _In_ BOOL bManualReset,
     _In_ BOOL bInitialState,
@@ -57,10 +58,85 @@ Hook_Kernel32_CreateEventA(
         return NULL;
     }
 
-    return Orig_Kernel32_CreateEventA(lpEventAttributes,
-                                      bManualReset,
-                                      bInitialState,
-                                      lpName);
+    return Orig_CreateEventA(lpEventAttributes,
+                             bManualReset,
+                             bInitialState,
+                             lpName);
+}
+
+HANDLE
+WINAPI
+Hook_Common_CreateEventW(
+    _In_ PFunc_CreateEventW Orig_CreateEventW,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpEventAttributes,
+    _In_ BOOL bManualReset,
+    _In_ BOOL bInitialState,
+    _In_opt_ LPCWSTR lpName
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_CreateEventW(lpEventAttributes,
+                             bManualReset,
+                             bInitialState,
+                             lpName);
+}
+
+HANDLE
+WINAPI
+Hook_Common_OpenEventA(
+    _In_ PFunc_OpenEventA Orig_CreateEventA,
+    _In_ DWORD dwDesiredAccess,
+    _In_ BOOL bInheritHandle,
+    _In_ LPCSTR lpName
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_CreateEventA(dwDesiredAccess, bInheritHandle, lpName);
+}
+
+HANDLE
+WINAPI
+Hook_Common_OpenEventW(
+    _In_ PFunc_OpenEventW Orig_OpenEventW,
+    _In_ DWORD dwDesiredAccess,
+    _In_ BOOL bInheritHandle,
+    _In_ LPCWSTR lpName
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return NULL;
+    }
+
+    return Orig_OpenEventW(dwDesiredAccess, bInheritHandle, lpName);
+}
+
+HANDLE
+WINAPI
+Hook_Kernel32_CreateEventA(
+    _In_opt_ LPSECURITY_ATTRIBUTES lpEventAttributes,
+    _In_ BOOL bManualReset,
+    _In_ BOOL bInitialState,
+    _In_opt_ LPCSTR lpName
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   CreateEventA,
+                                   lpEventAttributes,
+                                   bManualReset,
+                                   bInitialState,
+                                   lpName);
 }
 
 HANDLE
@@ -72,16 +148,12 @@ Hook_Kernel32_CreateEventW(
     _In_opt_ LPCWSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_CreateEventW(lpEventAttributes,
-                                      bManualReset,
-                                      bInitialState,
-                                      lpName);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   CreateEventW,
+                                   lpEventAttributes,
+                                   bManualReset,
+                                   bInitialState,
+                                   lpName);
 }
 
 HANDLE
@@ -92,13 +164,11 @@ Hook_Kernel32_OpenEventA(
     _In_ LPCSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_OpenEventA(dwDesiredAccess, bInheritHandle, lpName);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   OpenEventA,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
 
 HANDLE
@@ -109,13 +179,11 @@ Hook_Kernel32_OpenEventW(
     _In_ LPCWSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_Kernel32_OpenEventW(dwDesiredAccess, bInheritHandle, lpName);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   OpenEventW,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
 
 HANDLE
@@ -127,16 +195,12 @@ Hook_KernelBase_CreateEventA(
     _In_opt_ LPCSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_CreateEventA(lpEventAttributes,
-                                        bManualReset,
-                                        bInitialState,
-                                        lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   CreateEventA,
+                                   lpEventAttributes,
+                                   bManualReset,
+                                   bInitialState,
+                                   lpName);
 }
 
 HANDLE
@@ -148,16 +212,12 @@ Hook_KernelBase_CreateEventW(
     _In_opt_ LPCWSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_CreateEventW(lpEventAttributes,
-                                        bManualReset,
-                                        bInitialState,
-                                        lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   CreateEventW,
+                                   lpEventAttributes,
+                                   bManualReset,
+                                   bInitialState,
+                                   lpName);
 }
 
 HANDLE
@@ -168,13 +228,11 @@ Hook_KernelBase_OpenEventA(
     _In_ LPCSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_OpenEventA(dwDesiredAccess, bInheritHandle, lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   OpenEventA,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
 
 HANDLE
@@ -185,12 +243,9 @@ Hook_KernelBase_OpenEventW(
     _In_ LPCWSTR lpName
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return NULL;
-    }
-
-    return Orig_KernelBase_OpenEventW(dwDesiredAccess, bInheritHandle, lpName);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   OpenEventW,
+                                   dwDesiredAccess,
+                                   bInheritHandle,
+                                   lpName);
 }
-

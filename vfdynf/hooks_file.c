@@ -123,7 +123,8 @@ Hook_NtQueryVolumeInformationFile(
 
 HANDLE
 NTAPI
-Hook_Kernel32_CreateFileA(
+Hook_Common_CreateFileA(
+    _In_ PFunc_CreateFileA Orig_CreateFileA,
     _In_ LPCSTR lpFileName,
     _In_ DWORD dwDesiredAccess,
     _In_ DWORD dwShareMode,
@@ -139,13 +140,133 @@ Hook_Kernel32_CreateFileA(
         return INVALID_HANDLE_VALUE;
     }
 
-    return Orig_Kernel32_CreateFileA(lpFileName,
-                                     dwDesiredAccess,
-                                     dwShareMode,
-                                     lpSecurityAttributes,
-                                     dwCreationDisposition,
-                                     dwFlagsAndAttributes,
-                                     hTemplateFile);
+    return Orig_CreateFileA(lpFileName,
+                            dwDesiredAccess,
+                            dwShareMode,
+                            lpSecurityAttributes,
+                            dwCreationDisposition,
+                            dwFlagsAndAttributes,
+                            hTemplateFile);
+}
+
+HANDLE
+NTAPI
+Hook_Common_CreateFileW(
+    _In_ PFunc_CreateFileW Orig_CreateFileW,
+    _In_ LPCWSTR lpFileName,
+    _In_ DWORD dwDesiredAccess,
+    _In_ DWORD dwShareMode,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    _In_ DWORD dwCreationDisposition,
+    _In_ DWORD dwFlagsAndAttributes,
+    _In_opt_ HANDLE hTemplateFile
+    )
+{
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
+    {
+        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return Orig_CreateFileW(lpFileName,
+                            dwDesiredAccess,
+                            dwShareMode,
+                            lpSecurityAttributes,
+                            dwCreationDisposition,
+                            dwFlagsAndAttributes,
+                            hTemplateFile);
+}
+
+BOOL
+WINAPI
+Hook_Common_ReadFile(
+    _In_ PFunc_ReadFile Orig_ReadFile,
+    _In_ HANDLE hFile,
+    _Out_writes_bytes_to_opt_(nNumberOfBytesToRead, *lpNumberOfBytesRead) __out_data_source(FILE) LPVOID lpBuffer,
+    _In_ DWORD nNumberOfBytesToRead,
+    _Out_opt_ LPDWORD lpNumberOfBytesRead,
+    _Inout_opt_ LPOVERLAPPED lpOverlapped
+    )
+{
+    return Orig_ReadFile(hFile,
+                         lpBuffer,
+                         nNumberOfBytesToRead,
+                         lpNumberOfBytesRead,
+                         lpOverlapped);
+}
+
+BOOL
+WINAPI
+Hook_Common_ReadFileEx(
+    _In_ PFunc_ReadFileEx Orig_ReadFileEx,
+    _In_ HANDLE hFile,
+    _Out_writes_bytes_opt_(nNumberOfBytesToRead) __out_data_source(FILE) LPVOID lpBuffer,
+    _In_ DWORD nNumberOfBytesToRead,
+    _Inout_ LPOVERLAPPED lpOverlapped,
+    _In_ LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+    )
+{
+    return Orig_ReadFileEx(hFile,
+                           lpBuffer,
+                           nNumberOfBytesToRead,
+                           lpOverlapped,
+                           lpCompletionRoutine);
+}
+
+BOOL
+WINAPI
+Hook_Common_GetFileInformationByHandle(
+    _In_ PFunc_GetFileInformationByHandle Orig_GetFileInformationByHandle,
+    _In_ HANDLE hFile,
+    _Out_ LPBY_HANDLE_FILE_INFORMATION lpFileInformation
+    )
+{
+    return Orig_GetFileInformationByHandle(hFile, lpFileInformation);
+}
+
+DWORD
+WINAPI
+Hook_Common_GetFileSize(
+    _In_ PFunc_GetFileSize Orig_GetFileSize,
+    _In_ HANDLE hFile,
+    _Out_opt_ LPDWORD lpFileSizeHigh
+    )
+{
+    return Orig_GetFileSize(hFile, lpFileSizeHigh);
+}
+
+BOOL
+WINAPI
+Hook_Common_GetFileSizeEx(
+    _In_ PFunc_GetFileSizeEx Orig_GetFileSizeEx,
+    _In_ HANDLE hFile,
+    _Out_ PLARGE_INTEGER lpFileSize
+    )
+{
+    return Orig_GetFileSizeEx(hFile, lpFileSize);
+}
+
+HANDLE
+NTAPI
+Hook_Kernel32_CreateFileA(
+    _In_ LPCSTR lpFileName,
+    _In_ DWORD dwDesiredAccess,
+    _In_ DWORD dwShareMode,
+    _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    _In_ DWORD dwCreationDisposition,
+    _In_ DWORD dwFlagsAndAttributes,
+    _In_opt_ HANDLE hTemplateFile
+    )
+{
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   CreateFileA,
+                                   lpFileName,
+                                   dwDesiredAccess,
+                                   dwShareMode,
+                                   lpSecurityAttributes,
+                                   dwCreationDisposition,
+                                   dwFlagsAndAttributes,
+                                   hTemplateFile);
 }
 
 HANDLE
@@ -160,19 +281,15 @@ Hook_Kernel32_CreateFileW(
     _In_opt_ HANDLE hTemplateFile
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return Orig_Kernel32_CreateFileW(lpFileName,
-                                     dwDesiredAccess,
-                                     dwShareMode,
-                                     lpSecurityAttributes,
-                                     dwCreationDisposition,
-                                     dwFlagsAndAttributes,
-                                     hTemplateFile);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   CreateFileW,
+                                   lpFileName,
+                                   dwDesiredAccess,
+                                   dwShareMode,
+                                   lpSecurityAttributes,
+                                   dwCreationDisposition,
+                                   dwFlagsAndAttributes,
+                                   hTemplateFile);
 }
 
 BOOL
@@ -185,11 +302,13 @@ Hook_Kernel32_ReadFile(
     _Inout_opt_ LPOVERLAPPED lpOverlapped
     )
 {
-    return Orig_Kernel32_ReadFile(hFile,
-                                  lpBuffer,
-                                  nNumberOfBytesToRead,
-                                  lpNumberOfBytesRead,
-                                  lpOverlapped);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   ReadFile,
+                                   hFile,
+                                   lpBuffer,
+                                   nNumberOfBytesToRead,
+                                   lpNumberOfBytesRead,
+                                   lpOverlapped);
 }
 
 BOOL
@@ -202,11 +321,13 @@ Hook_Kernel32_ReadFileEx(
     _In_ LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
     )
 {
-    return Orig_Kernel32_ReadFileEx(hFile,
-                                    lpBuffer,
-                                    nNumberOfBytesToRead,
-                                    lpOverlapped,
-                                    lpCompletionRoutine);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   ReadFileEx,
+                                   hFile,
+                                   lpBuffer,
+                                   nNumberOfBytesToRead,
+                                   lpOverlapped,
+                                   lpCompletionRoutine);
 }
 
 BOOL
@@ -216,7 +337,10 @@ Hook_Kernel32_GetFileInformationByHandle(
     _Out_ LPBY_HANDLE_FILE_INFORMATION lpFileInformation
     )
 {
-    return Orig_Kernel32_GetFileInformationByHandle(hFile, lpFileInformation);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   GetFileInformationByHandle,
+                                   hFile,
+                                   lpFileInformation);
 }
 
 DWORD
@@ -226,7 +350,10 @@ Hook_Kernel32_GetFileSize(
     _Out_opt_ LPDWORD lpFileSizeHigh
     )
 {
-    return Orig_Kernel32_GetFileSize(hFile, lpFileSizeHigh);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   GetFileSize,
+                                   hFile,
+                                   lpFileSizeHigh);
 }
 
 BOOL
@@ -236,7 +363,10 @@ Hook_Kernel32_GetFileSizeEx(
     _Out_ PLARGE_INTEGER lpFileSize
     )
 {
-    return Orig_Kernel32_GetFileSizeEx(hFile, lpFileSize);
+    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+                                   GetFileSizeEx,
+                                   hFile,
+                                   lpFileSize);
 }
 
 HANDLE
@@ -251,19 +381,15 @@ Hook_KernelBase_CreateFileA(
     _In_opt_ HANDLE hTemplateFile
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return Orig_KernelBase_CreateFileA(lpFileName,
-                                       dwDesiredAccess,
-                                       dwShareMode,
-                                       lpSecurityAttributes,
-                                       dwCreationDisposition,
-                                       dwFlagsAndAttributes,
-                                       hTemplateFile);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   CreateFileA,
+                                   lpFileName,
+                                   dwDesiredAccess,
+                                   dwShareMode,
+                                   lpSecurityAttributes,
+                                   dwCreationDisposition,
+                                   dwFlagsAndAttributes,
+                                   hTemplateFile);
 }
 
 HANDLE
@@ -278,19 +404,15 @@ Hook_KernelBase_CreateFileW(
     _In_opt_ HANDLE hTemplateFile
     )
 {
-    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
-    {
-        NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
-        return INVALID_HANDLE_VALUE;
-    }
-
-    return Orig_KernelBase_CreateFileW(lpFileName,
-                                       dwDesiredAccess,
-                                       dwShareMode,
-                                       lpSecurityAttributes,
-                                       dwCreationDisposition,
-                                       dwFlagsAndAttributes,
-                                       hTemplateFile);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   CreateFileW,
+                                   lpFileName,
+                                   dwDesiredAccess,
+                                   dwShareMode,
+                                   lpSecurityAttributes,
+                                   dwCreationDisposition,
+                                   dwFlagsAndAttributes,
+                                   hTemplateFile);
 }
 
 BOOL
@@ -303,11 +425,13 @@ Hook_KernelBase_ReadFile(
     _Inout_opt_ LPOVERLAPPED lpOverlapped
     )
 {
-    return Orig_KernelBase_ReadFile(hFile,
-                                    lpBuffer,
-                                    nNumberOfBytesToRead,
-                                    lpNumberOfBytesRead,
-                                    lpOverlapped);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   ReadFile,
+                                   hFile,
+                                   lpBuffer,
+                                   nNumberOfBytesToRead,
+                                   lpNumberOfBytesRead,
+                                   lpOverlapped);
 }
 
 BOOL
@@ -320,11 +444,13 @@ Hook_KernelBase_ReadFileEx(
     _In_ LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
     )
 {
-    return Orig_KernelBase_ReadFileEx(hFile,
-                                      lpBuffer,
-                                      nNumberOfBytesToRead,
-                                      lpOverlapped,
-                                      lpCompletionRoutine);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   ReadFileEx,
+                                   hFile,
+                                   lpBuffer,
+                                   nNumberOfBytesToRead,
+                                   lpOverlapped,
+                                   lpCompletionRoutine);
 }
 
 BOOL
@@ -334,7 +460,10 @@ Hook_KernelBase_GetFileInformationByHandle(
     _Out_ LPBY_HANDLE_FILE_INFORMATION lpFileInformation
     )
 {
-    return Orig_KernelBase_GetFileInformationByHandle(hFile, lpFileInformation);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   GetFileInformationByHandle,
+                                   hFile,
+                                   lpFileInformation);
 }
 
 DWORD
@@ -344,7 +473,10 @@ Hook_KernelBase_GetFileSize(
     _Out_opt_ LPDWORD lpFileSizeHigh
     )
 {
-    return Orig_KernelBase_GetFileSize(hFile, lpFileSizeHigh);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   GetFileSize,
+                                   hFile,
+                                   lpFileSizeHigh);
 }
 
 BOOL
@@ -354,6 +486,9 @@ Hook_KernelBase_GetFileSizeEx(
     _Out_ PLARGE_INTEGER lpFileSize
     )
 {
-    return Orig_KernelBase_GetFileSizeEx(hFile, lpFileSize);
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
+                                   GetFileSizeEx,
+                                   hFile,
+                                   lpFileSize);
 }
 
