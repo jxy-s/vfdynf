@@ -83,6 +83,43 @@ NtOpenFile, (
     ));
 
 VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtReadFile, (
+    _In_ HANDLE FileHandle,
+    _In_opt_ HANDLE Event,
+    _In_opt_ PIO_APC_ROUTINE ApcRoutine,
+    _In_opt_ PVOID ApcContext,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length,
+    _In_opt_ PLARGE_INTEGER ByteOffset,
+    _In_opt_ PULONG Key
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtQueryInformationFile, (
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _Out_writes_bytes_(Length) PVOID FileInformation,
+    _In_ ULONG Length,
+    _In_ FILE_INFORMATION_CLASS FileInformationClass
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtQueryVolumeInformationFile, (
+    _In_ HANDLE FileHandle,
+    _Out_ PIO_STATUS_BLOCK IoStatusBlock,
+    _Out_writes_bytes_(Length) PVOID FsInformation,
+    _In_ ULONG Length,
+    _In_ FSINFOCLASS FsInformationClass
+    ));
+
+VFDYNF_DECLARE_HOOK(
 BSTR,
 WINAPI,
 SysAllocString, (
@@ -207,6 +244,65 @@ NtSetValueKey, (
     _In_ ULONG Type,
     _In_reads_bytes_opt_(DataSize) PVOID Data,
     _In_ ULONG DataSize
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtQueryKey, (
+    _In_ HANDLE KeyHandle,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtQueryValueKey, (
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtQueryMultipleValueKey, (
+    _In_ HANDLE KeyHandle,
+    _Inout_updates_(EntryCount) PKEY_VALUE_ENTRY ValueEntries,
+    _In_ ULONG EntryCount,
+    _Out_writes_bytes_(*BufferLength) PVOID ValueBuffer,
+    _Inout_ PULONG BufferLength,
+    _Out_opt_ PULONG RequiredBufferLength
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtEnumerateKey, (
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    ));
+
+VFDYNF_DECLARE_HOOK(
+NTSTATUS,
+NTAPI,
+NtEnumerateValueKey, (
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
     ));
 
 VFDYNF_DECLARE_HOOK(
@@ -363,6 +459,52 @@ CreateFileW, (
     _In_ DWORD dwCreationDisposition,
     _In_ DWORD dwFlagsAndAttributes,
     _In_opt_ HANDLE hTemplateFile
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASE(
+BOOL,
+WINAPI,
+ReadFile, (
+    _In_ HANDLE hFile,
+    _Out_writes_bytes_to_opt_(nNumberOfBytesToRead, *lpNumberOfBytesRead) __out_data_source(FILE) LPVOID lpBuffer,
+    _In_ DWORD nNumberOfBytesToRead,
+    _Out_opt_ LPDWORD lpNumberOfBytesRead,
+    _Inout_opt_ LPOVERLAPPED lpOverlapped
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASE(
+BOOL,
+WINAPI,
+ReadFileEx, (
+    _In_ HANDLE hFile,
+    _Out_writes_bytes_opt_(nNumberOfBytesToRead) __out_data_source(FILE) LPVOID lpBuffer,
+    _In_ DWORD nNumberOfBytesToRead,
+    _Inout_ LPOVERLAPPED lpOverlapped,
+    _In_ LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASE(
+BOOL,
+WINAPI,
+GetFileInformationByHandle, (
+    _In_ HANDLE hFile,
+    _Out_ LPBY_HANDLE_FILE_INFORMATION lpFileInformation
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASE(
+DWORD,
+WINAPI,
+GetFileSize, (
+    _In_ HANDLE hFile,
+    _Out_opt_ LPDWORD lpFileSizeHigh
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASE(
+BOOL,
+WINAPI,
+GetFileSizeEx, (
+    _In_ HANDLE hFile,
+    _Out_ PLARGE_INTEGER lpFileSize
     ));
 
 VFDYNF_DECLARE_HOOK_K32BASE(
@@ -573,6 +715,188 @@ RegSetValueExW, (
     _In_ DWORD dwType,
     _In_reads_bytes_opt_(cbData) CONST BYTE* lpData,
     _In_ DWORD cbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegQueryValueA, (
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegQueryValueW, (
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPWSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegQueryMultipleValuesA, (
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTA val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegQueryMultipleValuesW, (
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTW val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPWSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegQueryValueExA, (
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegQueryValueExW, (
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegGetValueA, (
+    _In_ HKEY hkey,
+    _In_opt_ LPCSTR lpSubKey,
+    _In_opt_ LPCSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegGetValueW, (
+    _In_ HKEY hkey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _In_opt_ LPCWSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegEnumKeyA, (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPSTR lpName,
+    _In_ DWORD cchName
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegEnumKeyW, (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPWSTR lpName,
+    _In_ DWORD cchName
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegEnumKeyExA, (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegEnumKeyExW, (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPWSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegEnumValueA, (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
+    ));
+
+VFDYNF_DECLARE_HOOK_K32BASEADV(
+LSTATUS,
+APIENTRY,
+RegEnumValueW, (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPWSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
     ));
 
 VFDYNF_DECLARE_HOOK_K32BASE(

@@ -22,6 +22,9 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpNtdll[] =
 {
     VFDYNF_THUNK(NtOpenFile),
     VFDYNF_THUNK(NtCreateFile),
+    VFDYNF_THUNK(NtReadFile),
+    VFDYNF_THUNK(NtQueryInformationFile),
+    VFDYNF_THUNK(NtQueryVolumeInformationFile),
     VFDYNF_THUNK(RtlAllocateHeap),
     VFDYNF_THUNK(RtlReAllocateHeap),
     VFDYNF_THUNK(NtCreateEvent),
@@ -29,6 +32,11 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpNtdll[] =
     VFDYNF_THUNK(NtCreateKey),
     VFDYNF_THUNK(NtOpenKey),
     VFDYNF_THUNK(NtSetValueKey),
+    VFDYNF_THUNK(NtQueryKey),
+    VFDYNF_THUNK(NtQueryValueKey),
+    VFDYNF_THUNK(NtQueryMultipleValueKey),
+    VFDYNF_THUNK(NtEnumerateKey),
+    VFDYNF_THUNK(NtEnumerateValueKey),
     VFDYNF_THUNK(NtAllocateVirtualMemory),
     VFDYNF_THUNK(NtAllocateVirtualMemoryEx),
     VFDYNF_THUNK(NtCreateSection),
@@ -48,6 +56,11 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpKernel32[] =
     VFDYNF_THUNK_EX(Kernel32, LocalReAlloc),
     VFDYNF_THUNK_EX(Kernel32, CreateFileA),
     VFDYNF_THUNK_EX(Kernel32, CreateFileW),
+    VFDYNF_THUNK_EX(Kernel32, ReadFile),
+    VFDYNF_THUNK_EX(Kernel32, ReadFileEx),
+    VFDYNF_THUNK_EX(Kernel32, GetFileInformationByHandle),
+    VFDYNF_THUNK_EX(Kernel32, GetFileSize),
+    VFDYNF_THUNK_EX(Kernel32, GetFileSizeEx),
     VFDYNF_THUNK_EX(Kernel32, WaitForSingleObject),
     VFDYNF_THUNK_EX(Kernel32, WaitForSingleObjectEx),
     VFDYNF_THUNK_EX(Kernel32, WaitForMultipleObjects),
@@ -68,6 +81,20 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpKernel32[] =
     VFDYNF_THUNK_EX(Kernel32, RegSetValueW),
     VFDYNF_THUNK_EX(Kernel32, RegSetValueExA),
     VFDYNF_THUNK_EX(Kernel32, RegSetValueExW),
+    VFDYNF_THUNK_EX(Kernel32, RegQueryValueA),
+    VFDYNF_THUNK_EX(Kernel32, RegQueryValueW),
+    VFDYNF_THUNK_EX(Kernel32, RegQueryMultipleValuesA),
+    VFDYNF_THUNK_EX(Kernel32, RegQueryMultipleValuesW),
+    VFDYNF_THUNK_EX(Kernel32, RegQueryValueExA),
+    VFDYNF_THUNK_EX(Kernel32, RegQueryValueExW),
+    VFDYNF_THUNK_EX(Kernel32, RegGetValueA),
+    VFDYNF_THUNK_EX(Kernel32, RegGetValueW),
+    VFDYNF_THUNK_EX(Kernel32, RegEnumKeyA),
+    VFDYNF_THUNK_EX(Kernel32, RegEnumKeyW),
+    VFDYNF_THUNK_EX(Kernel32, RegEnumKeyExA),
+    VFDYNF_THUNK_EX(Kernel32, RegEnumKeyExW),
+    VFDYNF_THUNK_EX(Kernel32, RegEnumValueA),
+    VFDYNF_THUNK_EX(Kernel32, RegEnumValueW),
     VFDYNF_THUNK_EX(Kernel32, CreateFileMappingW),
     VFDYNF_THUNK_EX(Kernel32, CreateFileMappingA),
     VFDYNF_THUNK_EX(Kernel32, OpenFileMappingW),
@@ -89,6 +116,11 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpKernelBase[] =
     VFDYNF_THUNK_EX(KernelBase, LocalReAlloc),
     VFDYNF_THUNK_EX(KernelBase, CreateFileA),
     VFDYNF_THUNK_EX(KernelBase, CreateFileW),
+    VFDYNF_THUNK_EX(KernelBase, ReadFile),
+    VFDYNF_THUNK_EX(KernelBase, ReadFileEx),
+    VFDYNF_THUNK_EX(KernelBase, GetFileInformationByHandle),
+    VFDYNF_THUNK_EX(KernelBase, GetFileSize),
+    VFDYNF_THUNK_EX(KernelBase, GetFileSizeEx),
     VFDYNF_THUNK_EX(KernelBase, WaitForSingleObject),
     VFDYNF_THUNK_EX(KernelBase, WaitForSingleObjectEx),
     VFDYNF_THUNK_EX(KernelBase, WaitForMultipleObjects),
@@ -109,6 +141,20 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpKernelBase[] =
     VFDYNF_THUNK_EX(KernelBase, RegSetValueW),
     VFDYNF_THUNK_EX(KernelBase, RegSetValueExA),
     VFDYNF_THUNK_EX(KernelBase, RegSetValueExW),
+    VFDYNF_THUNK_EX(KernelBase, RegQueryValueA),
+    VFDYNF_THUNK_EX(KernelBase, RegQueryValueW),
+    VFDYNF_THUNK_EX(KernelBase, RegQueryMultipleValuesA),
+    VFDYNF_THUNK_EX(KernelBase, RegQueryMultipleValuesW),
+    VFDYNF_THUNK_EX(KernelBase, RegQueryValueExA),
+    VFDYNF_THUNK_EX(KernelBase, RegQueryValueExW),
+    VFDYNF_THUNK_EX(KernelBase, RegGetValueA),
+    VFDYNF_THUNK_EX(KernelBase, RegGetValueW),
+    VFDYNF_THUNK_EX(KernelBase, RegEnumKeyA),
+    VFDYNF_THUNK_EX(KernelBase, RegEnumKeyW),
+    VFDYNF_THUNK_EX(KernelBase, RegEnumKeyExA),
+    VFDYNF_THUNK_EX(KernelBase, RegEnumKeyExW),
+    VFDYNF_THUNK_EX(KernelBase, RegEnumValueA),
+    VFDYNF_THUNK_EX(KernelBase, RegEnumValueW),
     VFDYNF_THUNK_EX(KernelBase, CreateFileMappingW),
     VFDYNF_THUNK_EX(KernelBase, CreateFileMappingA),
     VFDYNF_THUNK_EX(KernelBase, OpenFileMappingW),
@@ -136,6 +182,20 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpAdvapi32[] =
     VFDYNF_THUNK_EX(Advapi32, RegSetValueW),
     VFDYNF_THUNK_EX(Advapi32, RegSetValueExA),
     VFDYNF_THUNK_EX(Advapi32, RegSetValueExW),
+    VFDYNF_THUNK_EX(Advapi32, RegQueryValueA),
+    VFDYNF_THUNK_EX(Advapi32, RegQueryValueW),
+    VFDYNF_THUNK_EX(Advapi32, RegQueryMultipleValuesA),
+    VFDYNF_THUNK_EX(Advapi32, RegQueryMultipleValuesW),
+    VFDYNF_THUNK_EX(Advapi32, RegQueryValueExA),
+    VFDYNF_THUNK_EX(Advapi32, RegQueryValueExW),
+    VFDYNF_THUNK_EX(Advapi32, RegGetValueA),
+    VFDYNF_THUNK_EX(Advapi32, RegGetValueW),
+    VFDYNF_THUNK_EX(Advapi32, RegEnumKeyA),
+    VFDYNF_THUNK_EX(Advapi32, RegEnumKeyW),
+    VFDYNF_THUNK_EX(Advapi32, RegEnumKeyExA),
+    VFDYNF_THUNK_EX(Advapi32, RegEnumKeyExW),
+    VFDYNF_THUNK_EX(Advapi32, RegEnumValueA),
+    VFDYNF_THUNK_EX(Advapi32, RegEnumValueW),
     { NULL, NULL, NULL }
 };
 
@@ -206,6 +266,9 @@ BOOLEAN AVrfHookProcessAttach(
 {
     AVrfLinkHook(Ntdll, NtOpenFile);
     AVrfLinkHook(Ntdll, NtCreateFile);
+    AVrfLinkHook(Ntdll, NtReadFile);
+    AVrfLinkHook(Ntdll, NtQueryInformationFile);
+    AVrfLinkHook(Ntdll, NtQueryVolumeInformationFile);
     AVrfLinkHook(Ntdll, RtlAllocateHeap);
     AVrfLinkHook(Ntdll, RtlReAllocateHeap);
     AVrfLinkHook(Ntdll, NtCreateEvent);
@@ -213,6 +276,11 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook(Ntdll, NtCreateKey);
     AVrfLinkHook(Ntdll, NtOpenKey);
     AVrfLinkHook(Ntdll, NtSetValueKey);
+    AVrfLinkHook(Ntdll, NtQueryKey);
+    AVrfLinkHook(Ntdll, NtQueryValueKey);
+    AVrfLinkHook(Ntdll, NtQueryMultipleValueKey);
+    AVrfLinkHook(Ntdll, NtEnumerateKey);
+    AVrfLinkHook(Ntdll, NtEnumerateValueKey);
     AVrfLinkHook(Ntdll, NtAllocateVirtualMemory);
     AVrfLinkHook(Ntdll, NtAllocateVirtualMemoryEx);
     AVrfLinkHook(Ntdll, NtCreateSection);
@@ -228,6 +296,11 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook2(Kernel32, LocalReAlloc);
     AVrfLinkHook2(Kernel32, CreateFileA);
     AVrfLinkHook2(Kernel32, CreateFileW);
+    AVrfLinkHook2(Kernel32, ReadFile);
+    AVrfLinkHook2(Kernel32, ReadFileEx);
+    AVrfLinkHook2(Kernel32, GetFileInformationByHandle);
+    AVrfLinkHook2(Kernel32, GetFileSize);
+    AVrfLinkHook2(Kernel32, GetFileSizeEx);
     AVrfLinkHook2(Kernel32, WaitForSingleObject);
     AVrfLinkHook2(Kernel32, WaitForSingleObjectEx);
     AVrfLinkHook2(Kernel32, WaitForMultipleObjects);
@@ -248,6 +321,20 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook2(Kernel32, RegSetValueW);
     AVrfLinkHook2(Kernel32, RegSetValueExA);
     AVrfLinkHook2(Kernel32, RegSetValueExW);
+    AVrfLinkHook2(Kernel32, RegQueryValueA);
+    AVrfLinkHook2(Kernel32, RegQueryValueW);
+    AVrfLinkHook2(Kernel32, RegQueryMultipleValuesA);
+    AVrfLinkHook2(Kernel32, RegQueryMultipleValuesW);
+    AVrfLinkHook2(Kernel32, RegQueryValueExA);
+    AVrfLinkHook2(Kernel32, RegQueryValueExW);
+    AVrfLinkHook2(Kernel32, RegGetValueA);
+    AVrfLinkHook2(Kernel32, RegGetValueW);
+    AVrfLinkHook2(Kernel32, RegEnumKeyA);
+    AVrfLinkHook2(Kernel32, RegEnumKeyW);
+    AVrfLinkHook2(Kernel32, RegEnumKeyExA);
+    AVrfLinkHook2(Kernel32, RegEnumKeyExW);
+    AVrfLinkHook2(Kernel32, RegEnumValueA);
+    AVrfLinkHook2(Kernel32, RegEnumValueW);
     AVrfLinkHook2(Kernel32, CreateFileMappingW);
     AVrfLinkHook2(Kernel32, CreateFileMappingA);
     AVrfLinkHook2(Kernel32, OpenFileMappingW);
@@ -265,6 +352,11 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook2(KernelBase, LocalReAlloc);
     AVrfLinkHook2(KernelBase, CreateFileA);
     AVrfLinkHook2(KernelBase, CreateFileW);
+    AVrfLinkHook2(KernelBase, ReadFile);
+    AVrfLinkHook2(KernelBase, ReadFileEx);
+    AVrfLinkHook2(KernelBase, GetFileInformationByHandle);
+    AVrfLinkHook2(KernelBase, GetFileSize);
+    AVrfLinkHook2(KernelBase, GetFileSizeEx);
     AVrfLinkHook2(KernelBase, WaitForSingleObject);
     AVrfLinkHook2(KernelBase, WaitForSingleObjectEx);
     AVrfLinkHook2(KernelBase, WaitForMultipleObjects);
@@ -285,6 +377,20 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook2(KernelBase, RegSetValueW);
     AVrfLinkHook2(KernelBase, RegSetValueExA);
     AVrfLinkHook2(KernelBase, RegSetValueExW);
+    AVrfLinkHook2(KernelBase, RegQueryValueA);
+    AVrfLinkHook2(KernelBase, RegQueryValueW);
+    AVrfLinkHook2(KernelBase, RegQueryMultipleValuesA);
+    AVrfLinkHook2(KernelBase, RegQueryMultipleValuesW);
+    AVrfLinkHook2(KernelBase, RegQueryValueExA);
+    AVrfLinkHook2(KernelBase, RegQueryValueExW);
+    AVrfLinkHook2(KernelBase, RegGetValueA);
+    AVrfLinkHook2(KernelBase, RegGetValueW);
+    AVrfLinkHook2(KernelBase, RegEnumKeyA);
+    AVrfLinkHook2(KernelBase, RegEnumKeyW);
+    AVrfLinkHook2(KernelBase, RegEnumKeyExA);
+    AVrfLinkHook2(KernelBase, RegEnumKeyExW);
+    AVrfLinkHook2(KernelBase, RegEnumValueA);
+    AVrfLinkHook2(KernelBase, RegEnumValueW);
     AVrfLinkHook2(KernelBase, CreateFileMappingW);
     AVrfLinkHook2(KernelBase, CreateFileMappingA);
     AVrfLinkHook2(KernelBase, OpenFileMappingW);
@@ -308,6 +414,20 @@ BOOLEAN AVrfHookProcessAttach(
     AVrfLinkHook2(Advapi32, RegSetValueW);
     AVrfLinkHook2(Advapi32, RegSetValueExA);
     AVrfLinkHook2(Advapi32, RegSetValueExW);
+    AVrfLinkHook2(Advapi32, RegQueryValueA);
+    AVrfLinkHook2(Advapi32, RegQueryValueW);
+    AVrfLinkHook2(Advapi32, RegQueryMultipleValuesA);
+    AVrfLinkHook2(Advapi32, RegQueryMultipleValuesW);
+    AVrfLinkHook2(Advapi32, RegQueryValueExA);
+    AVrfLinkHook2(Advapi32, RegQueryValueExW);
+    AVrfLinkHook2(Advapi32, RegGetValueA);
+    AVrfLinkHook2(Advapi32, RegGetValueW);
+    AVrfLinkHook2(Advapi32, RegEnumKeyA);
+    AVrfLinkHook2(Advapi32, RegEnumKeyW);
+    AVrfLinkHook2(Advapi32, RegEnumKeyExA);
+    AVrfLinkHook2(Advapi32, RegEnumKeyExW);
+    AVrfLinkHook2(Advapi32, RegEnumValueA);
+    AVrfLinkHook2(Advapi32, RegEnumValueW);
 
     AVrfLinkHook(OleAut32, SysAllocString);
     AVrfLinkHook(OleAut32, SysReAllocString);

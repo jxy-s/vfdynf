@@ -70,6 +70,99 @@ Hook_NtSetValueKey(
                               DataSize);
 }
 
+NTSTATUS
+NTAPI
+Hook_NtQueryKey(
+    _In_ HANDLE KeyHandle,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    )
+{
+    return Orig_NtQueryKey(KeyHandle,
+                           KeyInformationClass,
+                           KeyInformation,
+                           Length,
+                           ResultLength);
+}
+
+NTSTATUS
+NTAPI
+Hook_NtQueryValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    )
+{
+    return Orig_NtQueryValueKey(KeyHandle,
+                                ValueName,
+                                KeyValueInformationClass,
+                                KeyValueInformation,
+                                Length,
+                                ResultLength);
+}
+
+NTSTATUS
+NTAPI
+Hook_NtQueryMultipleValueKey(
+    _In_ HANDLE KeyHandle,
+    _Inout_updates_(EntryCount) PKEY_VALUE_ENTRY ValueEntries,
+    _In_ ULONG EntryCount,
+    _Out_writes_bytes_(*BufferLength) PVOID ValueBuffer,
+    _Inout_ PULONG BufferLength,
+    _Out_opt_ PULONG RequiredBufferLength
+    )
+{
+    return Orig_NtQueryMultipleValueKey(KeyHandle,
+                                        ValueEntries,
+                                        EntryCount,
+                                        ValueBuffer,
+                                        BufferLength,
+                                        RequiredBufferLength);
+}
+
+NTSTATUS
+NTAPI
+Hook_NtEnumerateKey(
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    )
+{
+    return Orig_NtEnumerateKey(KeyHandle,
+                               Index,
+                               KeyInformationClass,
+                               KeyInformation,
+                               Length,
+                               ResultLength);
+}
+
+NTSTATUS
+NTAPI
+Hook_NtEnumerateValueKey(
+    _In_ HANDLE KeyHandle,
+    _In_ ULONG Index,
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Out_writes_bytes_opt_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length,
+    _Out_ PULONG ResultLength
+    )
+{
+    return Orig_NtEnumerateValueKey(KeyHandle,
+                                    Index,
+                                    KeyValueInformationClass,
+                                    KeyValueInformation,
+                                    Length,
+                                    ResultLength);
+}
+
 LSTATUS
 APIENTRY
 Hook_Kernel32_RegCreateKeyA(
@@ -336,6 +429,274 @@ Hook_Kernel32_RegSetValueExW(
                                         dwType,
                                         lpData,
                                         cbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegQueryValueA (
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    )
+{
+    return Orig_Kernel32_RegQueryValueA(hKey, lpSubKey, lpData, lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegQueryValueW (
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPWSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    )
+{
+    return Orig_Kernel32_RegQueryValueW(hKey, lpSubKey, lpData, lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegQueryMultipleValuesA(
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTA val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    )
+{
+    return Orig_Kernel32_RegQueryMultipleValuesA(hKey,
+                                                 val_list,
+                                                 num_vals,
+                                                 lpValueBuf,
+                                                 ldwTotsize);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegQueryMultipleValuesW(
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTW val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPWSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    )
+{
+    return Orig_Kernel32_RegQueryMultipleValuesW(hKey,
+                                                 val_list,
+                                                 num_vals,
+                                                 lpValueBuf,
+                                                 ldwTotsize);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegQueryValueExA(
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    )
+{
+    return Orig_Kernel32_RegQueryValueExA(hKey,
+                                          lpValueName,
+                                          lpReserved,
+                                          lpType,
+                                          lpData,
+                                          lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegQueryValueExW(
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    )
+{
+    return Orig_Kernel32_RegQueryValueExW(hKey,
+                                          lpValueName,
+                                          lpReserved,
+                                          lpType,
+                                          lpData,
+                                          lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegGetValueA(
+    _In_ HKEY hkey,
+    _In_opt_ LPCSTR lpSubKey,
+    _In_opt_ LPCSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    )
+{
+    return Orig_Kernel32_RegGetValueA(hkey,
+                                      lpSubKey,
+                                      lpValue,
+                                      dwFlags,
+                                      pdwType,
+                                      pvData,
+                                      pcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegGetValueW(
+    _In_ HKEY hkey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _In_opt_ LPCWSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    )
+{
+    return Orig_Kernel32_RegGetValueW(hkey,
+                                      lpSubKey,
+                                      lpValue,
+                                      dwFlags,
+                                      pdwType,
+                                      pvData,
+                                      pcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegEnumKeyA (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPSTR lpName,
+    _In_ DWORD cchName
+    )
+{
+    return Orig_Kernel32_RegEnumKeyA(hKey, dwIndex, lpName, cchName);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegEnumKeyW (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPWSTR lpName,
+    _In_ DWORD cchName
+    )
+{
+    return Orig_Kernel32_RegEnumKeyW(hKey, dwIndex, lpName, cchName);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegEnumKeyExA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    )
+{
+    return Orig_Kernel32_RegEnumKeyExA(hKey,
+                                       dwIndex,
+                                       lpName,
+                                       lpcchName,
+                                       lpReserved,
+                                       lpClass,
+                                       lpcchClass,
+                                       lpftLastWriteTime);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegEnumKeyExW(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPWSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    )
+{
+    return Orig_Kernel32_RegEnumKeyExW(hKey,
+                                       dwIndex,
+                                       lpName,
+                                       lpcchName,
+                                       lpReserved,
+                                       lpClass,
+                                       lpcchClass,
+                                       lpftLastWriteTime);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegEnumValueA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
+    )
+{
+    return Orig_Kernel32_RegEnumValueA(hKey,
+                                       dwIndex,
+                                       lpValueName,
+                                       lpcchValueName,
+                                       lpReserved,
+                                       lpType,
+                                       lpData,
+                                       lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Kernel32_RegEnumValueW(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPWSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
+    )
+{
+    return Orig_Kernel32_RegEnumValueW(hKey,
+                                       dwIndex,
+                                       lpValueName,
+                                       lpcchValueName,
+                                       lpReserved,
+                                       lpType,
+                                       lpData,
+                                       lpcbData);
 }
 
 LSTATUS
@@ -608,6 +969,274 @@ Hook_KernelBase_RegSetValueExW(
 
 LSTATUS
 APIENTRY
+Hook_KernelBase_RegQueryValueA (
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    )
+{
+    return Orig_KernelBase_RegQueryValueA(hKey, lpSubKey, lpData, lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegQueryValueW (
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPWSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    )
+{
+    return Orig_KernelBase_RegQueryValueW(hKey, lpSubKey, lpData, lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegQueryMultipleValuesA(
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTA val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    )
+{
+    return Orig_KernelBase_RegQueryMultipleValuesA(hKey,
+                                                   val_list,
+                                                   num_vals,
+                                                   lpValueBuf,
+                                                   ldwTotsize);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegQueryMultipleValuesW(
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTW val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPWSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    )
+{
+    return Orig_KernelBase_RegQueryMultipleValuesW(hKey,
+                                                   val_list,
+                                                   num_vals,
+                                                   lpValueBuf,
+                                                   ldwTotsize);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegQueryValueExA(
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    )
+{
+    return Orig_KernelBase_RegQueryValueExA(hKey,
+                                            lpValueName,
+                                            lpReserved,
+                                            lpType,
+                                            lpData,
+                                            lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegQueryValueExW(
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    )
+{
+    return Orig_KernelBase_RegQueryValueExW(hKey,
+                                            lpValueName,
+                                            lpReserved,
+                                            lpType,
+                                            lpData,
+                                            lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegGetValueA(
+    _In_ HKEY hkey,
+    _In_opt_ LPCSTR lpSubKey,
+    _In_opt_ LPCSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    )
+{
+    return Orig_KernelBase_RegGetValueA(hkey,
+                                        lpSubKey,
+                                        lpValue,
+                                        dwFlags,
+                                        pdwType,
+                                        pvData,
+                                        pcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegGetValueW(
+    _In_ HKEY hkey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _In_opt_ LPCWSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    )
+{
+    return Orig_KernelBase_RegGetValueW(hkey,
+                                        lpSubKey,
+                                        lpValue,
+                                        dwFlags,
+                                        pdwType,
+                                        pvData,
+                                        pcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegEnumKeyA (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPSTR lpName,
+    _In_ DWORD cchName
+    )
+{
+    return Orig_KernelBase_RegEnumKeyA(hKey, dwIndex, lpName, cchName);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegEnumKeyW (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPWSTR lpName,
+    _In_ DWORD cchName
+    )
+{
+    return Orig_KernelBase_RegEnumKeyW(hKey, dwIndex, lpName, cchName);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegEnumKeyExA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    )
+{
+    return Orig_KernelBase_RegEnumKeyExA(hKey,
+                                         dwIndex,
+                                         lpName,
+                                         lpcchName,
+                                         lpReserved,
+                                         lpClass,
+                                         lpcchClass,
+                                         lpftLastWriteTime);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegEnumKeyExW(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPWSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    )
+{
+    return Orig_KernelBase_RegEnumKeyExW(hKey,
+                                         dwIndex,
+                                         lpName,
+                                         lpcchName,
+                                         lpReserved,
+                                         lpClass,
+                                         lpcchClass,
+                                         lpftLastWriteTime);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegEnumValueA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
+    )
+{
+    return Orig_KernelBase_RegEnumValueA(hKey,
+                                         dwIndex,
+                                         lpValueName,
+                                         lpcchValueName,
+                                         lpReserved,
+                                         lpType,
+                                         lpData,
+                                         lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_KernelBase_RegEnumValueW(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPWSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
+    )
+{
+    return Orig_KernelBase_RegEnumValueW(hKey,
+                                         dwIndex,
+                                         lpValueName,
+                                         lpcchValueName,
+                                         lpReserved,
+                                         lpType,
+                                         lpData,
+                                         lpcbData);
+}
+
+LSTATUS
+APIENTRY
 Hook_Advapi32_RegCreateKeyA(
     _In_ HKEY hKey,
     _In_opt_ LPCSTR lpSubKey,
@@ -874,3 +1503,270 @@ Hook_Advapi32_RegSetValueExW(
                                         cbData);
 }
 
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegQueryValueA (
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    )
+{
+    return Orig_Advapi32_RegQueryValueA(hKey, lpSubKey, lpData, lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegQueryValueW (
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPWSTR lpData,
+    _Inout_opt_ PLONG lpcbData
+    )
+{
+    return Orig_Advapi32_RegQueryValueW(hKey, lpSubKey, lpData, lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegQueryMultipleValuesA(
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTA val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    )
+{
+    return Orig_Advapi32_RegQueryMultipleValuesA(hKey,
+                                                 val_list,
+                                                 num_vals,
+                                                 lpValueBuf,
+                                                 ldwTotsize);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegQueryMultipleValuesW(
+    _In_ HKEY hKey,
+    _Out_writes_(num_vals) PVALENTW val_list,
+    _In_ DWORD num_vals,
+    _Out_writes_bytes_to_opt_(*ldwTotsize, *ldwTotsize) __out_data_source(REGISTRY) LPWSTR lpValueBuf,
+    _Inout_opt_ LPDWORD ldwTotsize
+    )
+{
+    return Orig_Advapi32_RegQueryMultipleValuesW(hKey,
+                                                 val_list,
+                                                 num_vals,
+                                                 lpValueBuf,
+                                                 ldwTotsize);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegQueryValueExA(
+    _In_ HKEY hKey,
+    _In_opt_ LPCSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    )
+{
+    return Orig_Advapi32_RegQueryValueExA(hKey,
+                                          lpValueName,
+                                          lpReserved,
+                                          lpType,
+                                          lpData,
+                                          lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegQueryValueExW(
+    _In_ HKEY hKey,
+    _In_opt_ LPCWSTR lpValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
+    )
+{
+    return Orig_Advapi32_RegQueryValueExW(hKey,
+                                          lpValueName,
+                                          lpReserved,
+                                          lpType,
+                                          lpData,
+                                          lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegGetValueA(
+    _In_ HKEY hkey,
+    _In_opt_ LPCSTR lpSubKey,
+    _In_opt_ LPCSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    )
+{
+    return Orig_Advapi32_RegGetValueA(hkey,
+                                      lpSubKey,
+                                      lpValue,
+                                      dwFlags,
+                                      pdwType,
+                                      pvData,
+                                      pcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegGetValueW(
+    _In_ HKEY hkey,
+    _In_opt_ LPCWSTR lpSubKey,
+    _In_opt_ LPCWSTR lpValue,
+    _In_ DWORD dwFlags,
+    _Out_opt_ LPDWORD pdwType,
+    _When_((dwFlags & 0x7F) == RRF_RT_REG_SZ ||
+               (dwFlags & 0x7F) == RRF_RT_REG_EXPAND_SZ ||
+               (dwFlags & 0x7F) == (RRF_RT_REG_SZ | RRF_RT_REG_EXPAND_SZ) ||
+               *pdwType == REG_SZ ||
+               *pdwType == REG_EXPAND_SZ, _Post_z_)
+        _When_((dwFlags & 0x7F) == RRF_RT_REG_MULTI_SZ ||
+               *pdwType == REG_MULTI_SZ, _Post_ _NullNull_terminated_)
+    _Out_writes_bytes_to_opt_(*pcbData,*pcbData) PVOID pvData,
+    _Inout_opt_ LPDWORD pcbData
+    )
+{
+    return Orig_Advapi32_RegGetValueW(hkey,
+                                      lpSubKey,
+                                      lpValue,
+                                      dwFlags,
+                                      pdwType,
+                                      pvData,
+                                      pcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegEnumKeyA (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPSTR lpName,
+    _In_ DWORD cchName
+    )
+{
+    return Orig_Advapi32_RegEnumKeyA(hKey, dwIndex, lpName, cchName);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegEnumKeyW (
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_opt_(cchName) LPWSTR lpName,
+    _In_ DWORD cchName
+    )
+{
+    return Orig_Advapi32_RegEnumKeyW(hKey, dwIndex, lpName, cchName);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegEnumKeyExA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    )
+{
+    return Orig_Advapi32_RegEnumKeyExA(hKey,
+                                       dwIndex,
+                                       lpName,
+                                       lpcchName,
+                                       lpReserved,
+                                       lpClass,
+                                       lpcchClass,
+                                       lpftLastWriteTime);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegEnumKeyExW(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchName, *lpcchName + 1) LPWSTR lpName,
+    _Inout_ LPDWORD lpcchName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_writes_to_opt_(*lpcchClass,*lpcchClass + 1) LPWSTR lpClass,
+    _Inout_opt_ LPDWORD lpcchClass,
+    _Out_opt_ PFILETIME lpftLastWriteTime
+    )
+{
+    return Orig_Advapi32_RegEnumKeyExW(hKey,
+                                       dwIndex,
+                                       lpName,
+                                       lpcchName,
+                                       lpReserved,
+                                       lpClass,
+                                       lpcchClass,
+                                       lpftLastWriteTime);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegEnumValueA(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
+    )
+{
+    return Orig_Advapi32_RegEnumValueA(hKey,
+                                       dwIndex,
+                                       lpValueName,
+                                       lpcchValueName,
+                                       lpReserved,
+                                       lpType,
+                                       lpData,
+                                       lpcbData);
+}
+
+LSTATUS
+APIENTRY
+Hook_Advapi32_RegEnumValueW(
+    _In_ HKEY hKey,
+    _In_ DWORD dwIndex,
+    _Out_writes_to_opt_(*lpcchValueName, *lpcchValueName + 1) LPWSTR lpValueName,
+    _Inout_ LPDWORD lpcchValueName,
+    _Reserved_ LPDWORD lpReserved,
+    _Out_opt_ LPDWORD lpType,
+    _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPBYTE lpData,
+    _Inout_opt_ LPDWORD lpcbData
+    )
+{
+    return Orig_Advapi32_RegEnumValueW(hKey,
+                                       dwIndex,
+                                       lpValueName,
+                                       lpcchValueName,
+                                       lpReserved,
+                                       lpType,
+                                       lpData,
+                                       lpcbData);
+}
