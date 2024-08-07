@@ -11,9 +11,13 @@ VFDYNF_PROPERTIES AVrfProperties =
     .SymbolSearchPath = { L'\0' },
     .ExclusionsRegex = { L'\0' },
     .DynamicFaultPeroid = 30000,
-    .EnableFaultMask = VFDYNF_FAULT_VALID_MASK,
+    .EnableFaultMask = VFDYNF_FAULT_DEFAULT_MASK,
     .FaultProbability = 1000000,
     .FaultSeed = 0,
+    .FuzzCorruptionBlocks = 100,
+    .FuzzChaosProbability = 250000,
+    .FuzzSizeTruncateProbability = 250000,
+    .TypeExclusionsRegex = { 0 },
 };
 
 static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
@@ -59,7 +63,8 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         &AVrfProperties.EnableFaultMask,
         sizeof(AVrfProperties.EnableFaultMask),
         L"Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, "
-        L"4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage.",
+        L"4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage, 10=FuzzReg, "
+        L"11=FuzzFile, 12=FuzzMMap.",
         NULL
     },
     {
@@ -77,6 +82,35 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         sizeof(AVrfProperties.FaultSeed),
         L"Seed used for fault randomization. A value of zero will generate a "
         L"random seed.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"FuzzCorruptionBlocks",
+        &AVrfProperties.FuzzCorruptionBlocks,
+        sizeof(AVrfProperties.FuzzCorruptionBlocks),
+        L"Maximum number of blocks to corrupt when fuzzing. Larger numbers "
+        L"will impact performance, fuzzing logic will randomly loop between "
+        L"one and this maximum to apply corruption techniques on buffers.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"FuzzChaosProbability",
+        &AVrfProperties.FuzzChaosProbability,
+        sizeof(AVrfProperties.FuzzChaosProbability),
+        L"The probability (0 - 1000000) a corruption block will overwrite a "
+        L"portion of buffer with random data. Otherwise various corruption "
+        L"techniques are applied to the buffer in a less chaotic manner.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"FuzzSizeTruncateProbability",
+        &AVrfProperties.FuzzSizeTruncateProbability,
+        sizeof(AVrfProperties.FuzzSizeTruncateProbability),
+        L"The probability (0 - 1000000) that data lengths will be truncated "
+        L"to a random value below the actual length of the output data.",
         NULL
     },
     {
@@ -158,6 +192,33 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_INPAGE]),
         L"Excludes stack from section in-page fault injection when one of "
         L"these regular expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"FuzzRegExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG]),
+        L"Excludes stack from registry fuzzing when one of these regular "
+        L"expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"FuzzFileExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE]),
+        L"Excludes stack from file fuzzing when one of these regular "
+        L"expression matches the stack.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"FuzzMMapExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_MMAP],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_MMAP]),
+        L"Excludes stack from section map fuzzing when one of these regular "
+        L"expression matches the stack.",
         NULL
     },
     { AVRF_PROPERTY_NONE, NULL, NULL, 0, NULL, NULL }
@@ -318,6 +379,15 @@ BOOLEAN AVrfpProviderProcessAttach(
         return FALSE;
     }
 
+    if (!AVrfFuzzProcessAttach())
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: failed to setup fuzzing");
+        __debugbreak();
+        return FALSE;
+    }
+
     if (!AVrfExceptProcessAttach())
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -346,6 +416,8 @@ VOID AVrfpProviderProcessDetach(
     AVrfFaultProcessDetach();
 
     AVrfExceptProcessDetach();
+
+    AVrfFuzzProcessDetach();
 
     VerifierUnregisterLayer(Module, &AVrfpLayerDescriptor);
 }

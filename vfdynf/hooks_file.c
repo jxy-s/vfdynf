@@ -76,15 +76,37 @@ Hook_NtReadFile(
     _In_opt_ PULONG Key
     )
 {
-    return Orig_NtReadFile(FileHandle,
-                           Event,
-                           ApcRoutine,
-                           ApcContext,
-                           IoStatusBlock,
-                           Buffer,
-                           Length,
-                           ByteOffset,
-                           Key);
+    NTSTATUS status;
+
+    status = Orig_NtReadFile(FileHandle,
+                             Event,
+                             ApcRoutine,
+                             ApcContext,
+                             IoStatusBlock,
+                             Buffer,
+                             Length,
+                             ByteOffset,
+                             Key);
+
+    if (!NT_SUCCESS(status) || (status == STATUS_PENDING))
+    {
+        return status;
+    }
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+    {
+        LARGE_INTEGER bytesRead;
+
+        AVrfFuzzBuffer(Buffer, IoStatusBlock->Information);
+
+        bytesRead.QuadPart = IoStatusBlock->Information;
+
+        AVrfFuzzSizeTruncate(&bytesRead);
+
+        IoStatusBlock->Information = (ULONG_PTR)bytesRead.QuadPart;
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -97,11 +119,102 @@ Hook_NtQueryInformationFile(
     _In_ FILE_INFORMATION_CLASS FileInformationClass
     )
 {
-    return Orig_NtQueryInformationFile(FileHandle,
-                                       IoStatusBlock,
-                                       FileInformation,
-                                       Length,
-                                       FileInformationClass);
+    NTSTATUS status;
+
+    status = Orig_NtQueryInformationFile(FileHandle,
+                                         IoStatusBlock,
+                                         FileInformation,
+                                         Length,
+                                         FileInformationClass);
+
+    if ((status == STATUS_INFO_LENGTH_MISMATCH) ||
+        (status == STATUS_BUFFER_TOO_SMALL) ||
+        (status == STATUS_BUFFER_OVERFLOW))
+    {
+        if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+        {
+            IoStatusBlock->Information *= 2;
+        }
+
+        return status;
+    }
+
+    if (!NT_SUCCESS(status) || (status == STATUS_PENDING))
+    {
+        return status;
+    }
+
+    switch (FileInformationClass)
+    {
+        case FileStandardInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+            {
+                PFILE_STANDARD_INFORMATION info;
+                LARGE_INTEGER size;
+
+                info = FileInformation;
+
+                AVrfFuzzSize(&size);
+
+                info->EndOfFile = size;
+                size.QuadPart = ((size.QuadPart + 0xffff) & ~0xffff);
+                info->AllocationSize = size;
+            }
+            break;
+        }
+        case FileAllInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+            {
+                PFILE_ALL_INFORMATION info;
+                LARGE_INTEGER size;
+
+                info = FileInformation;
+
+                AVrfFuzzSize(&size);
+
+                info->StandardInformation.EndOfFile = size;
+                size.QuadPart = ((size.QuadPart + 0xffff) & ~0xffff);
+                info->StandardInformation.AllocationSize = size;
+            }
+            break;
+        }
+        case FileAllocationInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+            {
+                PFILE_ALLOCATION_INFORMATION info;
+                LARGE_INTEGER size;
+
+                info = FileInformation;
+
+                AVrfFuzzSize(&size);
+
+                size.QuadPart = ((size.QuadPart + 0xffff) & ~0xffff);
+                info->AllocationSize = size;
+            }
+            break;
+        }
+        case FileEndOfFileInfo:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+            {
+                PFILE_END_OF_FILE_INFORMATION info;
+
+                info = FileInformation;
+
+                AVrfFuzzSize(&info->EndOfFile);
+            }
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -188,11 +301,25 @@ Hook_Common_ReadFile(
     _Inout_opt_ LPOVERLAPPED lpOverlapped
     )
 {
-    return Orig_ReadFile(hFile,
-                         lpBuffer,
-                         nNumberOfBytesToRead,
-                         lpNumberOfBytesRead,
-                         lpOverlapped);
+    BOOL result;
+
+    result = Orig_ReadFile(hFile,
+                           lpBuffer,
+                           nNumberOfBytesToRead,
+                           lpNumberOfBytesRead,
+                           lpOverlapped);
+
+    if (result && lpBuffer && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+    {
+        AVrfFuzzBuffer(lpBuffer, nNumberOfBytesToRead);
+
+        if (lpNumberOfBytesRead)
+        {
+            AVrfFuzzSizeTruncateULong(lpNumberOfBytesRead);
+        }
+    }
+
+    return result;
 }
 
 BOOL
@@ -221,7 +348,24 @@ Hook_Common_GetFileInformationByHandle(
     _Out_ LPBY_HANDLE_FILE_INFORMATION lpFileInformation
     )
 {
-    return Orig_GetFileInformationByHandle(hFile, lpFileInformation);
+    BOOL result;
+
+    result = Orig_GetFileInformationByHandle(hFile, lpFileInformation);
+
+    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+    {
+        LARGE_INTEGER fileSize;
+
+        fileSize.HighPart = lpFileInformation->nFileSizeHigh;
+        fileSize.LowPart = lpFileInformation->nFileIndexLow;
+
+        AVrfFuzzSize(&fileSize);
+
+        lpFileInformation->nFileSizeHigh = fileSize.HighPart;
+        lpFileInformation->nFileIndexLow = fileSize.LowPart;
+    }
+
+    return result;
 }
 
 DWORD
@@ -243,7 +387,16 @@ Hook_Common_GetFileSizeEx(
     _Out_ PLARGE_INTEGER lpFileSize
     )
 {
-    return Orig_GetFileSizeEx(hFile, lpFileSize);
+    BOOL result;
+
+    result = Orig_GetFileSizeEx(hFile, lpFileSize);
+
+    if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+    {
+        AVrfFuzzSize(lpFileSize);
+    }
+
+    return result;
 }
 
 HANDLE

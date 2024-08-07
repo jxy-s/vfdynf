@@ -4,6 +4,194 @@
 #include <vfdynf.h>
 #include <hooks.h>
 
+VOID AVrfpCommonFuzzKeyInformation(
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Inout_updates_bytes_(ResultLength) PVOID KeyInformation,
+    _In_ ULONG ResultLength
+    )
+{
+    UNREFERENCED_PARAMETER(ResultLength);
+
+    switch (KeyInformationClass)
+    {
+        case KeyBasicInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_BASIC_INFORMATION info;
+
+                info = KeyInformation;
+
+                AVrfFuzzBuffer(info->Name, info->NameLength);
+
+                AVrfFuzzSizeTruncateWideString(&info->NameLength);
+            }
+            break;
+        }
+        case KeyNodeInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_NODE_INFORMATION info;
+
+                info = KeyInformation;
+
+                AVrfFuzzBuffer(info->Name, info->NameLength);
+                AVrfFuzzBuffer(Add2Ptr(info, info->ClassOffset),
+                               info->ClassLength);
+
+                AVrfFuzzSizeTruncateWideString(&info->NameLength);
+                AVrfFuzzSizeTruncateWideString(&info->ClassLength);
+            }
+            break;
+        }
+        case KeyFullInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_FULL_INFORMATION info;
+
+                info = KeyInformation;
+
+                AVrfFuzzBuffer(Add2Ptr(info, info->ClassOffset),
+                               info->ClassLength);
+
+                AVrfFuzzSizeTruncateWideString(&info->ClassLength);
+            }
+            break;
+        }
+        case KeyNameInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_NAME_INFORMATION info;
+
+                info = KeyInformation;
+
+                AVrfFuzzBuffer(info->Name, info->NameLength);
+
+                AVrfFuzzSizeTruncateWideString(&info->NameLength);
+            }
+            break;
+        }
+        case KeyCachedInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_CACHED_INFORMATION info;
+
+                info = KeyInformation;
+
+                AVrfFuzzBuffer(info->Name, info->NameLength);
+
+                AVrfFuzzSizeTruncateWideString(&info->NameLength);
+            }
+            break;
+        }
+    }
+}
+
+VOID AVrfpCommonFuzzKeyValueInformation(
+    _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    _Inout_updates_bytes_(ResultLength) PVOID KeyValueInformation,
+    _In_ ULONG ResultLength
+    )
+{
+    UNREFERENCED_PARAMETER(ResultLength);
+
+    switch (KeyValueInformationClass)
+    {
+        case KeyValueBasicInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_VALUE_BASIC_INFORMATION info;
+
+                info = KeyValueInformation;
+
+                AVrfFuzzBuffer(info->Name, info->NameLength);
+
+                AVrfFuzzSizeTruncateWideString(&info->NameLength);
+            }
+            break;
+        }
+        case KeyValueFullInformation:
+        case KeyValueFullInformationAlign64:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_VALUE_FULL_INFORMATION info;
+
+                info = KeyValueInformation;
+
+                AVrfFuzzBuffer(info->Name, info->NameLength);
+                AVrfFuzzBuffer(Add2Ptr(info, info->DataOffset),
+                               info->DataLength);
+
+                AVrfFuzzSizeTruncateWideString(&info->DataLength);
+
+                if ((info->Type == REG_SZ) ||
+                    (info->Type == REG_EXPAND_SZ) ||
+                    (info->Type == REG_MULTI_SZ))
+                {
+                    AVrfFuzzSizeTruncateWideString(&info->DataLength);
+                }
+                else
+                {
+                    AVrfFuzzSizeTruncateULong(&info->DataLength);
+                }
+            }
+            break;
+        }
+        case KeyValuePartialInformation:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_VALUE_PARTIAL_INFORMATION info;
+
+                info = KeyValueInformation;
+
+                AVrfFuzzBuffer(info->Data, info->DataLength);
+
+                if ((info->Type == REG_SZ) ||
+                    (info->Type == REG_EXPAND_SZ) ||
+                    (info->Type == REG_MULTI_SZ))
+                {
+                    AVrfFuzzSizeTruncateWideString(&info->DataLength);
+                }
+                else
+                {
+                    AVrfFuzzSizeTruncateULong(&info->DataLength);
+                }
+            }
+            break;
+        }
+        case KeyValuePartialInformationAlign64:
+        {
+            if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+            {
+                PKEY_VALUE_PARTIAL_INFORMATION_ALIGN64 info;
+
+                info = KeyValueInformation;
+
+                AVrfFuzzBuffer(info->Data, info->DataLength);
+
+                if ((info->Type == REG_SZ) ||
+                    (info->Type == REG_EXPAND_SZ) ||
+                    (info->Type == REG_MULTI_SZ))
+                {
+                    AVrfFuzzSizeTruncateWideString(&info->DataLength);
+                }
+                else
+                {
+                    AVrfFuzzSizeTruncateULong(&info->DataLength);
+                }
+            }
+            break;
+        }
+    }
+}
+
 NTSTATUS
 NTAPI
 Hook_NtCreateKey(
@@ -80,11 +268,34 @@ Hook_NtQueryKey(
     _Out_ PULONG ResultLength
     )
 {
-    return Orig_NtQueryKey(KeyHandle,
-                           KeyInformationClass,
-                           KeyInformation,
-                           Length,
-                           ResultLength);
+    NTSTATUS status;
+
+    status = Orig_NtQueryKey(KeyHandle,
+                             KeyInformationClass,
+                             KeyInformation,
+                             Length,
+                             ResultLength);
+
+    if ((status == STATUS_INFO_LENGTH_MISMATCH) ||
+        (status == STATUS_BUFFER_TOO_SMALL) ||
+        (status == STATUS_BUFFER_OVERFLOW))
+    {
+        if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *ResultLength *= 2;
+        }
+
+        return status;
+    }
+
+    if (NT_SUCCESS(status) && KeyInformation)
+    {
+        AVrfpCommonFuzzKeyInformation(KeyInformationClass,
+                                      KeyInformation,
+                                      *ResultLength);
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -98,12 +309,35 @@ Hook_NtQueryValueKey(
     _Out_ PULONG ResultLength
     )
 {
-    return Orig_NtQueryValueKey(KeyHandle,
-                                ValueName,
-                                KeyValueInformationClass,
-                                KeyValueInformation,
-                                Length,
-                                ResultLength);
+    NTSTATUS status;
+
+    status = Orig_NtQueryValueKey(KeyHandle,
+                                  ValueName,
+                                  KeyValueInformationClass,
+                                  KeyValueInformation,
+                                  Length,
+                                  ResultLength);
+
+    if ((status == STATUS_INFO_LENGTH_MISMATCH) ||
+        (status == STATUS_BUFFER_TOO_SMALL) ||
+        (status == STATUS_BUFFER_OVERFLOW))
+    {
+        if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *ResultLength *= 2;
+        }
+
+        return status;
+    }
+
+    if (NT_SUCCESS(status) && KeyValueInformation)
+    {
+        AVrfpCommonFuzzKeyValueInformation(KeyValueInformationClass,
+                                           KeyValueInformation,
+                                           *ResultLength);
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -117,12 +351,40 @@ Hook_NtQueryMultipleValueKey(
     _Out_opt_ PULONG RequiredBufferLength
     )
 {
-    return Orig_NtQueryMultipleValueKey(KeyHandle,
-                                        ValueEntries,
-                                        EntryCount,
-                                        ValueBuffer,
-                                        BufferLength,
-                                        RequiredBufferLength);
+    NTSTATUS status;
+
+    status = Orig_NtQueryMultipleValueKey(KeyHandle,
+                                          ValueEntries,
+                                          EntryCount,
+                                          ValueBuffer,
+                                          BufferLength,
+                                          RequiredBufferLength);
+
+    if ((status == STATUS_INFO_LENGTH_MISMATCH) ||
+        (status == STATUS_BUFFER_TOO_SMALL) ||
+        (status == STATUS_BUFFER_OVERFLOW))
+    {
+        if (RequiredBufferLength &&
+            AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *RequiredBufferLength *= 2;
+        }
+
+        return status;
+    }
+
+    if (!NT_SUCCESS(status))
+    {
+        return status;
+    }
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzBuffer(ValueBuffer, *BufferLength);
+        AVrfFuzzSizeTruncateULong(BufferLength);
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -136,12 +398,35 @@ Hook_NtEnumerateKey(
     _Out_ PULONG ResultLength
     )
 {
-    return Orig_NtEnumerateKey(KeyHandle,
-                               Index,
-                               KeyInformationClass,
-                               KeyInformation,
-                               Length,
-                               ResultLength);
+    NTSTATUS status;
+
+    status = Orig_NtEnumerateKey(KeyHandle,
+                                 Index,
+                                 KeyInformationClass,
+                                 KeyInformation,
+                                 Length,
+                                 ResultLength);
+
+    if ((status == STATUS_INFO_LENGTH_MISMATCH) ||
+        (status == STATUS_BUFFER_TOO_SMALL) ||
+        (status == STATUS_BUFFER_OVERFLOW))
+    {
+        if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *ResultLength *= 2;
+        }
+
+        return status;
+    }
+
+    if (NT_SUCCESS(status) && KeyInformation)
+    {
+        AVrfpCommonFuzzKeyInformation(KeyInformationClass,
+                                      KeyInformation,
+                                      *ResultLength);
+    }
+
+    return status;
 }
 
 NTSTATUS
@@ -155,12 +440,35 @@ Hook_NtEnumerateValueKey(
     _Out_ PULONG ResultLength
     )
 {
-    return Orig_NtEnumerateValueKey(KeyHandle,
-                                    Index,
-                                    KeyValueInformationClass,
-                                    KeyValueInformation,
-                                    Length,
-                                    ResultLength);
+    NTSTATUS status;
+
+    status = Orig_NtEnumerateValueKey(KeyHandle,
+                                      Index,
+                                      KeyValueInformationClass,
+                                      KeyValueInformation,
+                                      Length,
+                                      ResultLength);
+
+    if ((status == STATUS_INFO_LENGTH_MISMATCH) ||
+        (status == STATUS_BUFFER_TOO_SMALL) ||
+        (status == STATUS_BUFFER_OVERFLOW))
+    {
+        if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *ResultLength *= 2;
+        }
+
+        return status;
+    }
+
+    if (NT_SUCCESS(status) && KeyValueInformation)
+    {
+        AVrfpCommonFuzzKeyValueInformation(KeyValueInformationClass,
+                                           KeyValueInformation,
+                                           *ResultLength);
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -472,11 +780,38 @@ Hook_Common_RegQueryMultipleValuesA(
     _Inout_opt_ LPDWORD ldwTotsize
     )
 {
-    return Orig_RegQueryMultipleValuesA(hKey,
-                                        val_list,
-                                        num_vals,
-                                        lpValueBuf,
-                                        ldwTotsize);
+    LSTATUS status;
+
+    status = Orig_RegQueryMultipleValuesA(hKey,
+                                          val_list,
+                                          num_vals,
+                                          lpValueBuf,
+                                          ldwTotsize);
+
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *ldwTotsize *= 2;
+        }
+
+        return status;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (lpValueBuf && ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzBuffer(lpValueBuf, *ldwTotsize);
+        AVrfFuzzSizeTruncateULong(ldwTotsize);
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -490,11 +825,38 @@ Hook_Common_RegQueryMultipleValuesW(
     _Inout_opt_ LPDWORD ldwTotsize
     )
 {
-    return Orig_RegQueryMultipleValuesW(hKey,
-                                        val_list,
-                                        num_vals,
-                                        lpValueBuf,
-                                        ldwTotsize);
+    LSTATUS status;
+
+    status = Orig_RegQueryMultipleValuesW(hKey,
+                                          val_list,
+                                          num_vals,
+                                          lpValueBuf,
+                                          ldwTotsize);
+
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *ldwTotsize *= 2;
+        }
+
+        return status;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (lpValueBuf && ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzBuffer(lpValueBuf, *ldwTotsize);
+        AVrfFuzzSizeTruncateULong(ldwTotsize);
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -509,12 +871,39 @@ Hook_Common_RegQueryValueExA(
     _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
     )
 {
-    return Orig_RegQueryValueExA(hKey,
-                                 lpValueName,
-                                 lpReserved,
-                                 lpType,
-                                 lpData,
-                                 lpcbData);
+    LSTATUS status;
+
+    status = Orig_RegQueryValueExA(hKey,
+                                   lpValueName,
+                                   lpReserved,
+                                   lpType,
+                                   lpData,
+                                   lpcbData);
+
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *lpcbData *= 2;
+        }
+
+        return status;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (lpData && lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzBuffer(lpData, *lpcbData);
+        AVrfFuzzSizeTruncateULong(lpcbData);
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -529,14 +918,43 @@ Hook_Common_RegQueryValueExW(
     _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
     )
 {
-    return Orig_RegQueryValueExW(hKey,
-                                 lpValueName,
-                                 lpReserved,
-                                 lpType,
-                                 lpData,
-                                 lpcbData);
+    LSTATUS status;
+
+    status = Orig_RegQueryValueExW(hKey,
+                                   lpValueName,
+                                   lpReserved,
+                                   lpType,
+                                   lpData,
+                                   lpcbData);
+
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *lpcbData *= 2;
+        }
+
+        return status;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (lpData && lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzBuffer(lpData, *lpcbData);
+        AVrfFuzzSizeTruncateULong(lpcbData);
+    }
+
+    return status;
 }
 
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_Common_RegGetValueA(
@@ -557,15 +975,62 @@ Hook_Common_RegGetValueA(
     _Inout_opt_ LPDWORD pcbData
     )
 {
-    return Orig_RegGetValueA(hkey,
-                             lpSubKey,
-                             lpValue,
-                             dwFlags,
-                             pdwType,
-                             pvData,
-                             pcbData);
-}
+    LSTATUS status;
+    ULONG type;
 
+    status = Orig_RegGetValueA(hkey,
+                               lpSubKey,
+                               lpValue,
+                               dwFlags,
+                               &type,
+                               pvData,
+                               pcbData);
+
+    if (pdwType)
+    {
+        *pdwType = type;
+    }
+
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *pcbData *= 2;
+        }
+
+        return status;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (pvData && pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzBuffer(pvData, *pcbData);
+        AVrfFuzzSizeTruncateULong(pcbData);
+
+        if ((*pcbData >= sizeof(CHAR)) && (type == REG_SZ) || (type == REG_EXPAND_SZ))
+        {
+            ((PCHAR)pvData)[*pcbData - 1] = ANSI_NULL;
+        }
+
+        if ((*pcbData >= (sizeof(CHAR) * 2)) && (type == REG_MULTI_SZ))
+        {
+            ((PCHAR)pvData)[*pcbData - 1] = ANSI_NULL;
+            ((PCHAR)pvData)[*pcbData - 2] = ANSI_NULL;
+        }
+    }
+
+    return status;
+}
+#pragma prefast(pop)
+
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_Common_RegGetValueW(
@@ -586,14 +1051,69 @@ Hook_Common_RegGetValueW(
     _Inout_opt_ LPDWORD pcbData
     )
 {
-    return Orig_RegGetValueW(hkey,
-                             lpSubKey,
-                             lpValue,
-                             dwFlags,
-                             pdwType,
-                             pvData,
-                             pcbData);
+    LSTATUS status;
+    ULONG type;
+
+    status = Orig_RegGetValueW(hkey,
+                               lpSubKey,
+                               lpValue,
+                               dwFlags,
+                               &type,
+                               pvData,
+                               pcbData);
+
+    if (pdwType)
+    {
+        *pdwType = type;
+    }
+
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            *pcbData *= 2;
+        }
+
+        return status;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (pvData && pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzBuffer(pvData, *pcbData);
+
+        if ((type == REG_SZ) ||
+            (type == REG_EXPAND_SZ) ||
+            (type == REG_MULTI_SZ))
+        {
+            AVrfFuzzSizeTruncateWideString(pcbData);
+        }
+        else
+        {
+            AVrfFuzzSizeTruncateULong(pcbData);
+        }
+
+        if ((*pcbData >= sizeof(WCHAR)) && (type == REG_SZ) || (type == REG_EXPAND_SZ))
+        {
+            ((PWCHAR)pvData)[(*pcbData / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+        }
+
+        if ((*pcbData >= (sizeof(WCHAR) * 2)) && (type == REG_MULTI_SZ))
+        {
+            ((PWCHAR)pvData)[(*pcbData / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+            ((PWCHAR)pvData)[(*pcbData / sizeof(WCHAR)) - 2] = UNICODE_NULL;
+        }
+    }
+
+    return status;
 }
+#pragma prefast(pop)
 
 LSTATUS
 APIENTRY
@@ -635,14 +1155,40 @@ Hook_Common_RegEnumKeyExA(
     _Out_opt_ PFILETIME lpftLastWriteTime
     )
 {
-    return Orig_RegEnumKeyExA(hKey,
-                              dwIndex,
-                              lpName,
-                              lpcchName,
-                              lpReserved,
-                              lpClass,
-                              lpcchClass,
-                              lpftLastWriteTime);
+    LSTATUS status;
+
+    status = Orig_RegEnumKeyExA(hKey,
+                                dwIndex,
+                                lpName,
+                                lpcchName,
+                                lpReserved,
+                                lpClass,
+                                lpcchClass,
+                                lpftLastWriteTime);
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (!AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        return status;
+    }
+
+    if (lpName)
+    {
+        AVrfFuzzBuffer(lpName, *lpcchName * sizeof(CHAR));
+        AVrfFuzzSizeTruncateULong(lpcchName);
+    }
+
+    if (lpClass && lpcchClass)
+    {
+        AVrfFuzzBuffer(lpClass, *lpcchClass * sizeof(CHAR));
+        AVrfFuzzSizeTruncateULong(lpcchClass);
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -659,14 +1205,40 @@ Hook_Common_RegEnumKeyExW(
     _Out_opt_ PFILETIME lpftLastWriteTime
     )
 {
-    return Orig_RegEnumKeyExW(hKey,
-                              dwIndex,
-                              lpName,
-                              lpcchName,
-                              lpReserved,
-                              lpClass,
-                              lpcchClass,
-                              lpftLastWriteTime);
+    LSTATUS status;
+
+    status = Orig_RegEnumKeyExW(hKey,
+                                dwIndex,
+                                lpName,
+                                lpcchName,
+                                lpReserved,
+                                lpClass,
+                                lpcchClass,
+                                lpftLastWriteTime);
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (!AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        return status;
+    }
+
+    if (lpName)
+    {
+        AVrfFuzzBuffer(lpName, *lpcchName * sizeof(WCHAR));
+        AVrfFuzzSizeTruncateWideString(lpcchName);
+    }
+
+    if (lpClass && lpcchClass)
+    {
+        AVrfFuzzBuffer(lpClass, *lpcchClass * sizeof(WCHAR));
+        AVrfFuzzSizeTruncateWideString(lpcchClass);
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -683,14 +1255,56 @@ Hook_Common_RegEnumValueA(
     _Inout_opt_ LPDWORD lpcbData
     )
 {
-    return Orig_RegEnumValueA(hKey,
-                              dwIndex,
-                              lpValueName,
-                              lpcchValueName,
-                              lpReserved,
-                              lpType,
-                              lpData,
-                              lpcbData);
+    LSTATUS status;
+    ULONG type;
+
+    status = Orig_RegEnumValueA(hKey,
+                                dwIndex,
+                                lpValueName,
+                                lpcchValueName,
+                                lpReserved,
+                                &type,
+                                lpData,
+                                lpcbData);
+
+    if (lpType)
+    {
+        *lpType = type;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (!AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        return status;
+    }
+
+    if (lpValueName)
+    {
+        AVrfFuzzBuffer(lpValueName, *lpcchValueName * sizeof(CHAR));
+        AVrfFuzzSizeTruncateULong(lpcchValueName);
+    }
+
+    if (lpData && lpcbData)
+    {
+        AVrfFuzzBuffer(lpData, *lpcbData);
+
+        if ((type == REG_SZ) ||
+            (type == REG_EXPAND_SZ) ||
+            (type == REG_MULTI_SZ))
+        {
+            AVrfFuzzSizeTruncateWideString(lpcbData);
+        }
+        else
+        {
+            AVrfFuzzSizeTruncateULong(lpcbData);
+        }
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -707,14 +1321,56 @@ Hook_Common_RegEnumValueW(
     _Inout_opt_ LPDWORD lpcbData
     )
 {
-    return Orig_RegEnumValueW(hKey,
-                              dwIndex,
-                              lpValueName,
-                              lpcchValueName,
-                              lpReserved,
-                              lpType,
-                              lpData,
-                              lpcbData);
+    LSTATUS status;
+    ULONG type;
+
+    status = Orig_RegEnumValueW(hKey,
+                                dwIndex,
+                                lpValueName,
+                                lpcchValueName,
+                                lpReserved,
+                                &type,
+                                lpData,
+                                lpcbData);
+
+    if (lpType)
+    {
+        *lpType = type;
+    }
+
+    if (status != ERROR_SUCCESS)
+    {
+        return status;
+    }
+
+    if (!AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        return status;
+    }
+
+    if (lpValueName)
+    {
+        AVrfFuzzBuffer(lpValueName, *lpcchValueName * sizeof(WCHAR));
+        AVrfFuzzSizeTruncateWideString(lpcchValueName);
+    }
+
+    if (lpData && lpcbData)
+    {
+        AVrfFuzzBuffer(lpData, *lpcbData);
+
+        if ((type == REG_SZ) ||
+            (type == REG_EXPAND_SZ) ||
+            (type == REG_MULTI_SZ))
+        {
+            AVrfFuzzSizeTruncateWideString(lpcbData);
+        }
+        else
+        {
+            AVrfFuzzSizeTruncateULong(lpcbData);
+        }
+    }
+
+    return status;
 }
 
 LSTATUS
@@ -951,7 +1607,7 @@ Hook_Kernel32_RegSetValueExW(
 
 LSTATUS
 APIENTRY
-Hook_Kernel32_RegQueryValueA (
+Hook_Kernel32_RegQueryValueA(
     _In_ HKEY hKey,
     _In_opt_ LPCSTR lpSubKey,
     _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPSTR lpData,
@@ -968,7 +1624,7 @@ Hook_Kernel32_RegQueryValueA (
 
 LSTATUS
 APIENTRY
-Hook_Kernel32_RegQueryValueW (
+Hook_Kernel32_RegQueryValueW(
     _In_ HKEY hKey,
     _In_opt_ LPCWSTR lpSubKey,
     _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPWSTR lpData,
@@ -1063,6 +1719,8 @@ Hook_Kernel32_RegQueryValueExW(
                                    lpcbData);
 }
 
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_Kernel32_RegGetValueA(
@@ -1092,7 +1750,10 @@ Hook_Kernel32_RegGetValueA(
                                    pvData,
                                    pcbData);
 }
+#pragma prefast(pop)
 
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_Kernel32_RegGetValueW(
@@ -1122,10 +1783,11 @@ Hook_Kernel32_RegGetValueW(
                                    pvData,
                                    pcbData);
 }
+#pragma prefast(pop)
 
 LSTATUS
 APIENTRY
-Hook_Kernel32_RegEnumKeyA (
+Hook_Kernel32_RegEnumKeyA(
     _In_ HKEY hKey,
     _In_ DWORD dwIndex,
     _Out_writes_opt_(cchName) LPSTR lpName,
@@ -1142,7 +1804,7 @@ Hook_Kernel32_RegEnumKeyA (
 
 LSTATUS
 APIENTRY
-Hook_Kernel32_RegEnumKeyW (
+Hook_Kernel32_RegEnumKeyW(
     _In_ HKEY hKey,
     _In_ DWORD dwIndex,
     _Out_writes_opt_(cchName) LPWSTR lpName,
@@ -1491,7 +2153,7 @@ Hook_KernelBase_RegSetValueExW(
 
 LSTATUS
 APIENTRY
-Hook_KernelBase_RegQueryValueA (
+Hook_KernelBase_RegQueryValueA(
     _In_ HKEY hKey,
     _In_opt_ LPCSTR lpSubKey,
     _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPSTR lpData,
@@ -1508,7 +2170,7 @@ Hook_KernelBase_RegQueryValueA (
 
 LSTATUS
 APIENTRY
-Hook_KernelBase_RegQueryValueW (
+Hook_KernelBase_RegQueryValueW(
     _In_ HKEY hKey,
     _In_opt_ LPCWSTR lpSubKey,
     _Out_writes_bytes_to_opt_(*lpcbData, *lpcbData) __out_data_source(REGISTRY) LPWSTR lpData,
@@ -1603,6 +2265,8 @@ Hook_KernelBase_RegQueryValueExW(
                                    lpcbData);
 }
 
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_KernelBase_RegGetValueA(
@@ -1632,7 +2296,10 @@ Hook_KernelBase_RegGetValueA(
                                    pvData,
                                    pcbData);
 }
+#pragma prefast(pop)
 
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_KernelBase_RegGetValueW(
@@ -1662,10 +2329,11 @@ Hook_KernelBase_RegGetValueW(
                                    pvData,
                                    pcbData);
 }
+#pragma prefast(pop)
 
 LSTATUS
 APIENTRY
-Hook_KernelBase_RegEnumKeyA (
+Hook_KernelBase_RegEnumKeyA(
     _In_ HKEY hKey,
     _In_ DWORD dwIndex,
     _Out_writes_opt_(cchName) LPSTR lpName,
@@ -1682,7 +2350,7 @@ Hook_KernelBase_RegEnumKeyA (
 
 LSTATUS
 APIENTRY
-Hook_KernelBase_RegEnumKeyW (
+Hook_KernelBase_RegEnumKeyW(
     _In_ HKEY hKey,
     _In_ DWORD dwIndex,
     _Out_writes_opt_(cchName) LPWSTR lpName,
@@ -2143,6 +2811,8 @@ Hook_Advapi32_RegQueryValueExW(
                                    lpcbData);
 }
 
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_Advapi32_RegGetValueA(
@@ -2172,7 +2842,10 @@ Hook_Advapi32_RegGetValueA(
                                    pvData,
                                    pcbData);
 }
+#pragma prefast(pop)
 
+#pragma prefast(push)
+#pragma prefast(disable : 6054) // String 'pvData' might not be zero-terminated.
 LSTATUS
 APIENTRY
 Hook_Advapi32_RegGetValueW(
@@ -2202,6 +2875,7 @@ Hook_Advapi32_RegGetValueW(
                                    pvData,
                                    pcbData);
 }
+#pragma prefast(pop)
 
 LSTATUS
 APIENTRY
@@ -2336,4 +3010,3 @@ Hook_Advapi32_RegEnumValueW(
                                    lpData,
                                    lpcbData);
 }
-

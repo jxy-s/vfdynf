@@ -311,7 +311,7 @@ BOOLEAN AVrfShouldFaultInject(
         return FALSE;
     }
 
-    count = RtlCaptureStackBackTrace(2, ARRAYSIZE(frames), frames, &hash);
+    count = RtlCaptureStackBackTrace(1, ARRAYSIZE(frames), frames, &hash);
 
     RtlEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
 
@@ -715,6 +715,9 @@ BOOLEAN AVrfFaultProcessAttach(
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_SECTION);
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_OLE);
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_INPAGE);
+    AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_FUZZ_REG);
+    AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_FUZZ_FILE);
+    AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_FUZZ_MMAP);
 
     //
     // By default the system doesn't rely on probability for fault injection.
@@ -729,6 +732,9 @@ BOOLEAN AVrfFaultProcessAttach(
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_SECTION);
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_OLE);
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_INPAGE);
+    AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_FUZZ_REG);
+    AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_FUZZ_FILE);
+    AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_FUZZ_MMAP);
 
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_WAIT), L"Wait APIs");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_HEAP), L"Heap APIs");
@@ -739,6 +745,9 @@ BOOLEAN AVrfFaultProcessAttach(
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_SECTION), L"Section APIs");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_OLE), L"OLE String APIs");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_INPAGE), L"Section In-Page");
+    VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_FUZZ_REG), L"Fuzz Registry");
+    VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_FUZZ_FILE), L"Fuzz File");
+    VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_FUZZ_MMAP), L"Fuzz Section Map");
 
     if (!AVrfProperties.FaultSeed)
     {

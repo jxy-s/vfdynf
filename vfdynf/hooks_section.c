@@ -4,6 +4,90 @@
 #include <vfdynf.h>
 #include <hooks.h>
 
+_Must_inspect_result_
+BOOLEAN AVrfpShouldSubjectMemoryToFault(
+    _In_ PVOID Address,
+    _Out_ PSIZE_T RegionSize
+    )
+{
+    NTSTATUS status;
+    MEMORY_REGION_INFORMATION regionInfo;
+
+    *RegionSize = 0;
+
+    //
+    // Some of the information classes here might not be supported on older
+    // OSes. That's fine, we fail safe and do not inject a fault unless we're
+    // confident it's appropriate.
+    //
+
+    status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                  Address,
+                                  MemoryRegionInformationEx,
+                                  &regionInfo,
+                                  sizeof(regionInfo),
+                                  NULL);
+    if (!NT_SUCCESS(status))
+    {
+        return FALSE;
+    }
+
+    *RegionSize = regionInfo.RegionSize;
+
+    if (regionInfo.MappedDataFile)
+    {
+        //
+        // Inject faults for data mappings.
+        //
+        return TRUE;
+    }
+
+    if (regionInfo.MappedPageFile)
+    {
+        //
+        // Do not inject faults for page file backed sections.
+        //
+        // https://learn.microsoft.com/en-us/windows/win32/memory/reading-and-writing-from-a-file-view
+        // Reading from or writing to a file view of a file other than the page
+        // file can cause an EXCEPTION_IN_PAGE_ERROR exception.
+        //
+        return FALSE;
+    }
+
+    if (regionInfo.MappedImage)
+    {
+        MEMORY_IMAGE_INFORMATION imageInfo;
+
+        //
+        // Only inject faults for SEC_IMAGE_NO_EXECUTE.
+        //
+
+        status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                      Address,
+                                      MemoryImageInformation,
+                                      &imageInfo,
+                                      sizeof(imageInfo),
+                                      NULL);
+        if (!NT_SUCCESS(status))
+        {
+            return FALSE;
+        }
+
+        if (imageInfo.ImageNotExecutable)
+        {
+            return TRUE;
+        }
+
+        return FALSE;
+    }
+
+    //
+    // If we aren't sure do not inject faults.
+    //
+
+    return FALSE;
+}
+
 NTSTATUS
 NTAPI
 Hook_NtCreateSection(
@@ -92,11 +176,15 @@ Hook_NtMapViewOfSection(
     )
 {
     NTSTATUS status;
+    SIZE_T regionSize;
+    BOOLEAN strict;
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         return STATUS_NO_MEMORY;
     }
+
+    strict = (*BaseAddress || ZeroBits);
 
     status = Orig_NtMapViewOfSection(SectionHandle,
                                      ProcessHandle,
@@ -109,12 +197,23 @@ Hook_NtMapViewOfSection(
                                      AllocationType,
                                      Win32Protect);
 
-    if (NT_SUCCESS(status) &&
-        (ProcessHandle == NtCurrentProcess()) &&
-        AVrfShouldSubjectMemoryToInPageError(*BaseAddress) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (!NT_SUCCESS(status) || (ProcessHandle != NtCurrentProcess()))
+    {
+        return status;
+    }
+
+    if (!AVrfpShouldSubjectMemoryToFault(*BaseAddress, &regionSize))
+    {
+        return status;
+    }
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(*BaseAddress);
+    }
+    else if (!strict && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_MMAP))
+    {
+        *BaseAddress = AVrfFuzzMemoryMapping(*BaseAddress, regionSize);
     }
 
     return status;
@@ -135,11 +234,15 @@ Hook_NtMapViewOfSectionEx(
     )
 {
     NTSTATUS status;
+    SIZE_T regionSize;
+    BOOLEAN strict;
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         return STATUS_NO_MEMORY;
     }
+
+    strict = (*BaseAddress || ExtendedParameterCount);
 
     status = Orig_NtMapViewOfSectionEx(SectionHandle,
                                        ProcessHandle,
@@ -151,12 +254,23 @@ Hook_NtMapViewOfSectionEx(
                                        ExtendedParameters,
                                        ExtendedParameterCount);
 
-    if (NT_SUCCESS(status) &&
-        (ProcessHandle == NtCurrentProcess()) &&
-        AVrfShouldSubjectMemoryToInPageError(BaseAddress) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (!NT_SUCCESS(status) || (ProcessHandle != NtCurrentProcess()))
+    {
+        return status;
+    }
+
+    if (!AVrfpShouldSubjectMemoryToFault(*BaseAddress, &regionSize))
+    {
+        return status;
+    }
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(*BaseAddress);
+    }
+    else if (!strict && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_MMAP))
+    {
+        *BaseAddress = AVrfFuzzMemoryMapping(*BaseAddress, regionSize);
     }
 
     return status;
@@ -171,6 +285,7 @@ Hook_NtUnmapViewOfSection(
 {
     if ((ProcessHandle == NtCurrentProcess()) && BaseAddress)
     {
+        BaseAddress = AVrfForgetFuzzedMemoryMapping(BaseAddress);
         AVrfForgetGuardForInPageError(BaseAddress);
     }
 
@@ -187,6 +302,7 @@ Hook_NtUnmapViewOfSectionEx(
 {
     if ((ProcessHandle == NtCurrentProcess()) && BaseAddress)
     {
+        BaseAddress = AVrfForgetFuzzedMemoryMapping(BaseAddress);
         AVrfForgetGuardForInPageError(BaseAddress);
     }
 
@@ -297,6 +413,7 @@ Hook_Common_MapViewOfFile(
     )
 {
     LPVOID result;
+    SIZE_T regionSize;
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
@@ -310,11 +427,23 @@ Hook_Common_MapViewOfFile(
                                 dwFileOffsetLow,
                                 dwNumberOfBytesToMap);
 
-    if (result &&
-        AVrfShouldSubjectMemoryToInPageError(result) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (!result)
+    {
+        return result;
+    }
+
+    if (!AVrfpShouldSubjectMemoryToFault(result, &regionSize))
+    {
+        return result;
+    }
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(result);
+    }
+    else if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_MMAP))
+    {
+        result = AVrfFuzzMemoryMapping(result, regionSize);
     }
 
     return result;
@@ -333,6 +462,7 @@ Hook_Common_MapViewOfFileEx(
     )
 {
     LPVOID result;
+    SIZE_T regionSize;
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
@@ -347,11 +477,23 @@ Hook_Common_MapViewOfFileEx(
                                   dwNumberOfBytesToMap,
                                   lpBaseAddress);
 
-    if (result &&
-        AVrfShouldSubjectMemoryToInPageError(result) &&
-        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
+    if (!result)
+    {
+        return result;
+    }
+
+    if (!AVrfpShouldSubjectMemoryToFault(result, &regionSize))
+    {
+        return result;
+    }
+
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_INPAGE))
     {
         AVrfGuardToConvertToInPageError(result);
+    }
+    else if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_MMAP))
+    {
+        result = AVrfFuzzMemoryMapping(result, regionSize);
     }
 
     return result;
@@ -366,6 +508,7 @@ Hook_Common_UnmapViewOfFile(
 {
     if (BaseAddress)
     {
+        BaseAddress = AVrfForgetFuzzedMemoryMapping(BaseAddress);
         AVrfForgetGuardForInPageError(BaseAddress);
     }
 
@@ -382,6 +525,7 @@ Hook_Common_UnmapViewOfFileEx(
 {
     if (BaseAddress)
     {
+        BaseAddress = AVrfForgetFuzzedMemoryMapping(BaseAddress);
         AVrfForgetGuardForInPageError(BaseAddress);
     }
 

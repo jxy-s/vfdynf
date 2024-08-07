@@ -131,6 +131,11 @@ void DoInPageTestDataFile(uint32_t Id)
     __try
     {
         memcpy(buffer, address, sizeof(buffer));
+
+        if (*(PUSHORT)buffer != IMAGE_DOS_SIGNATURE)
+        {
+            printf("[%lu] caught mmap fuzz for data file\n", Id);
+        }
     }
     __except (InPageExceptionFilter(GetExceptionInformation()))
     {
@@ -200,6 +205,15 @@ void DoInPageTestImageFile(uint32_t Id)
     __try
     {
         memcpy(buffer, address, sizeof(buffer));
+
+        if (*(PUSHORT)buffer != IMAGE_DOS_SIGNATURE)
+        {
+            //
+            // N.B. we choose not to inject fuzzing for image files
+            //
+            printf("[%lu] FAILURE, caught mmap fuzz for image file\n", Id);
+            DebugBreak();
+        }
     }
     __except (InPageExceptionFilter(GetExceptionInformation()))
     {
@@ -274,6 +288,11 @@ void DoInPageTestImageFileNoExecute(uint32_t Id)
     __try
     {
         memcpy(buffer, address, sizeof(buffer));
+
+        if (*(PUSHORT)buffer != IMAGE_DOS_SIGNATURE)
+        {
+            printf("[%lu] caught mmap fuzz for image (no execute) file\n", Id);
+        }
     }
     __except (InPageExceptionFilter(GetExceptionInformation()))
     {
