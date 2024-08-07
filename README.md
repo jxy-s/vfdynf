@@ -63,24 +63,37 @@ Enabling the best of both worlds - debug iterators and fault injection!
 
 ## DynFault Properties (Options)
 
-| Name                   | Type        | Description |
-| ----                   | ----        | ----------- |
-| GracePeriod            | DWORD       | Delays fault injection until after this period, in milliseconds. |
-| SymbolSearchPath       | String      | Symbol search path used for dynamic fault injection and applying exclusions. |
-| ExclusionsRegex        | MultiString | Excludes stack from fault injection when one of these regular expression matches the stack. |
-| DynamicFaultPeriod     | DWORD       | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
-| EnableFaultMask        | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage. |
-| FaultProbability       | DWORD       | Probability that a fault will be injected (0 - 1000000). |
-| FaultSeed              | DWORD       | Seed used for fault randomization. A value of zero will generate a random seed. |
-| WaitExclusionsRegex    | MultiString | Excludes stack from wait fault injection when one of these regular expression matches the stack. |
-| HeapExclusionsRegex    | MultiString | Excludes stack from heap fault injection when one of these regular expression matches the stack. |
-| VMemExclusionsRegex    | MultiString | Excludes stack from virtual memory fault injection when one of these regular expression matches the stack. |
-| RegExclusionsRegex     | MultiString | Excludes stack from registry fault injection when one of these regular expression matches the stack. |
-| FileExclusionsRegex    | MultiString | Excludes stack from file fault injection when one of these regular expression matches the stack. |
-| EventExclusionsRegex   | MultiString | Excludes stack from event fault injection when one of these regular expression matches the stack. |
-| SectionExclusionsRegex | MultiString | Excludes stack from section fault injection when one of these regular expression matches the stack. |
-| OleExclusionsRegex     | MultiString | Excludes stack from OLE fault injection when one of these regular expression matches the stack. |
-| InPageExclusionsRegex  | MultiString | Excludes stack from section in-page fault injection when one of these regular expression matches the stack. |
+| Name                        | Type        | Description |
+| ----                        | ----        | ----------- |
+| GracePeriod                 | DWORD       | Delays fault injection until after this period, in milliseconds. |
+| SymbolSearchPath            | String      | Symbol search path used for dynamic fault injection and applying exclusions. |
+| ExclusionsRegex             | MultiString | Excludes stack from fault injection when one of these regular expression matches the stack. |
+| DynamicFaultPeriod          | DWORD       | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
+| EnableFaultMask             | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage, 10=FuzzReg, 11=FuzzFile, 12=FuzzMMap. |
+| FaultProbability            | DWORD       | Probability that a fault will be injected (0 - 1000000). |
+| FaultSeed                   | DWORD       | Seed used for fault randomization. A value of zero will generate a random seed. |
+| FuzzCorruptionBlocks        | DWORD       | Maximum number of blocks to corrupt when fuzzing. Larger numbers will impact performance, fuzzing logic will randomly loop between one and this maximum to apply corruption techniques on buffers. |
+| FuzzChaosProbability        | DWORD       | The probability (0 - 1000000) a corruption block will overwrite a portion of buffer with random data. Otherwise various corruption techniques are applied to the buffer in a less chaotic manner. |
+| FuzzSizeTruncateProbability | DWORD       | The probability (0 - 1000000) that data lengths will be truncated to a random value below the actual length of the output data. |
+| HeapReasonableAllocLimit    | QWORD       | Limit which is considered a reasonable single heap allocation. If the size a single heap allocation exceeds this limit a verifier stop is raised. |
+| WaitExclusionsRegex         | MultiString | Excludes stack from wait fault injection when one of these regular expression matches the stack. |
+| HeapExclusionsRegex         | MultiString | Excludes stack from heap fault injection when one of these regular expression matches the stack. |
+| VMemExclusionsRegex         | MultiString | Excludes stack from virtual memory fault injection when one of these regular expression matches the stack. |
+| RegExclusionsRegex          | MultiString | Excludes stack from registry fault injection when one of these regular expression matches the stack. |
+| FileExclusionsRegex         | MultiString | Excludes stack from file fault injection when one of these regular expression matches the stack. |
+| EventExclusionsRegex        | MultiString | Excludes stack from event fault injection when one of these regular expression matches the stack. |
+| SectionExclusionsRegex      | MultiString | Excludes stack from section fault injection when one of these regular expression matches the stack. |
+| OleExclusionsRegex          | MultiString | Excludes stack from OLE fault injection when one of these regular expression matches the stack. |
+| InPageExclusionsRegex       | MultiString | Excludes stack from section in-page fault injection when one of these regular expression matches the stack. |
+| FuzzRegExclusionsRegex      | MultiString | Excludes stack from registry fuzzing when one of these regular expression matches the stack. |
+| FuzzFileExclusionsRegex     | MultiString | Excludes stack from file fuzzing when one of these regular expression matches the stack. |
+| FuzzMMapExclusionsRegex     | MultiString | Excludes stack from section map fuzzing when one of these regular expression matches the stack. |
+
+## Fuzzing
+
+DynFault also supports fuzzing! The fuzzing options are disabled by default. To enable them, add the
+relevant bits to the `EnableFaultMask` property. You can use the same exclusions to exclude stacks
+from fuzzing as you would other fault types.
 
 ## Installation
 
