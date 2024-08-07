@@ -148,7 +148,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -177,7 +177,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -204,7 +204,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -231,7 +231,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -260,7 +260,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -289,7 +289,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -302,6 +302,7 @@
   <ItemGroup>
     <ClCompile Include="crt_vfdynf.c" />
     <ClCompile Include="except.c" />
+    <ClCompile Include="fuzz.c" />
     <ClCompile Include="hooks.c" />
     <ClCompile Include="hooks_event.c" />
     <ClCompile Include="hooks_file.c" />
