@@ -271,6 +271,29 @@ VerifierTlsSetValue(
     return FALSE;
 }
 
+NTSYSAPI
+VOID
+NTAPI
+VerifierStopMessageEx(
+    _In_ PAVRF_LAYER_DESCRIPTOR LayerDescriptor,
+    _In_ ULONG_PTR Code,
+    _In_ ULONG_PTR Param1,
+    _In_ ULONG_PTR Param2,
+    _In_ ULONG_PTR Param3,
+    _In_ ULONG_PTR Param4,
+    _In_ ULONG_PTR Reserved,
+    ...
+    )
+{
+    UNREFERENCED_PARAMETER(LayerDescriptor);
+    UNREFERENCED_PARAMETER(Code);
+    UNREFERENCED_PARAMETER(Param1);
+    UNREFERENCED_PARAMETER(Param2);
+    UNREFERENCED_PARAMETER(Param3);
+    UNREFERENCED_PARAMETER(Param4);
+    UNREFERENCED_PARAMETER(Reserved);
+}
+
 BOOL
 APIENTRY
 DllMain(

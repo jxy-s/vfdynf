@@ -113,6 +113,23 @@ typedef struct _AVRF_PROPERTY_DESCRIPTOR
     PVOID Param;
 } AVRF_PROPERTY_DESCRIPTOR, * PAVRF_PROPERTY_DESCRIPTOR;
 
+// ErrorReport
+#define AVRF_BREAK_ACTIVE           0x00000001
+#define AVRF_BREAK_BREAKPOINT       0x00000020
+#define AVRF_BREAK_EXCEPTION        0x00000040
+#define AVRF_BREAK_LOG_TO_FILE      0x00000080
+#define AVRF_BREAK_LOG_STACK_TRACE  0x00000100
+
+// Severity
+#define AVRF_BREAK_INFORMATION      0x00000003
+#define AVRF_BREAK_WARNING          0x0000000F
+#define AVRF_BREAK_ERROR            0x0000003F
+
+// Flavor
+#define AVRF_BREAK_NOT_CONTINUABLE  0x00000002
+#define AVRF_BREAK_ONCE             0x00000010
+#define AVRF_BREAK_DBGPRINT_ALWAYS  0x00000020
+
 typedef struct _AVRF_BREAK_DESCRIPTOR
 {
     DWORD StopCode;
@@ -422,6 +439,20 @@ NTAPI
 VerifierTlsSetValue(
     _In_ DWORD TlsIndex,
     _In_opt_ PVOID TlsValue
+    );
+
+NTSYSAPI
+VOID
+NTAPI
+VerifierStopMessageEx(
+    _In_ PAVRF_LAYER_DESCRIPTOR LayerDescriptor,
+    _In_ ULONG_PTR Code,
+    _In_ ULONG_PTR Param1,
+    _In_ ULONG_PTR Param2,
+    _In_ ULONG_PTR Param3,
+    _In_ ULONG_PTR Param4,
+    _In_ ULONG_PTR Reserved,
+    ...
     );
 
 #ifdef __cplusplus
