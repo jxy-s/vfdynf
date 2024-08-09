@@ -4,6 +4,22 @@
 #include <vfdynf.h>
 #include <hooks.h>
 
+VOID AVrfpCheckHeapAllocLimit(
+    _In_ SIZE_T Size
+    )
+{
+    if (Size > AVrfProperties.HeapReasonableAllocLimit)
+    {
+        VerifierStopMessageEx(&AVrfLayerDescriptor,
+                              VFDYNF_CODE_HEAP_ALLOC_LIMIT,
+                              Size,
+                              0,
+                              0,
+                              0,
+                              0);
+    }
+}
+
 PVOID
 NTAPI
 Hook_RtlAllocateHeap(
@@ -12,6 +28,8 @@ Hook_RtlAllocateHeap(
     _In_ SIZE_T Size
     )
 {
+    AVrfpCheckHeapAllocLimit(Size);
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
         if (FlagOn(Flags, HEAP_GENERATE_EXCEPTIONS))
@@ -42,6 +60,8 @@ Hook_RtlReAllocateHeap(
     _In_ SIZE_T Size
     )
 {
+    AVrfpCheckHeapAllocLimit(Size);
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
         if (FlagOn(Flags, HEAP_GENERATE_EXCEPTIONS))
@@ -71,6 +91,8 @@ Hook_Common_GlobalAlloc(
     _In_ SIZE_T dwBytes
     )
 {
+    AVrfpCheckHeapAllocLimit(dwBytes);
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -89,6 +111,8 @@ Hook_Common_GlobalReAlloc(
     _In_ UINT uFlags
     )
 {
+    AVrfpCheckHeapAllocLimit(dwBytes);
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -106,6 +130,8 @@ Hook_Common_LocalAlloc(
     _In_ SIZE_T uBytes
     )
 {
+    AVrfpCheckHeapAllocLimit(uFlags);
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -124,6 +150,8 @@ Hook_Common_LocalReAlloc(
     _In_ UINT uFlags
     )
 {
+    AVrfpCheckHeapAllocLimit(uBytes);
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;

@@ -114,10 +114,12 @@ typedef struct _VFDYNF_PROPERTIES
     ULONG FuzzCorruptionBlocks;
     ULONG FuzzChaosProbability;
     ULONG FuzzSizeTruncateProbability;
+    ULONG64 HeapReasonableAllocLimit;
     WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH];
 } VFDYNF_PROPERTIES, *PVFDYNF_PROPERTIES;
 
 #define VFDYNF_CODE_DEPRECATED_FUNCTION    0xdf01
+#define VFDYNF_CODE_HEAP_ALLOC_LIMIT       0xdf02
 
 // dllmain.c
 
