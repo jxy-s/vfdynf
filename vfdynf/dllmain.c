@@ -279,6 +279,8 @@ VOID NTAPI AVrfpDllLoadCallback(
     UNREFERENCED_PARAMETER(DllBase);
     UNREFERENCED_PARAMETER(DllSize);
     UNREFERENCED_PARAMETER(Reserved);
+
+    AVrfLinkHooks();
 }
 
 VOID NTAPI AVrfpDllUnlodCallback(
@@ -414,11 +416,11 @@ BOOLEAN AVrfpProviderProcessAttach(
         return TRUE;
     }
 
-    if (!AVrfHookProcessAttach())
+    if (!AVrfLinkHooks())
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to finalize hooks");
+                   "AVRF: failed to link hooks");
         __debugbreak();
         return FALSE;
     }
