@@ -753,6 +753,16 @@ Hook_Common_RegQueryValueA(
     _Inout_opt_ PLONG lpcbData
     )
 {
+    VerifierStopMessageEx(&AVrfLayerDescriptor,
+                          VFDYNF_CODE_DEPRECATED_FUNCTION,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          L"RegQueryValueA",
+                          L"RegQueryValueExA");
+
     return Orig_RegQueryValueA(hKey, lpSubKey, lpData, lpcbData);
 }
 
@@ -766,6 +776,16 @@ Hook_Common_RegQueryValueW(
     _Inout_opt_ PLONG lpcbData
     )
 {
+    VerifierStopMessageEx(&AVrfLayerDescriptor,
+                          VFDYNF_CODE_DEPRECATED_FUNCTION,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          L"RegQueryValueW",
+                          L"RegQueryValueExW");
+
     return Orig_RegQueryValueW(hKey, lpSubKey, lpData, lpcbData);
 }
 
@@ -1125,6 +1145,16 @@ Hook_Common_RegEnumKeyA(
     _In_ DWORD cchName
     )
 {
+    VerifierStopMessageEx(&AVrfLayerDescriptor,
+                          VFDYNF_CODE_DEPRECATED_FUNCTION,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          L"RegEnumKeyA",
+                          L"RegEnumKeyExA");
+
     return Orig_RegEnumKeyA(hKey, dwIndex, lpName, cchName);
 }
 
@@ -1138,6 +1168,16 @@ Hook_Common_RegEnumKeyW(
     _In_ DWORD cchName
     )
 {
+    VerifierStopMessageEx(&AVrfLayerDescriptor,
+                          VFDYNF_CODE_DEPRECATED_FUNCTION,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          L"RegEnumKeyW",
+                          L"RegEnumKeyExW");
+
     return Orig_RegEnumKeyW(hKey, dwIndex, lpName, cchName);
 }
 

@@ -224,6 +224,25 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
     { AVRF_PROPERTY_NONE, NULL, NULL, 0, NULL, NULL }
 };
 
+static AVRF_BREAK_DESCRIPTOR AVrfpBreakDescriptors[] =
+{
+    {
+        VFDYNF_CODE_DEPRECATED_FUNCTION,
+        AVRF_BREAK_ACTIVE | AVRF_BREAK_BREAKPOINT | AVRF_BREAK_LOG_TO_FILE | AVRF_BREAK_LOG_STACK_TRACE,
+        AVRF_BREAK_WARNING,
+        0,
+        NULL, IDS_DEPRECATED_FUNCTION_MESSAGE,
+        NULL, IDS_NOT_USED,
+        NULL, IDS_NOT_USED,
+        NULL, IDS_NOT_USED,
+        NULL, IDS_NOT_USED,
+        NULL, IDS_DEPRECATED_FUNCTION_FORMAT,
+        NULL, IDS_DEPRECATED_FUNCTION_DESCRIPTION,
+        NULL
+    },
+    { 0 }
+};
+
 VOID NTAPI AVrfpDllLoadCallback(
     _In_z_ PCWSTR DllName,
     _In_ PVOID DllBase,
@@ -290,14 +309,14 @@ ULONG NTAPI AVrfpValidateCallback(
     return ERROR_SUCCESS;
 }
 
-static AVRF_LAYER_DESCRIPTOR AVrfpLayerDescriptor =
+AVRF_LAYER_DESCRIPTOR AVrfLayerDescriptor =
 {
     &AVrfpProviderDescriptor,
     L"{d41d391a-d897-4956-953f-ed66b3861169}",
     L"DynFault",
     1,
     0,
-    NULL,
+    AVrfpBreakDescriptors,
     AVrfpPropertyDescriptors,
     NULL,
     L"Unique-stack based systematic fault injection to simulate low resource scenarios.",
@@ -349,7 +368,7 @@ BOOLEAN AVrfpProviderProcessAttach(
     ULONG err;
 
     err = VerifierRegisterLayerEx(Module,
-                                  &AVrfpLayerDescriptor,
+                                  &AVrfLayerDescriptor,
                                   0);
     if (err != ERROR_SUCCESS)
     {
@@ -419,7 +438,7 @@ VOID AVrfpProviderProcessDetach(
 
     AVrfFuzzProcessDetach();
 
-    VerifierUnregisterLayer(Module, &AVrfpLayerDescriptor);
+    VerifierUnregisterLayer(Module, &AVrfLayerDescriptor);
 }
 
 BOOL WINAPI DllMain(
