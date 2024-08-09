@@ -130,7 +130,7 @@ extern AVRF_LAYER_DESCRIPTOR AVrfLayerDescriptor;
 
 extern RTL_VERIFIER_DLL_DESCRIPTOR AVrfDllDescriptors[];
 
-BOOLEAN AVrfHookProcessAttach(
+BOOLEAN AVrfLinkHooks(
     VOID
     );
 

@@ -260,7 +260,7 @@ if (!AVrfpLinkHook(AVrfp##m, (PVOID)Hook_##m##_##x, (PVOID*)&Orig_##m##_##x)) \
     return FALSE;                                                             \
 }
 
-BOOLEAN AVrfHookProcessAttach(
+BOOLEAN AVrfLinkHooks(
     VOID
     )
 {
