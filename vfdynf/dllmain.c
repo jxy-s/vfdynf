@@ -17,6 +17,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .FuzzCorruptionBlocks = 100,
     .FuzzChaosProbability = 250000,
     .FuzzSizeTruncateProbability = 250000,
+    .HeapReasonableAllocLimit = (1 << 30), // 1 GiB
     .TypeExclusionsRegex = { 0 },
 };
 
@@ -111,6 +112,16 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         sizeof(AVrfProperties.FuzzSizeTruncateProbability),
         L"The probability (0 - 1000000) that data lengths will be truncated "
         L"to a random value below the actual length of the output data.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_QWORD,
+        L"HeapReasonableAllocLimit",
+        &AVrfProperties.HeapReasonableAllocLimit,
+        sizeof(AVrfProperties.HeapReasonableAllocLimit),
+        L"Limit which is considered a reasonable single heap allocation. If "
+        L"the size a single heap allocation exceeds this limit a verifier "
+        L"stop is raised.",
         NULL
     },
     {
@@ -238,6 +249,20 @@ static AVRF_BREAK_DESCRIPTOR AVrfpBreakDescriptors[] =
         NULL, IDS_NOT_USED,
         NULL, IDS_DEPRECATED_FUNCTION_FORMAT,
         NULL, IDS_DEPRECATED_FUNCTION_DESCRIPTION,
+        NULL
+    },
+    {
+        VFDYNF_CODE_HEAP_ALLOC_LIMIT,
+        AVRF_BREAK_ACTIVE | AVRF_BREAK_BREAKPOINT | AVRF_BREAK_LOG_TO_FILE | AVRF_BREAK_LOG_STACK_TRACE,
+        AVRF_BREAK_WARNING,
+        0,
+        NULL, IDS_HEAP_ALLOC_LIMIT_MESSAGE,
+        NULL, IDS_HEAP_ALLOC_LIMIT_PARAM_1,
+        NULL, IDS_NOT_USED,
+        NULL, IDS_NOT_USED,
+        NULL, IDS_NOT_USED,
+        NULL, IDS_EMPTY,
+        NULL, IDS_HEAP_ALLOC_LIMIT_DESCRIPTION,
         NULL
     },
     { 0 }
