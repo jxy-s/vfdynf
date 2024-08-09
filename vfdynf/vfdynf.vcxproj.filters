@@ -20,5 +20,9 @@
   <ItemGroup>
     <ClInclude Include="vfdynf.h" />
     <ClInclude Include="hooks.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="vfdynf.rc" />
   </ItemGroup>
 </Project>

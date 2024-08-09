@@ -19,6 +19,8 @@
 
 #include <pcre2_vfdynf.h>
 
+#include <resource.h>
+
 #ifndef Add2Ptr
 #define Add2Ptr(P, I) ((PVOID)((PUCHAR)(P) + (I)))
 #endif
@@ -115,9 +117,12 @@ typedef struct _VFDYNF_PROPERTIES
     WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH];
 } VFDYNF_PROPERTIES, *PVFDYNF_PROPERTIES;
 
+#define VFDYNF_CODE_DEPRECATED_FUNCTION    0xdf01
+
 // dllmain.c
 
 extern VFDYNF_PROPERTIES AVrfProperties;
+extern AVRF_LAYER_DESCRIPTOR AVrfLayerDescriptor;
 
 // hooks.c
 

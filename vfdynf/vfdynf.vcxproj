@@ -297,6 +297,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="hooks.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="vfdynf.h" />
   </ItemGroup>
   <ItemGroup>
@@ -315,6 +316,9 @@
     <ClCompile Include="stacktrk.c" />
     <ClCompile Include="dllmain.c" />
     <ClCompile Include="fault.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="vfdynf.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

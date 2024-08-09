@@ -376,6 +376,16 @@ Hook_Common_GetFileSize(
     _Out_opt_ LPDWORD lpFileSizeHigh
     )
 {
+    VerifierStopMessageEx(&AVrfLayerDescriptor,
+                          VFDYNF_CODE_DEPRECATED_FUNCTION,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0,
+                          L"GetFileSize",
+                          L"GetFileSizeEx");
+
     return Orig_GetFileSize(hFile, lpFileSizeHigh);
 }
 
