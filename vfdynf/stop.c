@@ -7,7 +7,7 @@ static PCRE2_CONTEXT StopRegex = { NULL, NULL };
 
 BOOLEAN AVrfShouldVerifierStop(
     _In_opt_ _Maybenull_ PVOID CallerAddress
-)
+    )
 {
     BOOLEAN result;
     NTSTATUS status;
