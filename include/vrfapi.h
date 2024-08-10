@@ -6,10 +6,7 @@
 #pragma once
 #include <minwindef.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif // __cplusplus
+EXTERN_C_START
 
 #define DLL_PROCESS_VERIFIER 4
 
@@ -455,6 +452,4 @@ VerifierStopMessageEx(
     ...
     );
 
-#ifdef __cplusplus
-}
-#endif // __cplusplus
+EXTERN_C_END
