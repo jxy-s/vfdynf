@@ -76,6 +76,7 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | FuzzChaosProbability        | DWORD       | The probability (0 - 1000000) a corruption block will overwrite a portion of buffer with random data. Otherwise various corruption techniques are applied to the buffer in a less chaotic manner. |
 | FuzzSizeTruncateProbability | DWORD       | The probability (0 - 1000000) that data lengths will be truncated to a random value below the actual length of the output data. |
 | HeapReasonableAllocLimit    | QWORD       | Limit which is considered a reasonable single heap allocation. If the size a single heap allocation exceeds this limit a verifier stop is raised. |
+| StopRegex                   | String      | Regular expression to check against the immediate caller module name when a verifier stop is about to be raised. If the module does not match this regular expression the verifier stop does not occur. Defaults to matching only the application module. |
 | WaitExclusionsRegex         | MultiString | Excludes stack from wait fault injection when one of these regular expression matches the stack. |
 | HeapExclusionsRegex         | MultiString | Excludes stack from heap fault injection when one of these regular expression matches the stack. |
 | VMemExclusionsRegex         | MultiString | Excludes stack from virtual memory fault injection when one of these regular expression matches the stack. |

@@ -9,6 +9,7 @@ VFDYNF_PROPERTIES AVrfProperties =
 {
     .GracePeriod = 5000,
     .SymbolSearchPath = { L'\0' },
+    .StopRegex = { L'\0' },
     .ExclusionsRegex = { L'\0' },
     .DynamicFaultPeroid = 30000,
     .EnableFaultMask = VFDYNF_FAULT_DEFAULT_MASK,
@@ -122,6 +123,17 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"Limit which is considered a reasonable single heap allocation. If "
         L"the size a single heap allocation exceeds this limit a verifier "
         L"stop is raised.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"StopRegex",
+        &AVrfProperties.StopRegex,
+        sizeof(AVrfProperties.StopRegex),
+        L"Regular expression to check against the immediate caller module name "
+        L"when a verifier stop is about to be raised. If the module does not "
+        L"match this regular expression the verifier stop does not occur. "
+        L"Defaults to matching only the application module.",
         NULL
     },
     {
@@ -425,6 +437,15 @@ BOOLEAN AVrfpProviderProcessAttach(
         return FALSE;
     }
 
+    if (!AVrfStopProcessAttach())
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: failed to setup stop handling");
+        __debugbreak();
+        return FALSE;
+    }
+
     if (!AVrfFuzzProcessAttach())
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -464,6 +485,8 @@ VOID AVrfpProviderProcessDetach(
     AVrfExceptProcessDetach();
 
     AVrfFuzzProcessDetach();
+
+    AVrfStopProcessDetach();
 
     VerifierUnregisterLayer(Module, &AVrfLayerDescriptor);
 }

@@ -10,13 +10,16 @@ VOID AVrfpCheckHeapAllocLimit(
 {
     if (Size > AVrfProperties.HeapReasonableAllocLimit)
     {
-        VerifierStopMessageEx(&AVrfLayerDescriptor,
-                              VFDYNF_CODE_HEAP_ALLOC_LIMIT,
-                              Size,
-                              0,
-                              0,
-                              0,
-                              0);
+        if (AVrfHookShouldVerifierStop())
+        {
+            VerifierStopMessageEx(&AVrfLayerDescriptor,
+                                  VFDYNF_CODE_HEAP_ALLOC_LIMIT,
+                                  Size,
+                                  0,
+                                  0,
+                                  0,
+                                  0);
+        }
     }
 }
 

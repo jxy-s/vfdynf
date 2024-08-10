@@ -6,6 +6,9 @@
 #define AVrfHookShouldFaultInject(type) \
     AVrfShouldFaultInject(type, VerifierGetAppCallerAddress(_ReturnAddress()))
 
+#define AVrfHookShouldVerifierStop() \
+    AVrfShouldVerifierStop(VerifierGetAppCallerAddress(_ReturnAddress()))
+
 #ifdef VFDYNF_HOOKS_PRIVATE
 #define VFDYNF_ORIG_QUAL
 #define VFDYNF_ORIG_INIT = NULL

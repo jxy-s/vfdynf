@@ -100,13 +100,14 @@
                                    VFDYNF_FAULT_TYPE_FUZZ_FILE               |\
                                    VFDYNF_FAULT_TYPE_FUZZ_MMAP))
 
-#define VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH (16 * 1024)
+#define VFDYN_SYMSEARCH_MAX_LENGTH (1024)
+#define VFDYN_REGEX_MAX_LENGTH     (16 * 1024)
 
 typedef struct _VFDYNF_PROPERTIES
 {
     ULONG GracePeriod;
-    WCHAR SymbolSearchPath[1024];
-    WCHAR ExclusionsRegex[VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH];
+    WCHAR SymbolSearchPath[VFDYN_SYMSEARCH_MAX_LENGTH];
+    WCHAR ExclusionsRegex[VFDYN_REGEX_MAX_LENGTH];
     ULONG DynamicFaultPeroid;
     ULONG64 EnableFaultMask;
     ULONG FaultProbability;
@@ -115,7 +116,8 @@ typedef struct _VFDYNF_PROPERTIES
     ULONG FuzzChaosProbability;
     ULONG FuzzSizeTruncateProbability;
     ULONG64 HeapReasonableAllocLimit;
-    WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_EXCLUSIONS_REGEX_MAX_LENGTH];
+    WCHAR StopRegex[VFDYN_REGEX_MAX_LENGTH];
+    WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_REGEX_MAX_LENGTH];
 } VFDYNF_PROPERTIES, *PVFDYNF_PROPERTIES;
 
 #define VFDYNF_CODE_DEPRECATED_FUNCTION    0xdf01
@@ -125,6 +127,20 @@ typedef struct _VFDYNF_PROPERTIES
 
 extern VFDYNF_PROPERTIES AVrfProperties;
 extern AVRF_LAYER_DESCRIPTOR AVrfLayerDescriptor;
+
+// stop.c
+
+BOOLEAN AVrfShouldVerifierStop(
+    _In_opt_ _Maybenull_ PVOID CallerAddress
+    );
+
+BOOLEAN AVrfStopProcessAttach(
+    VOID
+    );
+
+VOID AVrfStopProcessDetach(
+    VOID
+    );
 
 // hooks.c
 

@@ -316,6 +316,7 @@
     <ClCompile Include="stacktrk.c" />
     <ClCompile Include="dllmain.c" />
     <ClCompile Include="fault.c" />
+    <ClCompile Include="stop.c" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="vfdynf.rc" />

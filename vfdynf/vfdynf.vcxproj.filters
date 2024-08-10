@@ -16,6 +16,7 @@
     <ClCompile Include="hooks_wait.c" />
     <ClCompile Include="hooks_vmem.c" />
     <ClCompile Include="fuzz.c" />
+    <ClCompile Include="stop.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vfdynf.h" />
