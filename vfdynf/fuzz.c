@@ -232,27 +232,18 @@ VOID AVrfFuzzSizeTruncate(
     _Inout_ PLARGE_INTEGER Size
     )
 {
-    LARGE_INTEGER size;
-
     if (Size->QuadPart <= 0)
     {
         return;
     }
 
-    if (!AVrfFuzzProbability(AVrfProperties.FuzzSizeTruncateProbability))
+    if (AVrfFuzzProbability(AVrfProperties.FuzzSizeTruncateProbability))
     {
-        return;
-    }
+        LARGE_INTEGER size;
 
-    AVrfFuzzSize(&size);
+        AVrfFuzzSize(&size);
 
-    if (size.QuadPart > 0)
-    {
         Size->QuadPart = (size.QuadPart % Size->QuadPart);
-    }
-    else
-    {
-        Size->QuadPart = 0;
     }
 }
 
