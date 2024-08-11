@@ -17,11 +17,13 @@
     <ClCompile Include="hooks_vmem.c" />
     <ClCompile Include="fuzz.c" />
     <ClCompile Include="stop.c" />
+    <ClCompile Include="delayld.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vfdynf.h" />
     <ClInclude Include="hooks.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="delayld.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="vfdynf.rc" />

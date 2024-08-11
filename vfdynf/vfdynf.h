@@ -128,6 +128,24 @@ typedef struct _VFDYNF_PROPERTIES
 extern VFDYNF_PROPERTIES AVrfProperties;
 extern AVRF_LAYER_DESCRIPTOR AVrfLayerDescriptor;
 
+typedef
+_Function_class_(AVRF_RUN_ONCE_ROUTINE)
+BOOLEAN
+NTAPI
+AVRF_RUN_ONCE_ROUTINE(
+    VOID
+    );
+typedef AVRF_RUN_ONCE_ROUTINE* PAVRF_RUN_ONCE_ROUTINE;
+
+typedef volatile LONG AVRF_RUN_ONCE;
+typedef AVRF_RUN_ONCE* PAVRF_RUN_ONCE;
+#define AVRF_RUN_ONCE_INIT 0
+
+BOOLEAN AVrfRunOnce(
+    _Inout_ PAVRF_RUN_ONCE Once,
+    _In_ PAVRF_RUN_ONCE_ROUTINE Routine
+    );
+
 // stop.c
 
 BOOLEAN AVrfShouldVerifierStop(

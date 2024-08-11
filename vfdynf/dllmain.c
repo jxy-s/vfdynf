@@ -280,6 +280,32 @@ static AVRF_BREAK_DESCRIPTOR AVrfpBreakDescriptors[] =
     { 0 }
 };
 
+#define AVRF_RUN_ONCE_NOT_RUN      0
+#define AVRF_RUN_ONCE_INITIALIZING 1
+#define AVRF_RUN_ONCE_COMPLETED    2
+#define AVRF_RUN_ONCE_FAILED       3
+
+BOOLEAN AVrfRunOnce(
+    _Inout_ PAVRF_RUN_ONCE Once,
+    _In_ PAVRF_RUN_ONCE_ROUTINE Routine
+    )
+{
+    AVRF_RUN_ONCE res;
+
+    res = InterlockedCompareExchange(Once,
+                                     AVRF_RUN_ONCE_INITIALIZING,
+                                     AVRF_RUN_ONCE_NOT_RUN);
+
+    if (res == AVRF_RUN_ONCE_NOT_RUN)
+    {
+        res = Routine() ? AVRF_RUN_ONCE_COMPLETED : AVRF_RUN_ONCE_FAILED;
+
+        InterlockedExchange(Once, res);
+    }
+
+    return (res == AVRF_RUN_ONCE_COMPLETED);
+}
+
 VOID NTAPI AVrfpDllLoadCallback(
     _In_z_ PCWSTR DllName,
     _In_ PVOID DllBase,

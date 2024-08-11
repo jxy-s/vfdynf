@@ -2,6 +2,7 @@
     Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <vfdynf.h>
+#include <delayld.h>
 
 typedef struct _VFDYNF_EXCLUSION_REGEX
 {
@@ -12,6 +13,7 @@ typedef struct _VFDYNF_EXCLUSION_REGEX
 typedef struct _VFDYNF_FAULT_CONTEXT
 {
     BOOLEAN Initialized;
+    BOOLEAN SymInitialized;
     ULONG TypeBase;
     RTL_CRITICAL_SECTION CriticalSection;
     ULONG64 LastClear;
@@ -24,9 +26,12 @@ typedef struct _VFDYNF_FAULT_CONTEXT
     WCHAR StackSymbolBuffer[UNICODE_STRING_MAX_CHARS];
 } VFDYNF_FAULT_CONTEXT, *PVFDYNF_FAULT_CONTEXT;
 
+static AVRF_RUN_ONCE AVrfpFaultRunOnce = AVRF_RUN_ONCE_INIT;
+
 static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
 {
     .Initialized = FALSE,
+    .SymInitialized = FALSE,
     .TypeBase = ULONG_MAX,
     .CriticalSection = { 0 },
     .LastClear = 0,
@@ -114,6 +119,57 @@ BOOL CALLBACK AVrfpSymbolRegsteredCallback(
     }
 
     return TRUE;
+}
+
+_Function_class_(AVRF_RUN_ONCE_ROUTINE)
+BOOLEAN NTAPI AVrfpFaultRunOnceRoutine(
+    VOID
+    )
+{
+    if (!AVrfDelayLoadInitOnce())
+    {
+        return FALSE;
+    }
+
+    if (AVrfProperties.SymbolSearchPath[0] == L'\0')
+    {
+        if (!Delay_SymInitializeW(NtCurrentProcess(), NULL, FALSE))
+        {
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_ERROR_LEVEL,
+                       "AVRF: failed to initialize symbols (%lu)\n",
+                       NtCurrentTeb()->LastErrorValue);
+            return FALSE;
+        }
+    }
+    else
+    {
+        if (!Delay_SymInitializeW(NtCurrentProcess(),
+                                  AVrfProperties.SymbolSearchPath,
+                                  FALSE))
+        {
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_ERROR_LEVEL,
+                       "AVRF: failed to initialize symbols (%lu)\n",
+                       NtCurrentTeb()->LastErrorValue);
+            return FALSE;
+        }
+    }
+
+    AVrfpFaultContext.SymInitialized = TRUE;
+
+    Delay_SymSetOptions(Delay_SymGetOptions() | SYMOPT_UNDNAME);
+    Delay_SymRegisterCallbackW64(NtCurrentProcess(), AVrfpSymbolRegsteredCallback, 0);
+    Delay_SymRefreshModuleList(NtCurrentProcess());
+
+    return TRUE;
+}
+
+BOOLEAN AVrfpFaultDelayInitOnce(
+    VOID
+    )
+{
+    return AVrfRunOnce(&AVrfpFaultRunOnce, AVrfpFaultRunOnceRoutine);
 }
 
 BOOLEAN AVrfpInitExclusionsRegexInternal(
@@ -311,6 +367,16 @@ BOOLEAN AVrfShouldFaultInject(
         return FALSE;
     }
 
+    if (!AVrfpFaultDelayInitOnce())
+    {
+        return FALSE;
+    }
+
+    if (AVrfInDelayLoadDll(CallerAddress))
+    {
+        return FALSE;
+    }
+
     count = RtlCaptureStackBackTrace(1, ARRAYSIZE(frames), frames, &hash);
 
     RtlEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
@@ -420,20 +486,54 @@ BOOLEAN AVrfShouldFaultInject(
         PLIST_ENTRY modList;
         UNICODE_STRING symbol;
 
+        //
+        // N.B. Since we can not guarantee our delay load DLL don't delay
+        // load something themselves. If we encounter on of our delay load
+        // DLL in the stack we exclude it from fault injection. This comes
+        // with the consequence that anything calling through the delay load
+        // DLL we use won't be fault injected.
+        //
+        // It shouldn't be necessary to delay load in a verifier provider or
+        // have to do this hack. But verifier seems to have a bug in
+        // "rolling back" import hooks early in startup. It will do this when
+        // starting the process and initializing verifier. It seems like the
+        // intention behind this code is to allow a verifier provider to import
+        // more things but then roll back the import hooks so they don't apply
+        // to things verifier needs. The rollback code can cause the import
+        // table for things like kernel32 to point back on itself rather than
+        // pointing to kernelbase.
+        //
+        if (AVrfInDelayLoadDll(frames[i]))
+        {
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_INFO_LEVEL,
+                       "AVRF: stack excluded for internal delay load DLL\n");
+
+            stackEntry->Excluded = TRUE;
+            result = FALSE;
+            goto Exit;
+        }
+
         info = (PSYMBOL_INFOW)AVrfpFaultContext.SymInfoBuffer;
 
         RtlZeroMemory(info, sizeof(*info));
         info->SizeOfStruct = sizeof(SYMBOL_INFOW);
         info->MaxNameLen = MAX_SYM_NAME;
 
-        if (!SymFromAddrW(NtCurrentProcess(), (ULONG64)frames[i], &disp, info))
+        if (!Delay_SymFromAddrW(NtCurrentProcess(),
+                                (ULONG64)frames[i],
+                                &disp,
+                                info))
         {
             //
             // Refresh the module list and try again.
             //
-            SymRefreshModuleList(NtCurrentProcess());
+            Delay_SymRefreshModuleList(NtCurrentProcess());
 
-            if (!SymFromAddrW(NtCurrentProcess(), (ULONG64)frames[i], &disp, info))
+            if (!Delay_SymFromAddrW(NtCurrentProcess(),
+                                    (ULONG64)frames[i],
+                                    &disp,
+                                    info))
             {
                 DbgPrintEx(DPFLTR_VERIFIER_ID,
                            DPFLTR_WARNING_LEVEL,
@@ -658,35 +758,6 @@ BOOLEAN AVrfFaultProcessAttach(
         return FALSE;
     }
 
-    if (AVrfProperties.SymbolSearchPath[0] == L'\0')
-    {
-        if (!SymInitializeW(NtCurrentProcess(), NULL, FALSE))
-        {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to initialize symbols (%lu)\n",
-                       NtCurrentTeb()->LastErrorValue);
-            return FALSE;
-        }
-    }
-    else
-    {
-        if (!SymInitializeW(NtCurrentProcess(),
-                            AVrfProperties.SymbolSearchPath,
-                            FALSE))
-        {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to initialize symbols (%lu)\n",
-                       NtCurrentTeb()->LastErrorValue);
-            return FALSE;
-        }
-    }
-
-    SymSetOptions(SymGetOptions() | SYMOPT_UNDNAME);
-    SymRegisterCallbackW64(NtCurrentProcess(), AVrfpSymbolRegsteredCallback, 0);
-    SymRefreshModuleList(NtCurrentProcess());
-
     err = VerifierRegisterFaultInjectProvider(VFDYNF_FAULT_TYPE_COUNT,
                                               &AVrfpFaultContext.TypeBase);
     if (err != ERROR_SUCCESS)
@@ -824,5 +895,8 @@ VOID AVrfFaultProcessDetach(
 
     AVrfFreeStackTable(&AVrfpFaultContext.StackTable);
 
-    SymCleanup(NtCurrentProcess());
+    if (AVrfpFaultContext.SymInitialized)
+    {
+        Delay_SymCleanup(NtCurrentProcess());
+    }
 }

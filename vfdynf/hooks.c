@@ -11,7 +11,6 @@
 // So we need to duplicate hook definitions for each possible import.
 //
 
-
 #define VFDYNF_THUNK(x) { #x, NULL, Hook_##x }
 #define VFDYNF_THUNK_EX(m, x) { #x, NULL, Hook_##m##_##x }
 

@@ -2,6 +2,7 @@
     Copyright (c) Johnny Shaw. All rights reserved.
 */
 #include <vfdynf.h>
+#include <delayld.h>
 
 #define VFDYNF_FUZZ_BLOCK_SIZE  (0x1000 / 4)
 #define VFDYNF_RAND_VECTOR_SIZE 0x4000
@@ -23,6 +24,8 @@ typedef struct _VFDYNF_FUZZ_CONTEXT
     VFDYNF_FUZZ_MMAP_ENTRY MMapEntries[VFDYNF_FUZZ_MMAP_COUNT];
 } VFDYNF_FUZZ_CONTEXT, *PVFDYNF_FUZZ_CONTEXT;
 
+static AVRF_RUN_ONCE AVrfpFuzzRunOnce = AVRF_RUN_ONCE_INIT;
+
 static VFDYNF_FUZZ_CONTEXT AVrfpFuzzContext =
 {
     .Initialized = FALSE,
@@ -33,11 +36,46 @@ static VFDYNF_FUZZ_CONTEXT AVrfpFuzzContext =
     .MMapEntries = { 0 },
 };
 
+_Function_class_(AVRF_RUN_ONCE_ROUTINE)
+BOOLEAN NTAPI AVrfpFuzzRunOnceRoutine(
+    VOID
+    )
+{
+    NTSTATUS status;
+
+    if (!AVrfDelayLoadInitOnce())
+    {
+        return FALSE;
+    }
+
+    status = Delay_BCryptGenRandom(NULL,
+                                   AVrfpFuzzContext.Vector,
+                                   VFDYNF_RAND_VECTOR_SIZE,
+                                   BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+    if (!NT_SUCCESS(status))
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: failed to initialize fuzz vector (0x%08x)\n",
+                   status);
+        __debugbreak();
+
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 ULONG AVrfFuzzRandom(
     VOID
     )
 {
     ULONG index;
+
+    if (!AVrfRunOnce(&AVrfpFuzzRunOnce, AVrfpFuzzRunOnceRoutine))
+    {
+        return (ULONG)ReadTimeStampCounter();
+    }
 
     index = (ULONG)InterlockedIncrement(&AVrfpFuzzContext.Index);
 
@@ -385,20 +423,6 @@ BOOLEAN AVrfFuzzProcessAttach(
     )
 {
     NTSTATUS status;
-
-    status = BCryptGenRandom(NULL,
-                             AVrfpFuzzContext.Vector,
-                             VFDYNF_RAND_VECTOR_SIZE,
-                             BCRYPT_USE_SYSTEM_PREFERRED_RNG);
-    if (!NT_SUCCESS(status))
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to initialize fuzz vector (0x%08x)\n",
-                   status);
-        __debugbreak();
-        return FALSE;
-    }
 
     status = RtlInitializeCriticalSection(&AVrfpFuzzContext.CriticalSection);
     if (!NT_SUCCESS(status))

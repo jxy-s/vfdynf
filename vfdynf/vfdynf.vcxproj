@@ -187,7 +187,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -216,7 +216,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -243,7 +243,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -270,7 +270,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -297,7 +297,7 @@
       <SubSystem>Windows</SubSystem>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -326,7 +326,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -355,7 +355,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
@@ -384,19 +384,21 @@
       <OptimizeReferences>true</OptimizeReferences>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;bcrypt.lib;dbghelp.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
+      <AdditionalDependencies>ntdllp.lib;vrfcore.lib;pcre2.lib;BufferOverflow.lib;arm64rt.lib</AdditionalDependencies>
       <DelayLoadDLLs>%(DelayLoadDLLs)</DelayLoadDLLs>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol>DllMain</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="delayld.h" />
     <ClInclude Include="hooks.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="vfdynf.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crt_vfdynf.c" />
+    <ClCompile Include="delayld.c" />
     <ClCompile Include="except.c" />
     <ClCompile Include="fuzz.c" />
     <ClCompile Include="hooks.c" />
