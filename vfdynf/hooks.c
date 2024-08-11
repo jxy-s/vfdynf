@@ -444,5 +444,10 @@ BOOLEAN AVrfLinkHooks(
     AVrfLinkHook(OleAut32, SysReAllocStringLen);
     AVrfLinkHook(OleAut32, SysAllocStringByteLen);
 
+    AVrfLinkHook(Winsock, WSARecv);
+    AVrfLinkHook(Winsock, WSARecvFrom);
+    AVrfLinkHook(Winsock, recv);
+    AVrfLinkHook(Winsock, recvfrom);
+
     return TRUE;
 }
