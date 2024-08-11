@@ -789,6 +789,7 @@ BOOLEAN AVrfFaultProcessAttach(
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_FUZZ_REG);
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_FUZZ_FILE);
     AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_FUZZ_MMAP);
+    AVrfpFaultSetRangeForType(VFDYNF_FAULT_TYPE_FUZZ_NET);
 
     //
     // By default the system doesn't rely on probability for fault injection.
@@ -806,6 +807,7 @@ BOOLEAN AVrfFaultProcessAttach(
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_FUZZ_REG);
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_FUZZ_FILE);
     AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_FUZZ_MMAP);
+    AVrfpFaultSetProbabilityForType(VFDYNF_FAULT_TYPE_FUZZ_NET);
 
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_WAIT), L"Wait APIs");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_HEAP), L"Heap APIs");
@@ -819,6 +821,7 @@ BOOLEAN AVrfFaultProcessAttach(
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_FUZZ_REG), L"Fuzz Registry");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_FUZZ_FILE), L"Fuzz File");
     VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_FUZZ_MMAP), L"Fuzz Section Map");
+    VerifierSetAPIClassName(AVrfpFaultTypeClass(VFDYNF_FAULT_TYPE_FUZZ_NET), L"Fuzz Network");
 
     if (!AVrfProperties.FaultSeed)
     {

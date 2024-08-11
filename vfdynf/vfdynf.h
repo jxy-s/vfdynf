@@ -15,6 +15,7 @@
 #include <bcrypt.h>
 #include <DbgHelp.h>
 #include <oleauto.h>
+#include <WinSock2.h>
 #include <assert.h>
 
 #include <pcre2_vfdynf.h>
@@ -66,6 +67,7 @@
 #define VFDYNF_FAULT_TYPE_FUZZ_REG        0x00000200ul
 #define VFDYNF_FAULT_TYPE_FUZZ_FILE       0x00000400ul
 #define VFDYNF_FAULT_TYPE_FUZZ_MMAP       0x00000800ul
+#define VFDYNF_FAULT_TYPE_FUZZ_NET        0x00001000ul
 
 #define VFDYNF_FAULT_TYPE_INDEX_WAIT      0ul
 #define VFDYNF_FAULT_TYPE_INDEX_HEAP      1ul
@@ -79,8 +81,9 @@
 #define VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG  9ul
 #define VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE 10ul
 #define VFDYNF_FAULT_TYPE_INDEX_FUZZ_MMAP 11ul
+#define VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET  12ul
 
-#define VFDYNF_FAULT_TYPE_COUNT           12ul
+#define VFDYNF_FAULT_TYPE_COUNT           13ul
 
 #define VFDYNF_FAULT_VALID_MASK (VFDYNF_FAULT_TYPE_WAIT                      |\
                                  VFDYNF_FAULT_TYPE_HEAP                      |\
@@ -93,12 +96,14 @@
                                  VFDYNF_FAULT_TYPE_INPAGE                    |\
                                  VFDYNF_FAULT_TYPE_FUZZ_REG                  |\
                                  VFDYNF_FAULT_TYPE_FUZZ_FILE                 |\
-                                 VFDYNF_FAULT_TYPE_FUZZ_MMAP)
+                                 VFDYNF_FAULT_TYPE_FUZZ_MMAP                 |\
+                                 VFDYNF_FAULT_TYPE_FUZZ_NET)
 
 #define VFDYNF_FAULT_DEFAULT_MASK (VFDYNF_FAULT_VALID_MASK                & ~(\
                                    VFDYNF_FAULT_TYPE_FUZZ_REG                |\
                                    VFDYNF_FAULT_TYPE_FUZZ_FILE               |\
-                                   VFDYNF_FAULT_TYPE_FUZZ_MMAP))
+                                   VFDYNF_FAULT_TYPE_FUZZ_MMAP               |\
+                                   VFDYNF_FAULT_TYPE_FUZZ_NET))
 
 #define VFDYN_SYMSEARCH_MAX_LENGTH (1024)
 #define VFDYN_REGEX_MAX_LENGTH     (16 * 1024)

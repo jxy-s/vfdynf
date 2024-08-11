@@ -198,6 +198,15 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpAdvapi32[] =
     { NULL, NULL, NULL }
 };
 
+static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpWinsock[] =
+{
+    VFDYNF_THUNK(WSARecv),
+    VFDYNF_THUNK(WSARecvFrom),
+    VFDYNF_THUNK(recv),
+    VFDYNF_THUNK(recvfrom),
+    { NULL, NULL, NULL }
+};
+
 static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpOleAut32[] =
 {
     VFDYNF_THUNK(SysAllocString),
@@ -217,6 +226,7 @@ RTL_VERIFIER_DLL_DESCRIPTOR AVrfDllDescriptors[] =
     { L"kernel32.dll",   0, NULL, AVrfpKernel32 },
     { L"advapi32.dll",   0, NULL, AVrfpAdvapi32 },
     { L"oleaut32.dll",   0, NULL, AVrfpOleAut32 },
+    { L"Ws2_32.dll",     0, NULL, AVrfpWinsock },
     { NULL,              0, NULL, NULL }
 };
 

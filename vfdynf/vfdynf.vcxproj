@@ -405,6 +405,7 @@
     <ClCompile Include="hooks_event.c" />
     <ClCompile Include="hooks_file.c" />
     <ClCompile Include="hooks_heap.c" />
+    <ClCompile Include="hooks_net.c" />
     <ClCompile Include="hooks_ole.c" />
     <ClCompile Include="hooks_reg.c" />
     <ClCompile Include="hooks_section.c" />

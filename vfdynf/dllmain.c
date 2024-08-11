@@ -244,6 +244,15 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"expression matches the stack.",
         NULL
     },
+    {
+        AVRF_PROPERTY_MULTI_SZ,
+        L"FuzzNetExclusionsRegex",
+        &AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET],
+        sizeof(AVrfProperties.TypeExclusionsRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET]),
+        L"Excludes stack from network fuzzing when one of these regular "
+        L"expression matches the stack.",
+        NULL
+    },
     { AVRF_PROPERTY_NONE, NULL, NULL, 0, NULL, NULL }
 };
 
