@@ -423,6 +423,80 @@ Exit:
     }
 }
 
+#define TESTDYNF_REG_DATA 0x11223344
+void DoRegTest(uint32_t Id)
+{
+    LSTATUS status;
+    HKEY key;
+    DWORD type;
+    DWORD data;
+    DWORD dataSize;
+
+    status = RegCreateKeyW(HKEY_CURRENT_USER, L"SOFTWARE\\testdynf", &key);
+    if (status == ERROR_SUCCESS)
+    {
+        RegCloseKey(key);
+    }
+    else
+    {
+        printf("[%lu] failed to create registry key\n", Id);
+    }
+
+    status = RegOpenKeyExW(HKEY_CURRENT_USER,
+                           L"SOFTWARE\\testdynf",
+                           0,
+                           KEY_ALL_ACCESS,
+                           &key);
+    if (status != ERROR_SUCCESS)
+    {
+        printf("[%lu] failed to open registry key\n", Id);
+        key = NULL;
+        goto Exit;
+    }
+
+    dataSize = sizeof(data);
+    status = RegQueryValueExW(key,
+                              L"TestValue",
+                              NULL,
+                              &type,
+                              (PBYTE)&data,
+                              &dataSize);
+    if (status == ERROR_SUCCESS)
+    {
+        if (dataSize != sizeof(data))
+        {
+            printf("[%lu] caught registry size fuzzing\n", Id);
+        }
+        else if (data != TESTDYNF_REG_DATA)
+        {
+            printf("[%lu] caught registry data fuzzing\n", Id);
+        }
+    }
+    else
+    {
+        printf("[%lu] failed to query registry key\n", Id);
+    }
+
+    data = TESTDYNF_REG_DATA;
+    status = RegSetValueExW(key,
+                            L"TestValue",
+                            0,
+                            REG_DWORD,
+                            (PBYTE)&data,
+                            sizeof(data));
+    if (status != ERROR_SUCCESS)
+    {
+        printf("[%lu] failed to set registry key\n", Id);
+    }
+
+Exit:
+
+    if (key)
+    {
+        RegCloseKey(key);
+    }
+}
+
 void DoInPageTest(uint32_t Id)
 {
     DoInPageTestDataFile(Id);
@@ -437,6 +511,7 @@ void DoTest(uint32_t Id)
     DoHeapExceptionTest(Id);
     DoInPageTest(Id);
     DoReadFileTest(Id);
+    DoRegTest(Id);
 }
 
 #define RECURSE_TEST(x)                                                       \
