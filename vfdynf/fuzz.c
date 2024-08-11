@@ -248,7 +248,7 @@ VOID AVrfFuzzSizeTruncate(
 
     if (size.QuadPart > 0)
     {
-        Size->QuadPart %= size.QuadPart;
+        Size->QuadPart = (size.QuadPart % Size->QuadPart);
     }
     else
     {
