@@ -371,6 +371,58 @@ Exit:
     }
 }
 
+void DoReadFileTest(uint32_t Id)
+{
+    HANDLE file;
+    HANDLE section;
+    PVOID address;
+    BYTE buffer[512];
+
+    section = NULL;
+    address = NULL;
+
+    file = CreateFileW(L"C:\\Windows\\System32\\notepad.exe",
+                       GENERIC_READ,
+                       FILE_SHARE_READ,
+                       NULL,
+                       OPEN_EXISTING,
+                       FILE_ATTRIBUTE_NORMAL,
+                       NULL);
+    if (file == INVALID_HANDLE_VALUE)
+    {
+        printf("[%lu] failed to open data file\n", Id);
+        goto Exit;
+    }
+
+    ULONG bytesRead;
+    if (!ReadFile(file, buffer, sizeof(buffer), &bytesRead, NULL))
+    {
+        printf("[%lu] failed to read file\n", Id);
+        goto Exit;
+    }
+
+    if (bytesRead != sizeof(buffer))
+    {
+        printf("[%lu] failed to read all requested bytes\n", Id);
+    }
+
+    if (bytesRead < sizeof(IMAGE_DOS_SIGNATURE))
+    {
+        printf("[%lu] failed to read enough data\n", Id);
+    }
+    else if (*(PUSHORT)buffer != IMAGE_DOS_SIGNATURE)
+    {
+        printf("[%lu] caught file read fuzzing\n", Id);
+    }
+
+Exit:
+
+    if (file != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(file);
+    }
+}
+
 void DoInPageTest(uint32_t Id)
 {
     DoInPageTestDataFile(Id);
@@ -384,6 +436,7 @@ void DoTest(uint32_t Id)
     DoStlTest(Id);
     DoHeapExceptionTest(Id);
     DoInPageTest(Id);
+    DoReadFileTest(Id);
 }
 
 #define RECURSE_TEST(x)                                                       \
