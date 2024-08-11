@@ -143,7 +143,7 @@ Hook_KernelBase_VirtualAlloc(
     _In_ DWORD flProtect
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
                                    VirtualAlloc,
                                    lpAddress,
                                    dwSize,
@@ -161,7 +161,7 @@ Hook_KernelBase_VirtualAllocEx(
     _In_ DWORD flProtect
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
+    return VFDYNF_LINK_COMMON_HOOK(KernelBase,
                                    VirtualAllocEx,
                                    hProcess,
                                    lpAddress,

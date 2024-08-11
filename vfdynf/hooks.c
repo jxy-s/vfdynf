@@ -214,8 +214,8 @@ static RTL_VERIFIER_THUNK_DESCRIPTOR AVrfpOleAut32[] =
 RTL_VERIFIER_DLL_DESCRIPTOR AVrfDllDescriptors[] =
 {
     { L"ntdll.dll",      0, NULL, AVrfpNtdll },
-    { L"kernel32.dll",   0, NULL, AVrfpKernel32 },
     { L"kernelbase.dll", 0, NULL, AVrfpKernelBase },
+    { L"kernel32.dll",   0, NULL, AVrfpKernel32 },
     { L"advapi32.dll",   0, NULL, AVrfpAdvapi32 },
     { L"oleaut32.dll",   0, NULL, AVrfpOleAut32 },
     { NULL,              0, NULL, NULL }
