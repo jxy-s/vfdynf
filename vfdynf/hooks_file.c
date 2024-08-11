@@ -78,6 +78,11 @@ Hook_NtReadFile(
 {
     NTSTATUS status;
 
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+    {
+        AVrfFuzzSizeTruncateULong(&Length);
+    }
+
     status = Orig_NtReadFile(FileHandle,
                              Event,
                              ApcRoutine,
@@ -95,15 +100,7 @@ Hook_NtReadFile(
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
-        LARGE_INTEGER bytesRead;
-
         AVrfFuzzBuffer(Buffer, IoStatusBlock->Information);
-
-        bytesRead.QuadPart = IoStatusBlock->Information;
-
-        AVrfFuzzSizeTruncate(&bytesRead);
-
-        IoStatusBlock->Information = (ULONG_PTR)bytesRead.QuadPart;
     }
 
     return status;
@@ -303,6 +300,11 @@ Hook_Common_ReadFile(
 {
     BOOL result;
 
+    if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+    {
+        AVrfFuzzSizeTruncateULong(&nNumberOfBytesToRead);
+    }
+
     result = Orig_ReadFile(hFile,
                            lpBuffer,
                            nNumberOfBytesToRead,
@@ -312,11 +314,6 @@ Hook_Common_ReadFile(
     if (result && lpBuffer && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
         AVrfFuzzBuffer(lpBuffer, nNumberOfBytesToRead);
-
-        if (lpNumberOfBytesRead)
-        {
-            AVrfFuzzSizeTruncateULong(lpNumberOfBytesRead);
-        }
     }
 
     return result;
