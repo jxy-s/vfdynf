@@ -395,6 +395,16 @@ BOOLEAN AVrfShouldFaultInject(
         }
     }
 
+    if (AVrfpFaultContext.CriticalSection.RecursionCount > 1)
+    {
+        //
+        // Do not fault inject if we've back in this routine. This can happen
+        // while we're resolving symbols.
+        //
+        result = FALSE;
+        goto Exit;
+    }
+
     stackEntry = AVrfLookupStackEntry(&AVrfpFaultContext.StackTable, hash);
     if (stackEntry && (stackEntry->Hash == hash))
     {
@@ -429,7 +439,9 @@ BOOLEAN AVrfShouldFaultInject(
     // We haven't yet evaluated this stack, do so now.
     //
 
-    stackEntry = AVrfInsertStackEntry(&AVrfpFaultContext.StackTable, stackEntry, hash);
+    stackEntry = AVrfInsertStackEntry(&AVrfpFaultContext.StackTable,
+                                      stackEntry,
+                                      hash);
     if (!stackEntry)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -456,37 +468,6 @@ BOOLEAN AVrfShouldFaultInject(
                HandleToULong(NtCurrentTeb()->ClientId.UniqueProcess),
                HandleToULong(NtCurrentTeb()->ClientId.UniqueThread),
                count);
-
-    //
-    // N.B. Since we can not guarantee our delay load DLL don't delay
-    // load something themselves. If we encounter on of our delay load
-    // DLL in the stack we exclude it from fault injection. This comes
-    // with the consequence that anything calling through the delay load
-    // DLL we use won't be fault injected.
-    //
-    // It shouldn't be necessary to delay load in a verifier provider or
-    // have to do this hack. But verifier seems to have a bug in
-    // "rolling back" import hooks early in startup. It will do this when
-    // starting the process and initializing verifier. It seems like the
-    // intention behind this code is to allow a verifier provider to import
-    // more things but then roll back the import hooks so they don't apply
-    // to things verifier needs. The rollback code can cause the import
-    // table for things like kernel32 to point back on itself rather than
-    // pointing to kernelbase.
-    //
-    for (WORD i = 0; i < count; i++)
-    {
-        if (AVrfInDelayLoadDll(frames[i]))
-        {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_INFO_LEVEL,
-                       "AVRF: stack excluded for internal delay load DLL\n");
-
-            stackEntry->Excluded = TRUE;
-            result = FALSE;
-            goto Exit;
-        }
-    }
 
     //
     // Classify the stack. Check for overrides by symbols/etc. We build a
