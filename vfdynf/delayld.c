@@ -160,7 +160,7 @@ BOOLEAN AVrfDelayLoadInitOnce(
     VOID
     )
 {
-    return AVrfRunOnce(&AVrfpDelayLoadOnce, AVrfpDelayLoad);
+    return AVrfRunOnce(&AVrfpDelayLoadOnce, AVrfpDelayLoad, TRUE);
 }
 
 _Must_inspect_result_

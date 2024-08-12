@@ -294,9 +294,84 @@ static AVRF_BREAK_DESCRIPTOR AVrfpBreakDescriptors[] =
 #define AVRF_RUN_ONCE_COMPLETED    2
 #define AVRF_RUN_ONCE_FAILED       3
 
+typedef struct _AVRF_RUN_ONCE_ASYNC_CONTEXT
+{
+    PAVRF_RUN_ONCE Once;
+    PAVRF_RUN_ONCE_ROUTINE Routine;
+} AVRF_RUN_ONCE_ASYNC_CONTEXT, *PAVRF_RUN_ONCE_ASYNC_CONTEXT;
+
+NTSTATUS NTAPI AVrfpAsyncRunOnceRoutine(
+    _In_ PVOID ThreadParameter
+    )
+{
+    PAVRF_RUN_ONCE_ASYNC_CONTEXT context;
+    AVRF_RUN_ONCE res;
+
+    context = ThreadParameter;
+
+    res = context->Routine() ? AVRF_RUN_ONCE_COMPLETED : AVRF_RUN_ONCE_FAILED;
+
+    InterlockedExchange(context->Once, res);
+
+    RtlFreeHeap(RtlProcessHeap(), 0, context);
+
+    return STATUS_SUCCESS;
+}
+
+VOID AVrfpAsyncRunOnce(
+    _In_ PAVRF_RUN_ONCE Once,
+    _In_ PAVRF_RUN_ONCE_ROUTINE Routine
+    )
+{
+    NTSTATUS status;
+    PAVRF_RUN_ONCE_ASYNC_CONTEXT context;
+
+    context = RtlAllocateHeap(RtlProcessHeap(),
+                              0,
+                              sizeof(AVRF_RUN_ONCE_ASYNC_CONTEXT));
+    if (!context)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Exit;
+    }
+
+    context->Once = Once;
+    context->Routine = Routine;
+
+    status = RtlCreateUserThread(NtCurrentProcess(),
+                                 NULL,
+                                 FALSE,
+                                 0,
+                                 0,
+                                 0,
+                                 AVrfpAsyncRunOnceRoutine,
+                                 context,
+                                 NULL,
+                                 NULL);
+    if (!NT_SUCCESS(status))
+    {
+        goto Exit;
+    }
+
+    context = NULL;
+
+Exit:
+
+    if (context)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, context);
+    }
+
+    if (!NT_SUCCESS(status))
+    {
+        InterlockedExchange(Once, AVRF_RUN_ONCE_FAILED);
+    }
+}
+
 BOOLEAN AVrfRunOnce(
     _Inout_ PAVRF_RUN_ONCE Once,
-    _In_ PAVRF_RUN_ONCE_ROUTINE Routine
+    _In_ PAVRF_RUN_ONCE_ROUTINE Routine,
+    _In_ BOOLEAN Async
     )
 {
     AVRF_RUN_ONCE res;
@@ -307,7 +382,15 @@ BOOLEAN AVrfRunOnce(
 
     if (res == AVRF_RUN_ONCE_NOT_RUN)
     {
-        res = Routine() ? AVRF_RUN_ONCE_COMPLETED : AVRF_RUN_ONCE_FAILED;
+        if (Async)
+        {
+            AVrfpAsyncRunOnce(Once, Routine);
+            res = AVRF_RUN_ONCE_INITIALIZING;
+        }
+        else
+        {
+            res = Routine() ? AVRF_RUN_ONCE_COMPLETED : AVRF_RUN_ONCE_FAILED;
+        }
 
         InterlockedExchange(Once, res);
     }

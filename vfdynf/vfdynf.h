@@ -148,7 +148,8 @@ typedef AVRF_RUN_ONCE* PAVRF_RUN_ONCE;
 
 BOOLEAN AVrfRunOnce(
     _Inout_ PAVRF_RUN_ONCE Once,
-    _In_ PAVRF_RUN_ONCE_ROUTINE Routine
+    _In_ PAVRF_RUN_ONCE_ROUTINE Routine,
+    _In_ BOOLEAN Async
     );
 
 // stop.c

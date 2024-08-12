@@ -43,11 +43,6 @@ BOOLEAN NTAPI AVrfpFuzzRunOnceRoutine(
 {
     NTSTATUS status;
 
-    if (!AVrfDelayLoadInitOnce())
-    {
-        return FALSE;
-    }
-
     status = Delay_BCryptGenRandom(NULL,
                                    AVrfpFuzzContext.Vector,
                                    VFDYNF_RAND_VECTOR_SIZE,
@@ -72,7 +67,8 @@ ULONG AVrfFuzzRandom(
 {
     ULONG index;
 
-    if (!AVrfRunOnce(&AVrfpFuzzRunOnce, AVrfpFuzzRunOnceRoutine))
+    if (!AVrfDelayLoadInitOnce() ||
+        !AVrfRunOnce(&AVrfpFuzzRunOnce, AVrfpFuzzRunOnceRoutine, FALSE))
     {
         return (ULONG)ReadTimeStampCounter();
     }
