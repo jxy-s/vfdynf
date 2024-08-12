@@ -136,10 +136,11 @@ Hook_Kernel32_WaitForSingleObject(
     _In_ DWORD dwMilliseconds
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   WaitForSingleObject,
-                                   hHandle,
-                                   dwMilliseconds);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    WaitForSingleObject,
+                                    hHandle,
+                                    dwMilliseconds);
 }
 
 DWORD
@@ -150,11 +151,12 @@ Hook_Kernel32_WaitForSingleObjectEx(
     _In_ BOOL bAlertable
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   WaitForSingleObjectEx,
-                                   hHandle,
-                                   dwMilliseconds,
-                                   bAlertable);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    WaitForSingleObjectEx,
+                                    hHandle,
+                                    dwMilliseconds,
+                                    bAlertable);
 }
 
 DWORD
@@ -166,12 +168,13 @@ Hook_Kernel32_WaitForMultipleObjects(
     _In_ DWORD dwMilliseconds
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   WaitForMultipleObjects,
-                                   nCount,
-                                   lpHandles,
-                                   bWaitAll,
-                                   dwMilliseconds);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    WaitForMultipleObjects,
+                                    nCount,
+                                    lpHandles,
+                                    bWaitAll,
+                                    dwMilliseconds);
 }
 
 DWORD
@@ -184,13 +187,14 @@ Hook_Kernel32_WaitForMultipleObjectsEx(
     _In_ BOOL bAlertable
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   WaitForMultipleObjectsEx,
-                                   nCount,
-                                   lpHandles,
-                                   bWaitAll,
-                                   dwMilliseconds,
-                                   bAlertable);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    WaitForMultipleObjectsEx,
+                                    nCount,
+                                    lpHandles,
+                                    bWaitAll,
+                                    dwMilliseconds,
+                                    bAlertable);
 }
 
 DWORD

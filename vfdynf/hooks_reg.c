@@ -1433,11 +1433,12 @@ Hook_Kernel32_RegCreateKeyA(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegCreateKeyA,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegCreateKeyA,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -1448,11 +1449,12 @@ Hook_Kernel32_RegCreateKeyW(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegCreateKeyW,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegCreateKeyW,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -1469,17 +1471,18 @@ Hook_Kernel32_RegCreateKeyExA(
     _Out_opt_ LPDWORD lpdwDisposition
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegCreateKeyExA,
-                                   hKey,
-                                   lpSubKey,
-                                   Reserved,
-                                   lpClass,
-                                   dwOptions,
-                                   samDesired,
-                                   lpSecurityAttributes,
-                                   phkResult,
-                                   lpdwDisposition);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegCreateKeyExA,
+                                    hKey,
+                                    lpSubKey,
+                                    Reserved,
+                                    lpClass,
+                                    dwOptions,
+                                    samDesired,
+                                    lpSecurityAttributes,
+                                    phkResult,
+                                    lpdwDisposition);
 }
 
 LSTATUS
@@ -1496,17 +1499,18 @@ Hook_Kernel32_RegCreateKeyExW(
     _Out_opt_ LPDWORD lpdwDisposition
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegCreateKeyExW,
-                                   hKey,
-                                   lpSubKey,
-                                   Reserved,
-                                   lpClass,
-                                   dwOptions,
-                                   samDesired,
-                                   lpSecurityAttributes,
-                                   phkResult,
-                                   lpdwDisposition);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegCreateKeyExW,
+                                    hKey,
+                                    lpSubKey,
+                                    Reserved,
+                                    lpClass,
+                                    dwOptions,
+                                    samDesired,
+                                    lpSecurityAttributes,
+                                    phkResult,
+                                    lpdwDisposition);
 }
 
 LSTATUS
@@ -1517,11 +1521,12 @@ Hook_Kernel32_RegOpenKeyA(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegOpenKeyA,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegOpenKeyA,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -1532,11 +1537,12 @@ Hook_Kernel32_RegOpenKeyW(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegOpenKeyW,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegOpenKeyW,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -1549,13 +1555,14 @@ Hook_Kernel32_RegOpenKeyExA(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegOpenKeyExA,
-                                   hKey,
-                                   lpSubKey,
-                                   ulOptions,
-                                   samDesired,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegOpenKeyExA,
+                                    hKey,
+                                    lpSubKey,
+                                    ulOptions,
+                                    samDesired,
+                                    phkResult);
 }
 
 LSTATUS
@@ -1568,13 +1575,14 @@ Hook_Kernel32_RegOpenKeyExW(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegOpenKeyExW,
-                                   hKey,
-                                   lpSubKey,
-                                   ulOptions,
-                                   samDesired,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegOpenKeyExW,
+                                    hKey,
+                                    lpSubKey,
+                                    ulOptions,
+                                    samDesired,
+                                    phkResult);
 }
 
 LSTATUS
@@ -1587,13 +1595,14 @@ Hook_Kernel32_RegSetValueA(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegSetValueA,
-                                   hKey,
-                                   lpSubKey,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegSetValueA,
+                                    hKey,
+                                    lpSubKey,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -1606,13 +1615,14 @@ Hook_Kernel32_RegSetValueW(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegSetValueW,
-                                   hKey,
-                                   lpSubKey,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegSetValueW,
+                                    hKey,
+                                    lpSubKey,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -1626,14 +1636,15 @@ Hook_Kernel32_RegSetValueExA(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegSetValueExA,
-                                   hKey,
-                                   lpValueName,
-                                   Reserved,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegSetValueExA,
+                                    hKey,
+                                    lpValueName,
+                                    Reserved,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -1647,14 +1658,15 @@ Hook_Kernel32_RegSetValueExW(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegSetValueExW,
-                                   hKey,
-                                   lpValueName,
-                                   Reserved,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegSetValueExW,
+                                    hKey,
+                                    lpValueName,
+                                    Reserved,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -1666,12 +1678,13 @@ Hook_Kernel32_RegQueryValueA(
     _Inout_opt_ PLONG lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegQueryValueA,
-                                   hKey,
-                                   lpSubKey,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegQueryValueA,
+                                    hKey,
+                                    lpSubKey,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -1683,12 +1696,13 @@ Hook_Kernel32_RegQueryValueW(
     _Inout_opt_ PLONG lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegQueryValueW,
-                                   hKey,
-                                   lpSubKey,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegQueryValueW,
+                                    hKey,
+                                    lpSubKey,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -1701,13 +1715,14 @@ Hook_Kernel32_RegQueryMultipleValuesA(
     _Inout_opt_ LPDWORD ldwTotsize
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegQueryMultipleValuesA,
-                                   hKey,
-                                   val_list,
-                                   num_vals,
-                                   lpValueBuf,
-                                   ldwTotsize);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegQueryMultipleValuesA,
+                                    hKey,
+                                    val_list,
+                                    num_vals,
+                                    lpValueBuf,
+                                    ldwTotsize);
 }
 
 LSTATUS
@@ -1720,13 +1735,14 @@ Hook_Kernel32_RegQueryMultipleValuesW(
     _Inout_opt_ LPDWORD ldwTotsize
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegQueryMultipleValuesW,
-                                   hKey,
-                                   val_list,
-                                   num_vals,
-                                   lpValueBuf,
-                                   ldwTotsize);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegQueryMultipleValuesW,
+                                    hKey,
+                                    val_list,
+                                    num_vals,
+                                    lpValueBuf,
+                                    ldwTotsize);
 }
 
 LSTATUS
@@ -1740,14 +1756,15 @@ Hook_Kernel32_RegQueryValueExA(
     _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegQueryValueExA,
-                                   hKey,
-                                   lpValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegQueryValueExA,
+                                    hKey,
+                                    lpValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -1761,14 +1778,15 @@ Hook_Kernel32_RegQueryValueExW(
     _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegQueryValueExW,
-                                   hKey,
-                                   lpValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegQueryValueExW,
+                                    hKey,
+                                    lpValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }
 
 #pragma prefast(push)
@@ -1792,15 +1810,16 @@ Hook_Kernel32_RegGetValueA(
     _Inout_opt_ LPDWORD pcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegGetValueA,
-                                   hkey,
-                                   lpSubKey,
-                                   lpValue,
-                                   dwFlags,
-                                   pdwType,
-                                   pvData,
-                                   pcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegGetValueA,
+                                    hkey,
+                                    lpSubKey,
+                                    lpValue,
+                                    dwFlags,
+                                    pdwType,
+                                    pvData,
+                                    pcbData);
 }
 #pragma prefast(pop)
 
@@ -1825,15 +1844,16 @@ Hook_Kernel32_RegGetValueW(
     _Inout_opt_ LPDWORD pcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegGetValueW,
-                                   hkey,
-                                   lpSubKey,
-                                   lpValue,
-                                   dwFlags,
-                                   pdwType,
-                                   pvData,
-                                   pcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegGetValueW,
+                                    hkey,
+                                    lpSubKey,
+                                    lpValue,
+                                    dwFlags,
+                                    pdwType,
+                                    pvData,
+                                    pcbData);
 }
 #pragma prefast(pop)
 
@@ -1846,12 +1866,13 @@ Hook_Kernel32_RegEnumKeyA(
     _In_ DWORD cchName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegEnumKeyA,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   cchName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegEnumKeyA,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    cchName);
 }
 
 LSTATUS
@@ -1863,12 +1884,13 @@ Hook_Kernel32_RegEnumKeyW(
     _In_ DWORD cchName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegEnumKeyW,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   cchName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegEnumKeyW,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    cchName);
 }
 
 LSTATUS
@@ -1884,16 +1906,17 @@ Hook_Kernel32_RegEnumKeyExA(
     _Out_opt_ PFILETIME lpftLastWriteTime
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegEnumKeyExA,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   lpcchName,
-                                   lpReserved,
-                                   lpClass,
-                                   lpcchClass,
-                                   lpftLastWriteTime);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegEnumKeyExA,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    lpcchName,
+                                    lpReserved,
+                                    lpClass,
+                                    lpcchClass,
+                                    lpftLastWriteTime);
 }
 
 LSTATUS
@@ -1909,16 +1932,17 @@ Hook_Kernel32_RegEnumKeyExW(
     _Out_opt_ PFILETIME lpftLastWriteTime
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegEnumKeyExW,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   lpcchName,
-                                   lpReserved,
-                                   lpClass,
-                                   lpcchClass,
-                                   lpftLastWriteTime);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegEnumKeyExW,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    lpcchName,
+                                    lpReserved,
+                                    lpClass,
+                                    lpcchClass,
+                                    lpftLastWriteTime);
 }
 
 LSTATUS
@@ -1934,16 +1958,17 @@ Hook_Kernel32_RegEnumValueA(
     _Inout_opt_ LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegEnumValueA,
-                                   hKey,
-                                   dwIndex,
-                                   lpValueName,
-                                   lpcchValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegEnumValueA,
+                                    hKey,
+                                    dwIndex,
+                                    lpValueName,
+                                    lpcchValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -1959,16 +1984,17 @@ Hook_Kernel32_RegEnumValueW(
     _Inout_opt_ LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   RegEnumValueW,
-                                   hKey,
-                                   dwIndex,
-                                   lpValueName,
-                                   lpcchValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    RegEnumValueW,
+                                    hKey,
+                                    dwIndex,
+                                    lpValueName,
+                                    lpcchValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -2525,11 +2551,12 @@ Hook_Advapi32_RegCreateKeyA(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegCreateKeyA,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegCreateKeyA,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -2540,11 +2567,12 @@ Hook_Advapi32_RegCreateKeyW(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegCreateKeyW,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegCreateKeyW,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -2561,17 +2589,18 @@ Hook_Advapi32_RegCreateKeyExA(
     _Out_opt_ LPDWORD lpdwDisposition
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegCreateKeyExA,
-                                   hKey,
-                                   lpSubKey,
-                                   Reserved,
-                                   lpClass,
-                                   dwOptions,
-                                   samDesired,
-                                   lpSecurityAttributes,
-                                   phkResult,
-                                   lpdwDisposition);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegCreateKeyExA,
+                                    hKey,
+                                    lpSubKey,
+                                    Reserved,
+                                    lpClass,
+                                    dwOptions,
+                                    samDesired,
+                                    lpSecurityAttributes,
+                                    phkResult,
+                                    lpdwDisposition);
 }
 
 LSTATUS
@@ -2588,17 +2617,18 @@ Hook_Advapi32_RegCreateKeyExW(
     _Out_opt_ LPDWORD lpdwDisposition
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegCreateKeyExW,
-                                   hKey,
-                                   lpSubKey,
-                                   Reserved,
-                                   lpClass,
-                                   dwOptions,
-                                   samDesired,
-                                   lpSecurityAttributes,
-                                   phkResult,
-                                   lpdwDisposition);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegCreateKeyExW,
+                                    hKey,
+                                    lpSubKey,
+                                    Reserved,
+                                    lpClass,
+                                    dwOptions,
+                                    samDesired,
+                                    lpSecurityAttributes,
+                                    phkResult,
+                                    lpdwDisposition);
 }
 
 LSTATUS
@@ -2609,11 +2639,12 @@ Hook_Advapi32_RegOpenKeyA(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegOpenKeyA,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegOpenKeyA,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -2624,11 +2655,12 @@ Hook_Advapi32_RegOpenKeyW(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegOpenKeyW,
-                                   hKey,
-                                   lpSubKey,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegOpenKeyW,
+                                    hKey,
+                                    lpSubKey,
+                                    phkResult);
 }
 
 LSTATUS
@@ -2641,13 +2673,14 @@ Hook_Advapi32_RegOpenKeyExA(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegOpenKeyExA,
-                                   hKey,
-                                   lpSubKey,
-                                   ulOptions,
-                                   samDesired,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegOpenKeyExA,
+                                    hKey,
+                                    lpSubKey,
+                                    ulOptions,
+                                    samDesired,
+                                    phkResult);
 }
 
 LSTATUS
@@ -2660,13 +2693,14 @@ Hook_Advapi32_RegOpenKeyExW(
     _Out_ PHKEY phkResult
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegOpenKeyExW,
-                                   hKey,
-                                   lpSubKey,
-                                   ulOptions,
-                                   samDesired,
-                                   phkResult);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegOpenKeyExW,
+                                    hKey,
+                                    lpSubKey,
+                                    ulOptions,
+                                    samDesired,
+                                    phkResult);
 }
 
 LSTATUS
@@ -2679,13 +2713,14 @@ Hook_Advapi32_RegSetValueA(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegSetValueA,
-                                   hKey,
-                                   lpSubKey,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegSetValueA,
+                                    hKey,
+                                    lpSubKey,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -2698,13 +2733,14 @@ Hook_Advapi32_RegSetValueW(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegSetValueW,
-                                   hKey,
-                                   lpSubKey,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegSetValueW,
+                                    hKey,
+                                    lpSubKey,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -2718,14 +2754,15 @@ Hook_Advapi32_RegSetValueExA(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegSetValueExA,
-                                   hKey,
-                                   lpValueName,
-                                   Reserved,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegSetValueExA,
+                                    hKey,
+                                    lpValueName,
+                                    Reserved,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -2739,14 +2776,15 @@ Hook_Advapi32_RegSetValueExW(
     _In_ DWORD cbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegSetValueExW,
-                                   hKey,
-                                   lpValueName,
-                                   Reserved,
-                                   dwType,
-                                   lpData,
-                                   cbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegSetValueExW,
+                                    hKey,
+                                    lpValueName,
+                                    Reserved,
+                                    dwType,
+                                    lpData,
+                                    cbData);
 }
 
 LSTATUS
@@ -2758,12 +2796,13 @@ Hook_Advapi32_RegQueryValueA(
     _Inout_opt_ PLONG lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegQueryValueA,
-                                   hKey,
-                                   lpSubKey,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegQueryValueA,
+                                    hKey,
+                                    lpSubKey,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -2775,12 +2814,13 @@ Hook_Advapi32_RegQueryValueW(
     _Inout_opt_ PLONG lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegQueryValueW,
-                                   hKey,
-                                   lpSubKey,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegQueryValueW,
+                                    hKey,
+                                    lpSubKey,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -2793,13 +2833,14 @@ Hook_Advapi32_RegQueryMultipleValuesA(
     _Inout_opt_ LPDWORD ldwTotsize
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegQueryMultipleValuesA,
-                                   hKey,
-                                   val_list,
-                                   num_vals,
-                                   lpValueBuf,
-                                   ldwTotsize);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegQueryMultipleValuesA,
+                                    hKey,
+                                    val_list,
+                                    num_vals,
+                                    lpValueBuf,
+                                    ldwTotsize);
 }
 
 LSTATUS
@@ -2812,13 +2853,14 @@ Hook_Advapi32_RegQueryMultipleValuesW(
     _Inout_opt_ LPDWORD ldwTotsize
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegQueryMultipleValuesW,
-                                   hKey,
-                                   val_list,
-                                   num_vals,
-                                   lpValueBuf,
-                                   ldwTotsize);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegQueryMultipleValuesW,
+                                    hKey,
+                                    val_list,
+                                    num_vals,
+                                    lpValueBuf,
+                                    ldwTotsize);
 }
 
 LSTATUS
@@ -2832,14 +2874,15 @@ Hook_Advapi32_RegQueryValueExA(
     _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegQueryValueExA,
-                                   hKey,
-                                   lpValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegQueryValueExA,
+                                    hKey,
+                                    lpValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -2853,14 +2896,15 @@ Hook_Advapi32_RegQueryValueExW(
     _When_(lpData == NULL, _Out_opt_) _When_(lpData != NULL, _Inout_opt_) LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegQueryValueExW,
-                                   hKey,
-                                   lpValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegQueryValueExW,
+                                    hKey,
+                                    lpValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }
 
 #pragma prefast(push)
@@ -2884,15 +2928,16 @@ Hook_Advapi32_RegGetValueA(
     _Inout_opt_ LPDWORD pcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegGetValueA,
-                                   hkey,
-                                   lpSubKey,
-                                   lpValue,
-                                   dwFlags,
-                                   pdwType,
-                                   pvData,
-                                   pcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegGetValueA,
+                                    hkey,
+                                    lpSubKey,
+                                    lpValue,
+                                    dwFlags,
+                                    pdwType,
+                                    pvData,
+                                    pcbData);
 }
 #pragma prefast(pop)
 
@@ -2917,15 +2962,16 @@ Hook_Advapi32_RegGetValueW(
     _Inout_opt_ LPDWORD pcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegGetValueW,
-                                   hkey,
-                                   lpSubKey,
-                                   lpValue,
-                                   dwFlags,
-                                   pdwType,
-                                   pvData,
-                                   pcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegGetValueW,
+                                    hkey,
+                                    lpSubKey,
+                                    lpValue,
+                                    dwFlags,
+                                    pdwType,
+                                    pvData,
+                                    pcbData);
 }
 #pragma prefast(pop)
 
@@ -2938,12 +2984,13 @@ Hook_Advapi32_RegEnumKeyA(
     _In_ DWORD cchName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegEnumKeyA,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   cchName);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegEnumKeyA,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    cchName);
 }
 
 LSTATUS
@@ -2955,12 +3002,13 @@ Hook_Advapi32_RegEnumKeyW(
     _In_ DWORD cchName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegEnumKeyW,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   cchName);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegEnumKeyW,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    cchName);
 }
 
 LSTATUS
@@ -2976,16 +3024,17 @@ Hook_Advapi32_RegEnumKeyExA(
     _Out_opt_ PFILETIME lpftLastWriteTime
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegEnumKeyExA,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   lpcchName,
-                                   lpReserved,
-                                   lpClass,
-                                   lpcchClass,
-                                   lpftLastWriteTime);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegEnumKeyExA,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    lpcchName,
+                                    lpReserved,
+                                    lpClass,
+                                    lpcchClass,
+                                    lpftLastWriteTime);
 }
 
 LSTATUS
@@ -3001,16 +3050,17 @@ Hook_Advapi32_RegEnumKeyExW(
     _Out_opt_ PFILETIME lpftLastWriteTime
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegEnumKeyExW,
-                                   hKey,
-                                   dwIndex,
-                                   lpName,
-                                   lpcchName,
-                                   lpReserved,
-                                   lpClass,
-                                   lpcchClass,
-                                   lpftLastWriteTime);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegEnumKeyExW,
+                                    hKey,
+                                    dwIndex,
+                                    lpName,
+                                    lpcchName,
+                                    lpReserved,
+                                    lpClass,
+                                    lpcchClass,
+                                    lpftLastWriteTime);
 }
 
 LSTATUS
@@ -3026,16 +3076,17 @@ Hook_Advapi32_RegEnumValueA(
     _Inout_opt_ LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegEnumValueA,
-                                   hKey,
-                                   dwIndex,
-                                   lpValueName,
-                                   lpcchValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegEnumValueA,
+                                    hKey,
+                                    dwIndex,
+                                    lpValueName,
+                                    lpcchValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }
 
 LSTATUS
@@ -3051,14 +3102,15 @@ Hook_Advapi32_RegEnumValueW(
     _Inout_opt_ LPDWORD lpcbData
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Advapi32,
-                                   RegEnumValueW,
-                                   hKey,
-                                   dwIndex,
-                                   lpValueName,
-                                   lpcchValueName,
-                                   lpReserved,
-                                   lpType,
-                                   lpData,
-                                   lpcbData);
+    return VFDYNF_LINK_COMMON_HOOK2(Advapi32,
+                                    KernelBase,
+                                    RegEnumValueW,
+                                    hKey,
+                                    dwIndex,
+                                    lpValueName,
+                                    lpcchValueName,
+                                    lpReserved,
+                                    lpType,
+                                    lpData,
+                                    lpcbData);
 }

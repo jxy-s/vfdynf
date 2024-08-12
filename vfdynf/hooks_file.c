@@ -421,15 +421,16 @@ Hook_Kernel32_CreateFileA(
     _In_opt_ HANDLE hTemplateFile
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   CreateFileA,
-                                   lpFileName,
-                                   dwDesiredAccess,
-                                   dwShareMode,
-                                   lpSecurityAttributes,
-                                   dwCreationDisposition,
-                                   dwFlagsAndAttributes,
-                                   hTemplateFile);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    CreateFileA,
+                                    lpFileName,
+                                    dwDesiredAccess,
+                                    dwShareMode,
+                                    lpSecurityAttributes,
+                                    dwCreationDisposition,
+                                    dwFlagsAndAttributes,
+                                    hTemplateFile);
 }
 
 HANDLE
@@ -444,15 +445,16 @@ Hook_Kernel32_CreateFileW(
     _In_opt_ HANDLE hTemplateFile
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   CreateFileW,
-                                   lpFileName,
-                                   dwDesiredAccess,
-                                   dwShareMode,
-                                   lpSecurityAttributes,
-                                   dwCreationDisposition,
-                                   dwFlagsAndAttributes,
-                                   hTemplateFile);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    CreateFileW,
+                                    lpFileName,
+                                    dwDesiredAccess,
+                                    dwShareMode,
+                                    lpSecurityAttributes,
+                                    dwCreationDisposition,
+                                    dwFlagsAndAttributes,
+                                    hTemplateFile);
 }
 
 BOOL
@@ -465,13 +467,14 @@ Hook_Kernel32_ReadFile(
     _Inout_opt_ LPOVERLAPPED lpOverlapped
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   ReadFile,
-                                   hFile,
-                                   lpBuffer,
-                                   nNumberOfBytesToRead,
-                                   lpNumberOfBytesRead,
-                                   lpOverlapped);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    ReadFile,
+                                    hFile,
+                                    lpBuffer,
+                                    nNumberOfBytesToRead,
+                                    lpNumberOfBytesRead,
+                                    lpOverlapped);
 }
 
 BOOL
@@ -484,13 +487,14 @@ Hook_Kernel32_ReadFileEx(
     _In_ LPOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   ReadFileEx,
-                                   hFile,
-                                   lpBuffer,
-                                   nNumberOfBytesToRead,
-                                   lpOverlapped,
-                                   lpCompletionRoutine);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    ReadFileEx,
+                                    hFile,
+                                    lpBuffer,
+                                    nNumberOfBytesToRead,
+                                    lpOverlapped,
+                                    lpCompletionRoutine);
 }
 
 BOOL
@@ -500,10 +504,11 @@ Hook_Kernel32_GetFileInformationByHandle(
     _Out_ LPBY_HANDLE_FILE_INFORMATION lpFileInformation
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   GetFileInformationByHandle,
-                                   hFile,
-                                   lpFileInformation);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    GetFileInformationByHandle,
+                                    hFile,
+                                    lpFileInformation);
 }
 
 DWORD
@@ -513,10 +518,11 @@ Hook_Kernel32_GetFileSize(
     _Out_opt_ LPDWORD lpFileSizeHigh
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   GetFileSize,
-                                   hFile,
-                                   lpFileSizeHigh);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    GetFileSize,
+                                    hFile,
+                                    lpFileSizeHigh);
 }
 
 BOOL
@@ -526,10 +532,11 @@ Hook_Kernel32_GetFileSizeEx(
     _Out_ PLARGE_INTEGER lpFileSize
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   GetFileSizeEx,
-                                   hFile,
-                                   lpFileSize);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    GetFileSizeEx,
+                                    hFile,
+                                    lpFileSize);
 }
 
 HANDLE

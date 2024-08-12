@@ -131,12 +131,13 @@ Hook_Kernel32_CreateEventA(
     _In_opt_ LPCSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   CreateEventA,
-                                   lpEventAttributes,
-                                   bManualReset,
-                                   bInitialState,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    CreateEventA,
+                                    lpEventAttributes,
+                                    bManualReset,
+                                    bInitialState,
+                                    lpName);
 }
 
 HANDLE
@@ -148,12 +149,13 @@ Hook_Kernel32_CreateEventW(
     _In_opt_ LPCWSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   CreateEventW,
-                                   lpEventAttributes,
-                                   bManualReset,
-                                   bInitialState,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    CreateEventW,
+                                    lpEventAttributes,
+                                    bManualReset,
+                                    bInitialState,
+                                    lpName);
 }
 
 HANDLE
@@ -164,11 +166,12 @@ Hook_Kernel32_OpenEventA(
     _In_ LPCSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   OpenEventA,
-                                   dwDesiredAccess,
-                                   bInheritHandle,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    OpenEventA,
+                                    dwDesiredAccess,
+                                    bInheritHandle,
+                                    lpName);
 }
 
 HANDLE
@@ -179,11 +182,12 @@ Hook_Kernel32_OpenEventW(
     _In_ LPCWSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   OpenEventW,
-                                   dwDesiredAccess,
-                                   bInheritHandle,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    OpenEventW,
+                                    dwDesiredAccess,
+                                    bInheritHandle,
+                                    lpName);
 }
 
 HANDLE

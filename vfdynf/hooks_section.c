@@ -543,14 +543,15 @@ Hook_Kernel32_CreateFileMappingW(
     _In_opt_ LPCWSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   CreateFileMappingW,
-                                   hFile,
-                                   lpFileMappingAttributes,
-                                   flProtect,
-                                   dwMaximumSizeHigh,
-                                   dwMaximumSizeLow,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    CreateFileMappingW,
+                                    hFile,
+                                    lpFileMappingAttributes,
+                                    flProtect,
+                                    dwMaximumSizeHigh,
+                                    dwMaximumSizeLow,
+                                    lpName);
 }
 
 HANDLE
@@ -564,14 +565,15 @@ Hook_Kernel32_CreateFileMappingA(
     _In_opt_ LPCSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   CreateFileMappingA,
-                                   hFile,
-                                   lpFileMappingAttributes,
-                                   flProtect,
-                                   dwMaximumSizeHigh,
-                                   dwMaximumSizeLow,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    CreateFileMappingA,
+                                    hFile,
+                                    lpFileMappingAttributes,
+                                    flProtect,
+                                    dwMaximumSizeHigh,
+                                    dwMaximumSizeLow,
+                                    lpName);
 }
 
 HANDLE
@@ -582,11 +584,12 @@ Hook_Kernel32_OpenFileMappingW(
     _In_ LPCWSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   OpenFileMappingW,
-                                   dwDesiredAccess,
-                                   bInheritHandle,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    OpenFileMappingW,
+                                    dwDesiredAccess,
+                                    bInheritHandle,
+                                    lpName);
 }
 
 HANDLE
@@ -597,11 +600,12 @@ Hook_Kernel32_OpenFileMappingA(
     _In_ LPCSTR lpName
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   OpenFileMappingA,
-                                   dwDesiredAccess,
-                                   bInheritHandle,
-                                   lpName);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    OpenFileMappingA,
+                                    dwDesiredAccess,
+                                    bInheritHandle,
+                                    lpName);
 }
 
 LPVOID
@@ -614,13 +618,14 @@ Hook_Kernel32_MapViewOfFile(
     _In_ SIZE_T dwNumberOfBytesToMap
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   MapViewOfFile,
-                                   hFileMappingObject,
-                                   dwDesiredAccess,
-                                   dwFileOffsetHigh,
-                                   dwFileOffsetLow,
-                                   dwNumberOfBytesToMap);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    MapViewOfFile,
+                                    hFileMappingObject,
+                                    dwDesiredAccess,
+                                    dwFileOffsetHigh,
+                                    dwFileOffsetLow,
+                                    dwNumberOfBytesToMap);
 }
 
 LPVOID
@@ -634,14 +639,15 @@ Hook_Kernel32_MapViewOfFileEx(
     _In_opt_ LPVOID lpBaseAddress
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   MapViewOfFileEx,
-                                   hFileMappingObject,
-                                   dwDesiredAccess,
-                                   dwFileOffsetHigh,
-                                   dwFileOffsetLow,
-                                   dwNumberOfBytesToMap,
-                                   lpBaseAddress);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    MapViewOfFileEx,
+                                    hFileMappingObject,
+                                    dwDesiredAccess,
+                                    dwFileOffsetHigh,
+                                    dwFileOffsetLow,
+                                    dwNumberOfBytesToMap,
+                                    lpBaseAddress);
 }
 
 BOOL
@@ -650,9 +656,10 @@ Hook_Kernel32_UnmapViewOfFile(
     _In_ PVOID BaseAddress
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   UnmapViewOfFile,
-                                   BaseAddress);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    UnmapViewOfFile,
+                                    BaseAddress);
 }
 
 BOOL
@@ -662,10 +669,11 @@ Hook_Kernel32_UnmapViewOfFileEx(
     _In_ ULONG UnmapFlags
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   UnmapViewOfFileEx,
-                                   BaseAddress,
-                                   UnmapFlags);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    UnmapViewOfFileEx,
+                                    BaseAddress,
+                                    UnmapFlags);
 }
 
 HANDLE

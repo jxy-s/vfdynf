@@ -106,12 +106,13 @@ Hook_Kernel32_VirtualAlloc(
     _In_ DWORD flProtect
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   VirtualAlloc,
-                                   lpAddress,
-                                   dwSize,
-                                   flAllocationType,
-                                   flProtect);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    VirtualAlloc,
+                                    lpAddress,
+                                    dwSize,
+                                    flAllocationType,
+                                    flProtect);
 }
 
 LPVOID
@@ -124,13 +125,14 @@ Hook_Kernel32_VirtualAllocEx(
     _In_ DWORD flProtect
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   VirtualAllocEx,
-                                   hProcess,
-                                   lpAddress,
-                                   dwSize,
-                                   flAllocationType,
-                                   flProtect);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    VirtualAllocEx,
+                                    hProcess,
+                                    lpAddress,
+                                    dwSize,
+                                    flAllocationType,
+                                    flProtect);
 }
 
 

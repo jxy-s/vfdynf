@@ -44,6 +44,12 @@
 #define VFDYNF_LINK_COMMON_HOOK(mod, name, ...)                               \
     Hook_Common_##name(Orig_##mod##_##name, __VA_ARGS__)
 
+#define VFDYNF_LINK_COMMON_HOOK2(mod, mod2, name, ...)                        \
+    Hook_Common_##name(Orig_##mod2##_##name ?                                 \
+                       Orig_##mod2##_##name :                                 \
+                       Orig_##mod##_##name,                                   \
+                       __VA_ARGS__)
+
 VFDYNF_DECLARE_HOOK(
 NTSTATUS,
 NTAPI,

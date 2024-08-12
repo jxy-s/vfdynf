@@ -171,10 +171,11 @@ Hook_Kernel32_GlobalAlloc(
     _In_ SIZE_T dwBytes
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   GlobalAlloc,
-                                   uFlags,
-                                   dwBytes);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    GlobalAlloc,
+                                    uFlags,
+                                    dwBytes);
 }
 
 HGLOBAL
@@ -185,11 +186,12 @@ Hook_Kernel32_GlobalReAlloc(
     _In_ UINT uFlags
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   GlobalReAlloc,
-                                   hMem,
-                                   dwBytes,
-                                   uFlags);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    GlobalReAlloc,
+                                    hMem,
+                                    dwBytes,
+                                    uFlags);
 }
 
 HLOCAL
@@ -199,10 +201,11 @@ Hook_Kernel32_LocalAlloc(
     _In_ SIZE_T uBytes
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   LocalAlloc,
-                                   uFlags,
-                                   uBytes);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    LocalAlloc,
+                                    uFlags,
+                                    uBytes);
 }
 
 HLOCAL
@@ -213,11 +216,12 @@ Hook_Kernel32_LocalReAlloc(
     _In_ UINT uFlags
     )
 {
-    return VFDYNF_LINK_COMMON_HOOK(Kernel32,
-                                   LocalReAlloc,
-                                   hMem,
-                                   uBytes,
-                                   uFlags);
+    return VFDYNF_LINK_COMMON_HOOK2(Kernel32,
+                                    KernelBase,
+                                    LocalReAlloc,
+                                    hMem,
+                                    uBytes,
+                                    uFlags);
 }
 
 HGLOBAL
