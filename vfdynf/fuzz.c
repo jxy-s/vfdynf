@@ -43,10 +43,15 @@ BOOLEAN NTAPI AVrfpFuzzRunOnceRoutine(
 {
     NTSTATUS status;
 
+    AVrfDisableCurrentThreadFaultInjection();
+
     status = Delay_BCryptGenRandom(NULL,
                                    AVrfpFuzzContext.Vector,
                                    VFDYNF_RAND_VECTOR_SIZE,
                                    BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+
+    AVrfEnableCurrentThreadFaultInjection();
+
     if (!NT_SUCCESS(status))
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -54,7 +59,6 @@ BOOLEAN NTAPI AVrfpFuzzRunOnceRoutine(
                    "AVRF: failed to initialize fuzz vector (0x%08x)\n",
                    status);
         __debugbreak();
-
         return FALSE;
     }
 

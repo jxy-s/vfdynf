@@ -327,6 +327,25 @@ BOOLEAN AVrfpIsStackOverriddenByRegex(
     return FALSE;
 }
 
+VOID AVrfDisableCurrentThreadFaultInjection(
+    VOID
+    )
+{
+    RtlEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
+}
+
+VOID AVrfEnableCurrentThreadFaultInjection(
+    VOID
+    )
+{
+    //
+    // Could use TLS for this, but we're already preventing fault injection
+    // where we don't want it with the critical section, so hijack it instead.
+    //
+#pragma prefast(suppress : 26110)
+    RtlLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
+}
+
 BOOLEAN AVrfShouldFaultInject(
     _In_ ULONG FaultType,
     _In_opt_ _Maybenull_ PVOID CallerAddress

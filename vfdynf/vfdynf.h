@@ -251,6 +251,14 @@ BOOLEAN AVrfShouldFaultInject(
     _In_opt_ _Maybenull_ PVOID CallerAddress
     );
 
+VOID AVrfDisableCurrentThreadFaultInjection(
+    VOID
+    );
+
+VOID AVrfEnableCurrentThreadFaultInjection(
+    VOID
+    );
+
 // stacktrk.c
 
 typedef struct _AVRF_STACK_ENTRY
