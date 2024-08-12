@@ -74,7 +74,6 @@ BOOLEAN NTAPI AVrfpDelayLoad(
                        "AVRF: failed to delay load %wZ (0x%08x)\n",
                        &dllEntry->DllName,
                        status);
-            __debugbreak();
             goto Exit;
         }
 
