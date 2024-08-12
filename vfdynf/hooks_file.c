@@ -100,7 +100,9 @@ Hook_NtReadFile(
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
-        AVrfFuzzBuffer(Buffer, IoStatusBlock->Information);
+        AVrfFuzzBuffer(Buffer,
+                       IoStatusBlock->Information,
+                       VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE);
     }
 
     return status;
@@ -313,7 +315,9 @@ Hook_Common_ReadFile(
 
     if (result && lpBuffer && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
-        AVrfFuzzBuffer(lpBuffer, nNumberOfBytesToRead);
+        AVrfFuzzBuffer(lpBuffer,
+                       nNumberOfBytesToRead,
+                       VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE);
     }
 
     return result;

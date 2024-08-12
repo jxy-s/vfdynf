@@ -4,15 +4,23 @@
 #include <vfdynf.h>
 #include <delayld.h>
 
-#define VFDYNF_FUZZ_BLOCK_SIZE  (0x1000 / 4)
-#define VFDYNF_RAND_VECTOR_SIZE 0x4000
-#define VFDYNF_FUZZ_MMAP_COUNT  1024
+#define VFDYNF_FUZZ_BLOCK_SIZE              (0x1000 / 4)
+#define VFDYNF_RAND_VECTOR_SIZE              0x4000
+#define VFDYNF_FUZZ_MMAP_COUNT               1024
+#define VFCYNF_FUZZED_BUFFERS_COUNT          1024
 
 typedef struct _VFDYNF_FUZZ_MMAP_ENTRY
 {
     PVOID OriginalBaseAddress;
     PVOID FuzzedBaseAddress;
 } VFDYNF_FUZZ_MMAP_ENTRY, *PVFDYNF_FUZZ_MMAP_ENTRY;
+
+typedef struct _VFDYNF_FUZZED_BUFFER_ENTRY
+{
+    ULONG TypeIndex;
+    PVOID Address;
+    SIZE_T Size;
+} VFDYNF_FUZZED_BUFFER_ENTRY, *PVFDYNF_FUZZED_BUFFER_ENTRY;
 
 typedef struct _VFDYNF_FUZZ_CONTEXT
 {
@@ -22,6 +30,8 @@ typedef struct _VFDYNF_FUZZ_CONTEXT
     RTL_CRITICAL_SECTION CriticalSection;
     ULONG MMapEntryCount;
     VFDYNF_FUZZ_MMAP_ENTRY MMapEntries[VFDYNF_FUZZ_MMAP_COUNT];
+    volatile LONG BufferIndex;
+    VFDYNF_FUZZED_BUFFER_ENTRY FuzzedBuffers[VFCYNF_FUZZED_BUFFERS_COUNT];
 } VFDYNF_FUZZ_CONTEXT, *PVFDYNF_FUZZ_CONTEXT;
 
 static AVRF_RUN_ONCE AVrfpFuzzRunOnce = AVRF_RUN_ONCE_INIT;
@@ -34,6 +44,8 @@ static VFDYNF_FUZZ_CONTEXT AVrfpFuzzContext =
     .CriticalSection = { 0 },
     .MMapEntryCount = 0,
     .MMapEntries = { 0 },
+    .BufferIndex = 0,
+    .FuzzedBuffers = { 0 },
 };
 
 _Function_class_(AVRF_RUN_ONCE_ROUTINE)
@@ -77,7 +89,7 @@ ULONG AVrfFuzzRandom(
         return (ULONG)ReadTimeStampCounter();
     }
 
-    index = (ULONG)InterlockedIncrement(&AVrfpFuzzContext.Index);
+    index = (ULONG)(InterlockedIncrement(&AVrfpFuzzContext.Index) - 1);
 
     return *(PULONG)&AVrfpFuzzContext.Vector[index % VFDYNF_RAND_VECTOR_SIZE];
 }
@@ -210,12 +222,33 @@ VOID AVrfpFuzzBuffer(
     }
 }
 
+VOID AvrfpTrackFuzzedBuffer(
+    _In_ PVOID Buffer,
+    _In_ SIZE_T Length,
+    _In_ ULONG TypeIndex
+    )
+{
+    ULONG index;
+    PVFDYNF_FUZZED_BUFFER_ENTRY entry;
+
+    index = (ULONG)(InterlockedIncrement(&AVrfpFuzzContext.BufferIndex) - 1);
+
+    entry = &AVrfpFuzzContext.FuzzedBuffers[index % VFCYNF_FUZZED_BUFFERS_COUNT];
+
+    entry->TypeIndex = TypeIndex;
+    entry->Address = Buffer;
+    entry->Size = Length;
+}
+
 VOID AVrfFuzzBuffer(
     _Inout_bytecount_(Length) PVOID Buffer,
-    _In_ SIZE_T Length
+    _In_ SIZE_T Length,
+    _In_ ULONG TypeIndex
     )
 {
     SIZE_T remaining;
+
+    AvrfpTrackFuzzedBuffer(Buffer, Length, TypeIndex);
 
     remaining = Length;
 
@@ -356,7 +389,9 @@ PVOID AVrfFuzzMemoryMapping(
             NOTHING;
         }
 
-        AVrfFuzzBuffer(baseAddress, RegionSize);
+        AVrfFuzzBuffer(baseAddress,
+                       RegionSize,
+                       VFDYNF_FAULT_TYPE_INDEX_FUZZ_MMAP);
     }
     else
     {

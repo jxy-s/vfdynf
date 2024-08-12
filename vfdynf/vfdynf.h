@@ -208,7 +208,8 @@ BOOLEAN AVrfFuzzProbability(
 
 VOID AVrfFuzzBuffer(
     _Inout_bytecount_(Length) PVOID Buffer,
-    _In_ SIZE_T Length
+    _In_ SIZE_T Length,
+    _In_ ULONG TypeIndex
     );
 
 VOID AVrfFuzzSize(

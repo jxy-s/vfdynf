@@ -30,7 +30,9 @@ Hook_WSARecv(
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
         {
-            AVrfFuzzBuffer(lpBuffers[i].buf, lpBuffers[i].len);
+            AVrfFuzzBuffer(lpBuffers[i].buf,
+                           lpBuffers[i].len,
+                           VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET);
         }
     }
 
@@ -67,7 +69,9 @@ Hook_WSARecvFrom(
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
         {
-            AVrfFuzzBuffer(lpBuffers[i].buf, lpBuffers[i].len);
+            AVrfFuzzBuffer(lpBuffers[i].buf,
+                           lpBuffers[i].len,
+                           VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET);
         }
     }
 
@@ -91,7 +95,7 @@ Hook_recv(
         (len > 0) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
-        AVrfFuzzBuffer(buf, (ULONG)len);
+        AVrfFuzzBuffer(buf, (ULONG)len, VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET);
     }
 
     return res;
@@ -116,7 +120,7 @@ Hook_recvfrom(
         (len > 0) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
-        AVrfFuzzBuffer(buf, (ULONG)len);
+        AVrfFuzzBuffer(buf, (ULONG)len, VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET);
     }
 
     return res;
