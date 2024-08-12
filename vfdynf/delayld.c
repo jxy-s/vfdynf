@@ -101,9 +101,7 @@ BOOLEAN NTAPI AVrfpDelayLoad(
         }
     }
 
-    status = LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY,
-                               &ldrDisp,
-                               &ldrCookie);
+    status = LdrLockLoaderLock(0, &ldrDisp, &ldrCookie);
     if (!NT_SUCCESS(status))
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
