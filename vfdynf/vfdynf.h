@@ -112,6 +112,7 @@ typedef struct _VFDYNF_PROPERTIES
 {
     ULONG GracePeriod;
     WCHAR SymbolSearchPath[VFDYN_SYMSEARCH_MAX_LENGTH];
+    WCHAR IncludeRegex[VFDYN_REGEX_MAX_LENGTH];
     WCHAR ExclusionsRegex[VFDYN_REGEX_MAX_LENGTH];
     ULONG DynamicFaultPeroid;
     ULONG64 EnableFaultMask;
@@ -122,6 +123,7 @@ typedef struct _VFDYNF_PROPERTIES
     ULONG FuzzSizeTruncateProbability;
     ULONG64 HeapReasonableAllocLimit;
     WCHAR StopRegex[VFDYN_REGEX_MAX_LENGTH];
+    WCHAR TypeIncludeRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_REGEX_MAX_LENGTH];
     WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_REGEX_MAX_LENGTH];
 } VFDYNF_PROPERTIES, *PVFDYNF_PROPERTIES;
 

@@ -10,6 +10,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .GracePeriod = 5000,
     .SymbolSearchPath = { L'\0' },
     .StopRegex = { L'\0' },
+    .IncludeRegex = { L'\0' },
     .ExclusionsRegex = { L'\0' },
     .DynamicFaultPeroid = 30000,
     .EnableFaultMask = VFDYNF_FAULT_DEFAULT_MASK,
@@ -19,6 +20,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .FuzzChaosProbability = 250000,
     .FuzzSizeTruncateProbability = 250000,
     .HeapReasonableAllocLimit = (1 << 30), // 1 GiB
+    .TypeIncludeRegex = { 0 },
     .TypeExclusionsRegex = { 0 },
 };
 
@@ -39,6 +41,16 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         sizeof(AVrfProperties.SymbolSearchPath),
         L"Symbol search path used for dynamic fault injection and applying "
         L"exclusions.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"IncludeRegex",
+        &AVrfProperties.IncludeRegex,
+        sizeof(AVrfProperties.IncludeRegex),
+        L"Includes fault injection for the immediate calling module when this "
+        L"regular expression matches the module name. When not provided all "
+        L"modules are included.",
         NULL
     },
     {
@@ -134,6 +146,136 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"when a verifier stop is about to be raised. If the module does not "
         L"match this regular expression the verifier stop does not occur. "
         L"Defaults to matching only the application module.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"WaitIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_WAIT],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_WAIT]),
+        L"Includes wait fault injection for the immediate calling module when "
+        L"this regular expression matches the module name. When not provided "
+        L"all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"HeapIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_HEAP],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_HEAP]),
+        L"Includes heap fault injection for the immediate calling module when "
+        L"this regular expression matches the module name. When not provided "
+        L"all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"VMemIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_VMEM],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_VMEM]),
+        L"Includes virtual memory fault injection for the immediate calling "
+        L"module when this regular expression matches the module name. When "
+        L"not provided all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"RegIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_REG],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_REG]),
+        L"Includes registry fault injection for the immediate calling module "
+        L"when this regular expression matches the module name.When not "
+        L"provided all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"FileIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FILE],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FILE]),
+        L"Includes file fault injection for the immediate calling module when "
+        L"this regular expression matches the module name.When not provided "
+        L"all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"EventIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_EVENT],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_EVENT]),
+        L"Includes event fault injection for the immediate calling module when "
+        L"this regular expression matches the module name.When not provided "
+        L"all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"SectionIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_SECTION],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_SECTION]),
+        L"Includes section fault injection for the immediate calling module "
+        L"when this regular expression matches the module name.When not "
+        L"provided all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"OleIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_OLE],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_OLE]),
+        L"Includes OLE fault injection for the immediate calling module when "
+        L"this regular expression matches the module name.When not provided "
+        L"all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"InPageIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_INPAGE],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_INPAGE]),
+        L"Includes in-page fault injection for the immediate calling module "
+        L"when this regular expression matches the module name.When not "
+        L"provided all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"FuzzRegIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG]),
+        L"Includes registry fuzzing for the immediate calling module when this "
+        L"regular expression matches the module name.When not provided all "
+        L"modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"FuzzFileIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE]),
+        L"Includes file fuzzing for the immediate calling module when this "
+        L"regular expression matches the module name.When not provided all "
+        L"modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"FuzzMMapIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_MMAP],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_MMAP]),
+        L"Includes section map fuzzing for the immediate calling module when "
+        L"this regular expression matches the module name.When not provided "
+        L"all modules are included.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_SZ,
+        L"FuzzNetIncludeRegex",
+        &AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET],
+        sizeof(AVrfProperties.TypeIncludeRegex[VFDYNF_FAULT_TYPE_INDEX_FUZZ_NET]),
+        L"Includes network fuzzing for the immediate calling module when this "
+        L"regular expression matches the module name.When not provided all "
+        L"modules are included.",
         NULL
     },
     {

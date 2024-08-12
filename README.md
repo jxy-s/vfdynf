@@ -67,6 +67,7 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | ----                        | ----        | ----------- |
 | GracePeriod                 | DWORD       | Delays fault injection until after this period, in milliseconds. |
 | SymbolSearchPath            | String      | Symbol search path used for dynamic fault injection and applying exclusions. |
+| IncludeRegex                | String      | Includes fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
 | ExclusionsRegex             | MultiString | Excludes stack from fault injection when one of these regular expression matches the stack. |
 | DynamicFaultPeriod          | DWORD       | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
 | EnableFaultMask             | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage, 10=FuzzReg, 11=FuzzFile, 12=FuzzMMap. |
@@ -77,6 +78,19 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | FuzzSizeTruncateProbability | DWORD       | The probability (0 - 1000000) that data lengths will be truncated to a random value below the actual length of the output data. |
 | HeapReasonableAllocLimit    | QWORD       | Limit which is considered a reasonable single heap allocation. If the size a single heap allocation exceeds this limit a verifier stop is raised. |
 | StopRegex                   | String      | Regular expression to check against the immediate caller module name when a verifier stop is about to be raised. If the module does not match this regular expression the verifier stop does not occur. Defaults to matching only the application module. |
+| WaitIncludeRegex            | MultiString | Includes wait fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| HeapIncludeRegex            | MultiString | Includes heap fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| VMemIncludeRegex            | MultiString | Includes virtual memory fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| RegIncludeRegex             | MultiString | Includes registry fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| FileIncludeRegex            | MultiString | Includes file fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| EventIncludeRegex           | MultiString | Includes event fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| SectionIncludeRegex         | MultiString | Includes section fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| OleIncludeRegex             | MultiString | Includes OLE fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| InPageIncludeRegex          | MultiString | Includes in-page fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| FuzzRegIncludeRegex         | MultiString | Includes file fuzzing for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| FuzzFileIncludeRegex        | MultiString | Includes file fuzzing for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| FuzzMMapIncludeRegex        | MultiString | Includes section map fuzzing for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
+| FuzzNetIncludeRegex         | MultiString | Includes network fuzzing for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
 | WaitExclusionsRegex         | MultiString | Excludes stack from wait fault injection when one of these regular expression matches the stack. |
 | HeapExclusionsRegex         | MultiString | Excludes stack from heap fault injection when one of these regular expression matches the stack. |
 | VMemExclusionsRegex         | MultiString | Excludes stack from virtual memory fault injection when one of these regular expression matches the stack. |
@@ -89,6 +103,7 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | FuzzRegExclusionsRegex      | MultiString | Excludes stack from registry fuzzing when one of these regular expression matches the stack. |
 | FuzzFileExclusionsRegex     | MultiString | Excludes stack from file fuzzing when one of these regular expression matches the stack. |
 | FuzzMMapExclusionsRegex     | MultiString | Excludes stack from section map fuzzing when one of these regular expression matches the stack. |
+| FuzzNetExclusionsRegex      | MultiString | Excludes stack from network fuzzing when one of these regular expression matches the stack. |
 
 ## Fuzzing
 
