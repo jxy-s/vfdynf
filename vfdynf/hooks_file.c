@@ -77,6 +77,11 @@ Hook_NtReadFile(
     )
 {
     NTSTATUS status;
+    ULONG inputLength;
+
+    inputLength = Length;
+
+    AVrfFuzzFillMemory(Buffer, Length);
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
@@ -100,9 +105,7 @@ Hook_NtReadFile(
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
-        AVrfFuzzBuffer(Buffer,
-                       IoStatusBlock->Information,
-                       VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE);
+        AVrfFuzzBuffer(Buffer, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE);
     }
 
     return status;
@@ -301,6 +304,14 @@ Hook_Common_ReadFile(
     )
 {
     BOOL result;
+    ULONG inputLength;
+
+    inputLength = nNumberOfBytesToRead;
+
+    if (lpBuffer)
+    {
+        AVrfFuzzFillMemory(lpBuffer, inputLength);
+    }
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
@@ -316,7 +327,7 @@ Hook_Common_ReadFile(
     if (result && lpBuffer && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
         AVrfFuzzBuffer(lpBuffer,
-                       nNumberOfBytesToRead,
+                       inputLength,
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE);
     }
 

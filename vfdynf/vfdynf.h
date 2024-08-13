@@ -196,11 +196,26 @@ VOID AVrfExceptProcessDetach(
 
 // fuzz.c
 
+#define VFDYNF_FUZZ_SENTINEL '#'
+
+FORCEINLINE
+VOID AVrfFuzzFillMemory(
+    _Out_writes_bytes_all_(Length) PVOID Destination,
+    _In_ SIZE_T Length
+    )
+{
+    RtlFillMemory(Destination, Length, VFDYNF_FUZZ_SENTINEL);
+}
+
 BOOLEAN AVrfFuzzProcessAttach(
     VOID
     );
 
 VOID AVrfFuzzProcessDetach(
+    VOID
+    );
+
+ULONG AVrfFuzzRandom(
     VOID
     );
 

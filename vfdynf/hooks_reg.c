@@ -4,14 +4,42 @@
 #include <vfdynf.h>
 #include <hooks.h>
 
-VOID AVrfpCommonFuzzKeyInformation(
-    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
-    _Inout_updates_bytes_(ResultLength) PVOID KeyInformation,
-    _In_ ULONG ResultLength
+VOID AVrfpPreFuzzKeyValueLength(
+    _Inout_ PULONG Length,
+    _In_ ULONG Type
     )
 {
-    UNREFERENCED_PARAMETER(ResultLength);
+    switch (AVrfFuzzRandom() % 10)
+    {
+        case 1: // do nothing
+        {
+            break;
+        }
+        case 2: // small multiple
+        {
+            *Length *= (2 + (AVrfFuzzRandom() % 5));
+            break;
+        }
+        default: // round up to 4k boundary
+        {
+            if ((Type == REG_BINARY) ||
+                (Type == REG_SZ) ||
+                (Type == REG_EXPAND_SZ) ||
+                (Type == REG_MULTI_SZ))
+            {
+                *Length = (((ULONG64)*Length + 0xfff) & ~0xfff);
+            }
+            break;
+        }
+    }
+}
 
+VOID AVrfpFuzzKeyInformation(
+    _In_ KEY_INFORMATION_CLASS KeyInformationClass,
+    _Inout_updates_bytes_(Length) PVOID KeyInformation,
+    _In_ ULONG Length
+    )
+{
     switch (KeyInformationClass)
     {
         case KeyBasicInformation:
@@ -19,13 +47,12 @@ VOID AVrfpCommonFuzzKeyInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_BASIC_INFORMATION info;
+                ULONG length;
 
                 info = KeyInformation;
+                length = (Length - FIELD_OFFSET(KEY_BASIC_INFORMATION, Name));
 
-                AVrfFuzzBuffer(info->Name,
-                               info->NameLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-
+                AVrfFuzzBuffer(info->Name, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
                 AVrfFuzzSizeTruncateWideString(&info->NameLength);
             }
             break;
@@ -35,16 +62,12 @@ VOID AVrfpCommonFuzzKeyInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_NODE_INFORMATION info;
+                ULONG length;
 
                 info = KeyInformation;
+                length = (Length - FIELD_OFFSET(KEY_NODE_INFORMATION, Name));
 
-                AVrfFuzzBuffer(info->Name,
-                               info->NameLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-                AVrfFuzzBuffer(Add2Ptr(info, info->ClassOffset),
-                               info->ClassLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-
+                AVrfFuzzBuffer(info->Name, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
                 AVrfFuzzSizeTruncateWideString(&info->NameLength);
                 AVrfFuzzSizeTruncateWideString(&info->ClassLength);
             }
@@ -55,13 +78,12 @@ VOID AVrfpCommonFuzzKeyInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_FULL_INFORMATION info;
+                ULONG length;
 
                 info = KeyInformation;
+                length = (Length - FIELD_OFFSET(KEY_FULL_INFORMATION, Class));
 
-                AVrfFuzzBuffer(Add2Ptr(info, info->ClassOffset),
-                               info->ClassLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-
+                AVrfFuzzBuffer(info->Class, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
                 AVrfFuzzSizeTruncateWideString(&info->ClassLength);
             }
             break;
@@ -71,13 +93,12 @@ VOID AVrfpCommonFuzzKeyInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_NAME_INFORMATION info;
+                ULONG length;
 
                 info = KeyInformation;
+                length = (Length - FIELD_OFFSET(KEY_NAME_INFORMATION, Name));
 
-                AVrfFuzzBuffer(info->Name,
-                               info->NameLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-
+                AVrfFuzzBuffer(info->Name, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
                 AVrfFuzzSizeTruncateWideString(&info->NameLength);
             }
             break;
@@ -87,13 +108,12 @@ VOID AVrfpCommonFuzzKeyInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_CACHED_INFORMATION info;
+                ULONG length;
 
                 info = KeyInformation;
+                length = (Length - FIELD_OFFSET(KEY_CACHED_INFORMATION, Name));
 
-                AVrfFuzzBuffer(info->Name,
-                               info->NameLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-
+                AVrfFuzzBuffer(info->Name, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
                 AVrfFuzzSizeTruncateWideString(&info->NameLength);
             }
             break;
@@ -101,14 +121,12 @@ VOID AVrfpCommonFuzzKeyInformation(
     }
 }
 
-VOID AVrfpCommonFuzzKeyValueInformation(
+VOID AVrfpFuzzKeyValueInformation(
     _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
-    _Inout_updates_bytes_(ResultLength) PVOID KeyValueInformation,
-    _In_ ULONG ResultLength
+    _Inout_updates_bytes_(Length) PVOID KeyValueInformation,
+    _In_ ULONG Length
     )
 {
-    UNREFERENCED_PARAMETER(ResultLength);
-
     switch (KeyValueInformationClass)
     {
         case KeyValueBasicInformation:
@@ -116,13 +134,12 @@ VOID AVrfpCommonFuzzKeyValueInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_VALUE_BASIC_INFORMATION info;
+                ULONG length;
 
                 info = KeyValueInformation;
+                length = (Length - FIELD_OFFSET(KEY_VALUE_BASIC_INFORMATION, Name));
 
-                AVrfFuzzBuffer(info->Name,
-                               info->NameLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-
+                AVrfFuzzBuffer(info->Name, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
                 AVrfFuzzSizeTruncateWideString(&info->NameLength);
             }
             break;
@@ -133,16 +150,12 @@ VOID AVrfpCommonFuzzKeyValueInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_VALUE_FULL_INFORMATION info;
+                ULONG length;
 
                 info = KeyValueInformation;
+                length = (Length - FIELD_OFFSET(KEY_VALUE_FULL_INFORMATION, Name));
 
-                AVrfFuzzBuffer(info->Name,
-                               info->NameLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-                AVrfFuzzBuffer(Add2Ptr(info, info->DataOffset),
-                               info->DataLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
-
+                AVrfFuzzBuffer(info->Name, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
                 AVrfFuzzSizeTruncateWideString(&info->DataLength);
 
                 if ((info->Type == REG_SZ) ||
@@ -163,12 +176,12 @@ VOID AVrfpCommonFuzzKeyValueInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_VALUE_PARTIAL_INFORMATION info;
+                ULONG length;
 
                 info = KeyValueInformation;
+                length = (Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data));
 
-                AVrfFuzzBuffer(info->Data,
-                               info->DataLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+                AVrfFuzzBuffer(info->Data, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
 
                 if ((info->Type == REG_SZ) ||
                     (info->Type == REG_EXPAND_SZ) ||
@@ -188,12 +201,12 @@ VOID AVrfpCommonFuzzKeyValueInformation(
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
             {
                 PKEY_VALUE_PARTIAL_INFORMATION_ALIGN64 info;
+                ULONG length;
 
                 info = KeyValueInformation;
+                length = (Length - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION_ALIGN64, Data));
 
-                AVrfFuzzBuffer(info->Data,
-                               info->DataLength,
-                               VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+                AVrfFuzzBuffer(info->Data, length, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
 
                 if ((info->Type == REG_SZ) ||
                     (info->Type == REG_EXPAND_SZ) ||
@@ -289,6 +302,11 @@ Hook_NtQueryKey(
 {
     NTSTATUS status;
 
+    if (KeyInformation)
+    {
+        AVrfFuzzFillMemory(KeyInformation, Length);
+    }
+
     status = Orig_NtQueryKey(KeyHandle,
                              KeyInformationClass,
                              KeyInformation,
@@ -301,7 +319,7 @@ Hook_NtQueryKey(
     {
         if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *ResultLength *= 2;
+            AVrfpPreFuzzKeyValueLength(ResultLength, REG_BINARY);
         }
 
         return status;
@@ -309,9 +327,7 @@ Hook_NtQueryKey(
 
     if (NT_SUCCESS(status) && KeyInformation)
     {
-        AVrfpCommonFuzzKeyInformation(KeyInformationClass,
-                                      KeyInformation,
-                                      *ResultLength);
+        AVrfpFuzzKeyInformation(KeyInformationClass, KeyInformation, Length);
     }
 
     return status;
@@ -330,6 +346,11 @@ Hook_NtQueryValueKey(
 {
     NTSTATUS status;
 
+    if (KeyValueInformation)
+    {
+        AVrfFuzzFillMemory(KeyValueInformation, Length);
+    }
+
     status = Orig_NtQueryValueKey(KeyHandle,
                                   ValueName,
                                   KeyValueInformationClass,
@@ -343,7 +364,7 @@ Hook_NtQueryValueKey(
     {
         if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *ResultLength *= 2;
+            AVrfpPreFuzzKeyValueLength(ResultLength, REG_BINARY);
         }
 
         return status;
@@ -351,9 +372,9 @@ Hook_NtQueryValueKey(
 
     if (NT_SUCCESS(status) && KeyValueInformation)
     {
-        AVrfpCommonFuzzKeyValueInformation(KeyValueInformationClass,
-                                           KeyValueInformation,
-                                           *ResultLength);
+        AVrfpFuzzKeyValueInformation(KeyValueInformationClass,
+                                     KeyValueInformation,
+                                     Length);
     }
 
     return status;
@@ -371,6 +392,11 @@ Hook_NtQueryMultipleValueKey(
     )
 {
     NTSTATUS status;
+    ULONG inputLength;
+
+    inputLength = *BufferLength;
+
+    AVrfFuzzFillMemory(ValueBuffer, inputLength);
 
     status = Orig_NtQueryMultipleValueKey(KeyHandle,
                                           ValueEntries,
@@ -386,7 +412,7 @@ Hook_NtQueryMultipleValueKey(
         if (RequiredBufferLength &&
             AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *RequiredBufferLength *= 2;
+            AVrfpPreFuzzKeyValueLength(RequiredBufferLength, REG_BINARY);
         }
 
         return status;
@@ -400,7 +426,7 @@ Hook_NtQueryMultipleValueKey(
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzBuffer(ValueBuffer,
-                       *BufferLength,
+                       inputLength,
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(BufferLength);
     }
@@ -421,6 +447,11 @@ Hook_NtEnumerateKey(
 {
     NTSTATUS status;
 
+    if (KeyInformation)
+    {
+        AVrfFuzzFillMemory(KeyInformation, Length);
+    }
+
     status = Orig_NtEnumerateKey(KeyHandle,
                                  Index,
                                  KeyInformationClass,
@@ -434,7 +465,7 @@ Hook_NtEnumerateKey(
     {
         if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *ResultLength *= 2;
+            AVrfpPreFuzzKeyValueLength(ResultLength, REG_BINARY);
         }
 
         return status;
@@ -442,9 +473,7 @@ Hook_NtEnumerateKey(
 
     if (NT_SUCCESS(status) && KeyInformation)
     {
-        AVrfpCommonFuzzKeyInformation(KeyInformationClass,
-                                      KeyInformation,
-                                      *ResultLength);
+        AVrfpFuzzKeyInformation(KeyInformationClass, KeyInformation, Length);
     }
 
     return status;
@@ -463,6 +492,11 @@ Hook_NtEnumerateValueKey(
 {
     NTSTATUS status;
 
+    if (KeyValueInformation)
+    {
+        AVrfFuzzFillMemory(KeyValueInformation, Length);
+    }
+
     status = Orig_NtEnumerateValueKey(KeyHandle,
                                       Index,
                                       KeyValueInformationClass,
@@ -476,7 +510,7 @@ Hook_NtEnumerateValueKey(
     {
         if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *ResultLength *= 2;
+            AVrfpPreFuzzKeyValueLength(ResultLength, REG_BINARY);
         }
 
         return status;
@@ -484,9 +518,9 @@ Hook_NtEnumerateValueKey(
 
     if (NT_SUCCESS(status) && KeyValueInformation)
     {
-        AVrfpCommonFuzzKeyValueInformation(KeyValueInformationClass,
-                                           KeyValueInformation,
-                                           *ResultLength);
+        AVrfpFuzzKeyValueInformation(KeyValueInformationClass,
+                                     KeyValueInformation,
+                                     Length);
     }
 
     return status;
@@ -828,6 +862,14 @@ Hook_Common_RegQueryMultipleValuesA(
     )
 {
     LSTATUS status;
+    ULONG inputLength;
+
+    inputLength = ldwTotsize ? *ldwTotsize : 0;
+
+    if (lpValueBuf)
+    {
+        AVrfFuzzFillMemory(lpValueBuf, inputLength);
+    }
 
     status = Orig_RegQueryMultipleValuesA(hKey,
                                           val_list,
@@ -841,7 +883,7 @@ Hook_Common_RegQueryMultipleValuesA(
     {
         if (ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *ldwTotsize *= 2;
+            AVrfpPreFuzzKeyValueLength(ldwTotsize, REG_BINARY);
         }
 
         return status;
@@ -854,7 +896,7 @@ Hook_Common_RegQueryMultipleValuesA(
 
     if (lpValueBuf && ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzBuffer(lpValueBuf, *ldwTotsize, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(lpValueBuf, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(ldwTotsize);
     }
 
@@ -873,6 +915,14 @@ Hook_Common_RegQueryMultipleValuesW(
     )
 {
     LSTATUS status;
+    ULONG inputLength;
+
+    inputLength = ldwTotsize ? *ldwTotsize : 0;
+
+    if (lpValueBuf)
+    {
+        AVrfFuzzFillMemory(lpValueBuf, inputLength);
+    }
 
     status = Orig_RegQueryMultipleValuesW(hKey,
                                           val_list,
@@ -886,7 +936,7 @@ Hook_Common_RegQueryMultipleValuesW(
     {
         if (ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *ldwTotsize *= 2;
+            AVrfpPreFuzzKeyValueLength(ldwTotsize, REG_BINARY);
         }
 
         return status;
@@ -899,7 +949,7 @@ Hook_Common_RegQueryMultipleValuesW(
 
     if (lpValueBuf && ldwTotsize && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzBuffer(lpValueBuf, *ldwTotsize, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(lpValueBuf, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(ldwTotsize);
     }
 
@@ -919,13 +969,27 @@ Hook_Common_RegQueryValueExA(
     )
 {
     LSTATUS status;
+    ULONG inputLength;
+    ULONG type;
+
+    inputLength = lpcbData ? *lpcbData : 0;
+
+    if (lpData)
+    {
+        AVrfFuzzFillMemory(lpData, inputLength);
+    }
 
     status = Orig_RegQueryValueExA(hKey,
                                    lpValueName,
                                    lpReserved,
-                                   lpType,
+                                   &type,
                                    lpData,
                                    lpcbData);
+
+    if (lpType)
+    {
+        *lpType = type;
+    }
 
     if ((status == ERROR_BAD_LENGTH) ||
         (status == ERROR_INSUFFICIENT_BUFFER) ||
@@ -933,7 +997,7 @@ Hook_Common_RegQueryValueExA(
     {
         if (lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *lpcbData *= 2;
+            AVrfpPreFuzzKeyValueLength(lpcbData, type);
         }
 
         return status;
@@ -946,7 +1010,7 @@ Hook_Common_RegQueryValueExA(
 
     if (lpData && lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzBuffer(lpData, *lpcbData, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(lpData, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(lpcbData);
     }
 
@@ -966,13 +1030,27 @@ Hook_Common_RegQueryValueExW(
     )
 {
     LSTATUS status;
+    ULONG inputLength;
+    ULONG type;
+
+    inputLength = lpcbData ? *lpcbData : 0;
+
+    if (lpData)
+    {
+        AVrfFuzzFillMemory(lpData, inputLength);
+    }
 
     status = Orig_RegQueryValueExW(hKey,
                                    lpValueName,
                                    lpReserved,
-                                   lpType,
+                                   &type,
                                    lpData,
                                    lpcbData);
+
+    if (lpType)
+    {
+        *lpType = type;
+    }
 
     if ((status == ERROR_BAD_LENGTH) ||
         (status == ERROR_INSUFFICIENT_BUFFER) ||
@@ -980,7 +1058,7 @@ Hook_Common_RegQueryValueExW(
     {
         if (lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *lpcbData *= 2;
+            AVrfpPreFuzzKeyValueLength(lpcbData, type);
         }
 
         return status;
@@ -993,7 +1071,7 @@ Hook_Common_RegQueryValueExW(
 
     if (lpData && lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzBuffer(lpData, *lpcbData, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(lpData, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(lpcbData);
     }
 
@@ -1023,7 +1101,15 @@ Hook_Common_RegGetValueA(
     )
 {
     LSTATUS status;
+    ULONG inputLength;
     ULONG type;
+
+    inputLength = pcbData ? *pcbData : 0;
+
+    if (pvData)
+    {
+        AVrfFuzzFillMemory(pvData, inputLength);
+    }
 
     status = Orig_RegGetValueA(hkey,
                                lpSubKey,
@@ -1044,7 +1130,7 @@ Hook_Common_RegGetValueA(
     {
         if (pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *pcbData *= 2;
+            AVrfpPreFuzzKeyValueLength(pcbData, type);
         }
 
         return status;
@@ -1057,7 +1143,7 @@ Hook_Common_RegGetValueA(
 
     if (pvData && pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzBuffer(pvData, *pcbData, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(pvData, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(pcbData);
 
         if ((*pcbData >= sizeof(CHAR)) && (type == REG_SZ) || (type == REG_EXPAND_SZ))
@@ -1099,7 +1185,15 @@ Hook_Common_RegGetValueW(
     )
 {
     LSTATUS status;
+    ULONG inputLength;
     ULONG type;
+
+    inputLength = pcbData ? *pcbData : 0;
+
+    if (pvData)
+    {
+        AVrfFuzzFillMemory(pvData, inputLength);
+    }
 
     status = Orig_RegGetValueW(hkey,
                                lpSubKey,
@@ -1120,7 +1214,7 @@ Hook_Common_RegGetValueW(
     {
         if (pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
         {
-            *pcbData *= 2;
+            AVrfpPreFuzzKeyValueLength(pcbData, type);
         }
 
         return status;
@@ -1133,7 +1227,7 @@ Hook_Common_RegGetValueW(
 
     if (pvData && pcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzBuffer(pvData, *pcbData, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(pvData, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
 
         if ((type == REG_SZ) ||
             (type == REG_EXPAND_SZ) ||
@@ -1229,6 +1323,21 @@ Hook_Common_RegEnumKeyExA(
     )
 {
     LSTATUS status;
+    ULONG inputNameLength;
+    ULONG inputClassLength;
+
+    inputNameLength = *lpcchName;
+    inputClassLength = lpcchClass ? *lpcchClass : 0;
+
+    if (lpName)
+    {
+        AVrfFuzzFillMemory(lpName, inputNameLength * sizeof(CHAR));
+    }
+
+    if (lpClass)
+    {
+        AVrfFuzzFillMemory(lpClass, inputClassLength * sizeof(CHAR));
+    }
 
     status = Orig_RegEnumKeyExA(hKey,
                                 dwIndex,
@@ -1252,7 +1361,7 @@ Hook_Common_RegEnumKeyExA(
     if (lpName)
     {
         AVrfFuzzBuffer(lpName,
-                       *lpcchName * sizeof(CHAR),
+                       inputNameLength * sizeof(CHAR),
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(lpcchName);
     }
@@ -1260,7 +1369,7 @@ Hook_Common_RegEnumKeyExA(
     if (lpClass && lpcchClass)
     {
         AVrfFuzzBuffer(lpClass,
-                       *lpcchClass * sizeof(CHAR),
+                       inputClassLength * sizeof(CHAR),
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(lpcchClass);
     }
@@ -1283,6 +1392,21 @@ Hook_Common_RegEnumKeyExW(
     )
 {
     LSTATUS status;
+    ULONG inputNameLength;
+    ULONG inputClassLength;
+
+    inputNameLength = *lpcchName;
+    inputClassLength = lpcchClass ? *lpcchClass : 0;
+
+    if (lpName)
+    {
+        AVrfFuzzFillMemory(lpName, inputNameLength * sizeof(WCHAR));
+    }
+
+    if (lpClass)
+    {
+        AVrfFuzzFillMemory(lpClass, inputClassLength * sizeof(WCHAR));
+    }
 
     status = Orig_RegEnumKeyExW(hKey,
                                 dwIndex,
@@ -1306,7 +1430,7 @@ Hook_Common_RegEnumKeyExW(
     if (lpName)
     {
         AVrfFuzzBuffer(lpName,
-                       *lpcchName * sizeof(WCHAR),
+                       inputNameLength * sizeof(WCHAR),
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateWideString(lpcchName);
     }
@@ -1314,7 +1438,7 @@ Hook_Common_RegEnumKeyExW(
     if (lpClass && lpcchClass)
     {
         AVrfFuzzBuffer(lpClass,
-                       *lpcchClass * sizeof(WCHAR),
+                       inputClassLength * sizeof(WCHAR),
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateWideString(lpcchClass);
     }
@@ -1337,7 +1461,22 @@ Hook_Common_RegEnumValueA(
     )
 {
     LSTATUS status;
+    ULONG inputNameLength;
+    ULONG inputLength;
     ULONG type;
+
+    inputNameLength = *lpcchValueName;
+    inputLength = lpcbData ? *lpcbData : 0;
+
+    if (lpValueName)
+    {
+        AVrfFuzzFillMemory(lpValueName, inputNameLength * sizeof(CHAR));
+    }
+
+    if (lpData)
+    {
+        AVrfFuzzFillMemory(lpData, inputLength);
+    }
 
     status = Orig_RegEnumValueA(hKey,
                                 dwIndex,
@@ -1353,6 +1492,18 @@ Hook_Common_RegEnumValueA(
         *lpType = type;
     }
 
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            AVrfpPreFuzzKeyValueLength(lpcbData, type);
+        }
+
+        return status;
+    }
+
     if (status != ERROR_SUCCESS)
     {
         return status;
@@ -1366,14 +1517,14 @@ Hook_Common_RegEnumValueA(
     if (lpValueName)
     {
         AVrfFuzzBuffer(lpValueName,
-                       *lpcchValueName * sizeof(CHAR),
+                       inputNameLength * sizeof(CHAR),
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(lpcchValueName);
     }
 
     if (lpData && lpcbData)
     {
-        AVrfFuzzBuffer(lpData, *lpcbData, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(lpData, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
 
         if ((type == REG_SZ) ||
             (type == REG_EXPAND_SZ) ||
@@ -1405,7 +1556,22 @@ Hook_Common_RegEnumValueW(
     )
 {
     LSTATUS status;
+    ULONG inputNameLength;
+    ULONG inputLength;
     ULONG type;
+
+    inputNameLength = *lpcchValueName;
+    inputLength = lpcbData ? *lpcbData : 0;
+
+    if (lpValueName)
+    {
+        AVrfFuzzFillMemory(lpValueName, inputNameLength * sizeof(WCHAR));
+    }
+
+    if (lpData)
+    {
+        AVrfFuzzFillMemory(lpData, inputLength);
+    }
 
     status = Orig_RegEnumValueW(hKey,
                                 dwIndex,
@@ -1421,6 +1587,18 @@ Hook_Common_RegEnumValueW(
         *lpType = type;
     }
 
+    if ((status == ERROR_BAD_LENGTH) ||
+        (status == ERROR_INSUFFICIENT_BUFFER) ||
+        (status == ERROR_MORE_DATA))
+    {
+        if (lpcbData && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_REG))
+        {
+            AVrfpPreFuzzKeyValueLength(lpcbData, type);
+        }
+
+        return status;
+    }
+
     if (status != ERROR_SUCCESS)
     {
         return status;
@@ -1434,14 +1612,14 @@ Hook_Common_RegEnumValueW(
     if (lpValueName)
     {
         AVrfFuzzBuffer(lpValueName,
-                       *lpcchValueName * sizeof(WCHAR),
+                       inputNameLength * sizeof(WCHAR),
                        VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateWideString(lpcchValueName);
     }
 
     if (lpData && lpcbData)
     {
-        AVrfFuzzBuffer(lpData, *lpcbData, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
+        AVrfFuzzBuffer(lpData, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
 
         if ((type == REG_SZ) ||
             (type == REG_EXPAND_SZ) ||

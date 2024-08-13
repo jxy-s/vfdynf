@@ -18,6 +18,11 @@ Hook_WSARecv(
 {
     int res;
 
+    for (ULONG i = 0; i < dwBufferCount; i++)
+    {
+        AVrfFuzzFillMemory(lpBuffers[i].buf, lpBuffers[i].len);
+    }
+
     res = Orig_WSARecv(s,
                        lpBuffers,
                        dwBufferCount,
@@ -55,6 +60,11 @@ Hook_WSARecvFrom(
 {
     int res;
 
+    for (ULONG i = 0; i < dwBufferCount; i++)
+    {
+        AVrfFuzzFillMemory(lpBuffers[i].buf, lpBuffers[i].len);
+    }
+
     res = Orig_WSARecvFrom(s,
                            lpBuffers,
                            dwBufferCount,
@@ -89,6 +99,8 @@ Hook_recv(
 {
     int res;
 
+    AVrfFuzzFillMemory(buf, len);
+
     res = Orig_recv(s, buf, len, flags);
 
     if ((res != SOCKET_ERROR) &&
@@ -113,6 +125,8 @@ Hook_recvfrom(
     )
 {
     int res;
+
+    AVrfFuzzFillMemory(buf, len);
 
     res = Orig_recvfrom(s, buf, len, flags, from, fromlen);
 
