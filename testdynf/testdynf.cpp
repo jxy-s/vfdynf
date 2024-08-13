@@ -428,23 +428,15 @@ void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG Data
     LSTATUS status;
     HKEY key;
     DWORD type;
-    PBYTE buffer;
+    BYTE buffer[1000];
     DWORD dataSize;
 
-    key = NULL;
-
-    buffer = (PBYTE)malloc(DataSize);
-    if (!buffer)
-    {
-        printf("[%lu] failed to allocated reg buffer\n", Id);
-        goto Exit;
-    }
+    assert(DataSize <= sizeof(buffer));
 
     status = RegCreateKeyW(HKEY_CURRENT_USER, L"SOFTWARE\\testdynf", &key);
     if (status == ERROR_SUCCESS)
     {
         RegCloseKey(key);
-        key = NULL;
     }
     else
     {
@@ -463,7 +455,7 @@ void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG Data
         goto Exit;
     }
 
-    dataSize = DataSize;
+    dataSize = sizeof(buffer);
     status = RegQueryValueExW(key,
                               ValueName,
                               NULL,
@@ -502,11 +494,6 @@ Exit:
     if (key)
     {
         RegCloseKey(key);
-    }
-
-    if (buffer)
-    {
-        free(buffer);
     }
 }
 
