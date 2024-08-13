@@ -4,10 +4,12 @@
 #include <vfdynf.h>
 #include <delayld.h>
 
-#define VFDYNF_FUZZ_BLOCK_SIZE       (0x1000 / 4)
-#define VFDYNF_RAND_VECTOR_SIZE      0x4000
-#define VFDYNF_FUZZ_MMAP_COUNT       1024
-#define VFCYNF_FUZZED_BUFFERS_COUNT  1024
+#define VFDYNF_FUZZ_BLOCK_SIZE          (0x1000 / 4)
+#define VFDYNF_RAND_VECTOR_SIZE         0x4000
+#define VFDYNF_FUZZ_MMAP_COUNT          1024
+#define VFDYNF_FUZZED_BUFFERS_COUNT     1024
+#define VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH (sizeof(ULONG64) * 2)
+#define VFDYNF_FUZZ_CLASSIFY_SENTINELS  5
 
 typedef struct _VFDYNF_FUZZ_MMAP_ENTRY
 {
@@ -38,7 +40,7 @@ typedef struct _VFDYNF_FUZZ_CONTEXT
     ULONG MMapEntryCount;
     VFDYNF_FUZZ_MMAP_ENTRY MMapEntries[VFDYNF_FUZZ_MMAP_COUNT];
     volatile LONG BufferIndex;
-    VFDYNF_FUZZED_BUFFER_ENTRY FuzzedBuffers[VFCYNF_FUZZED_BUFFERS_COUNT];
+    VFDYNF_FUZZED_BUFFER_ENTRY FuzzedBuffers[VFDYNF_FUZZED_BUFFERS_COUNT];
 } VFDYNF_FUZZ_CONTEXT, *PVFDYNF_FUZZ_CONTEXT;
 
 static AVRF_RUN_ONCE AVrfpFuzzRunOnce = AVRF_RUN_ONCE_INIT;
@@ -177,15 +179,18 @@ BOOLEAN AVrfFuzzProbability(
 }
 
 VFDYNF_FUZZ_BUFFER_CLASS AVrfpFuzzClassifyBuffer(
-    _In_reads_bytes_(Length) PBYTE Buffer,
-    _In_ SIZE_T Length
+    _In_reads_bytes_(*Length) PBYTE Buffer,
+    _Inout_ PSIZE_T Length
     )
 {
+    SIZE_T length;
     SIZE_T printable;
     SIZE_T sentinels;
-    FLOAT percent;
+    SIZE_T percent;
 
-    if (Length <= (sizeof(ULONG64) * 4))
+    length = *Length;
+
+    if (length <= VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH)
     {
         return VFDynfBufferData;
     }
@@ -193,7 +198,7 @@ VFDYNF_FUZZ_BUFFER_CLASS AVrfpFuzzClassifyBuffer(
     sentinels = 0;
     printable = 0;
 
-    for (ULONG i = 0; i < Length; i++)
+    for (ULONG i = 0; i < length; i++)
     {
         if (AVrfpCharIsPrintable[Buffer[i]])
         {
@@ -209,23 +214,36 @@ VFDYNF_FUZZ_BUFFER_CLASS AVrfpFuzzClassifyBuffer(
             sentinels = 0;
         }
 
-        if (sentinels > 5)
+        if (sentinels >= VFDYNF_FUZZ_CLASSIFY_SENTINELS)
         {
             //
-            // Likely at our memory fill, stop counting.
+            // Likely at our memory fill, stop counting and clamp the length.
             //
+            length = (((SIZE_T)i - VFDYNF_FUZZ_CLASSIFY_SENTINELS) + 1);
+            printable -= sentinels;
+            *Length = length;
             break;
         }
     }
 
-    percent = ((FLOAT)printable / Length) * 100.0f;
-    if (percent >= 95.0f)
+    //
+    // Check if we've clamped the length too small.
+    //
+    if (length <= VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH)
+    {
+        return VFDynfBufferData;
+    }
+
+    C_ASSERT(VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH > 2);
+
+    percent = ((printable * 100) / length);
+    if (percent >= 79)
     {
         return VFDynfBufferAnsi;
     }
 
-    percent = ((FLOAT)printable / (Length / 2)) * 100.0f;
-    if (percent >= 95.0f)
+    percent = ((printable * 100) / (length / 2));
+    if ((percent <= 100) && (percent >= 94))
     {
         return VFDynfBufferUnicode;
     }
@@ -267,7 +285,7 @@ VOID AVrfpFuzzBuffer(
     bufferLength = Length;
     corruptionBlocks = (1 + (AVrfFuzzRandom() % AVrfProperties.FuzzCorruptionBlocks));
 
-    bufferClass = AVrfpFuzzClassifyBuffer(bufferBytes, bufferLength);
+    bufferClass = AVrfpFuzzClassifyBuffer(bufferBytes, &bufferLength);
 
     for (ULONG i = 0; i < corruptionBlocks; i++)
     {
@@ -418,7 +436,7 @@ VOID AvrfpTrackFuzzedBuffer(
 
     index = (ULONG)(InterlockedIncrement(&AVrfpFuzzContext.BufferIndex) - 1);
 
-    entry = &AVrfpFuzzContext.FuzzedBuffers[index % VFCYNF_FUZZED_BUFFERS_COUNT];
+    entry = &AVrfpFuzzContext.FuzzedBuffers[index % VFDYNF_FUZZED_BUFFERS_COUNT];
 
     entry->TypeIndex = TypeIndex;
     entry->Address = Buffer;
