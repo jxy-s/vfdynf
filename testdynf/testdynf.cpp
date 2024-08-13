@@ -423,19 +423,28 @@ Exit:
     }
 }
 
-#define TESTDYNF_REG_DATA 0x11223344
-void DoRegTest(uint32_t Id)
+void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG DataSize)
 {
     LSTATUS status;
     HKEY key;
     DWORD type;
-    DWORD data;
+    PBYTE buffer;
     DWORD dataSize;
+
+    key = NULL;
+
+    buffer = (PBYTE)malloc(DataSize);
+    if (!buffer)
+    {
+        printf("[%lu] failed to allocated reg buffer\n", Id);
+        goto Exit;
+    }
 
     status = RegCreateKeyW(HKEY_CURRENT_USER, L"SOFTWARE\\testdynf", &key);
     if (status == ERROR_SUCCESS)
     {
         RegCloseKey(key);
+        key = NULL;
     }
     else
     {
@@ -454,20 +463,20 @@ void DoRegTest(uint32_t Id)
         goto Exit;
     }
 
-    dataSize = sizeof(data);
+    dataSize = DataSize;
     status = RegQueryValueExW(key,
-                              L"TestValue",
+                              ValueName,
                               NULL,
                               &type,
-                              (PBYTE)&data,
+                              buffer,
                               &dataSize);
     if (status == ERROR_SUCCESS)
     {
-        if (dataSize != sizeof(data))
+        if (dataSize != DataSize)
         {
             printf("[%lu] caught registry size fuzzing\n", Id);
         }
-        else if (data != TESTDYNF_REG_DATA)
+        else if (memcmp(buffer, Data, DataSize))
         {
             printf("[%lu] caught registry data fuzzing\n", Id);
         }
@@ -477,13 +486,12 @@ void DoRegTest(uint32_t Id)
         printf("[%lu] failed to query registry key\n", Id);
     }
 
-    data = TESTDYNF_REG_DATA;
     status = RegSetValueExW(key,
-                            L"TestValue",
+                            ValueName,
                             0,
-                            REG_DWORD,
-                            (PBYTE)&data,
-                            sizeof(data));
+                            Type,
+                            (PBYTE)Data,
+                            DataSize);
     if (status != ERROR_SUCCESS)
     {
         printf("[%lu] failed to set registry key\n", Id);
@@ -495,6 +503,11 @@ Exit:
     {
         RegCloseKey(key);
     }
+
+    if (buffer)
+    {
+        free(buffer);
+    }
 }
 
 void DoInPageTest(uint32_t Id)
@@ -505,13 +518,17 @@ void DoInPageTest(uint32_t Id)
     DoInPageTestPagingFile(Id);
 }
 
+static DWORD RegDword = 0x11223344;
+static WCHAR RegString[] = L"String to store in the registry";
+
 void DoTest(uint32_t Id)
 {
     DoStlTest(Id);
     DoHeapExceptionTest(Id);
     DoInPageTest(Id);
     DoReadFileTest(Id);
-    DoRegTest(Id);
+    DoRegTest(Id, L"TestDWORD", REG_DWORD, &RegDword, sizeof(ULONG));
+    DoRegTest(Id, L"TestString", REG_SZ, (PVOID)RegString, sizeof(RegString));
 }
 
 #define RECURSE_TEST(x)                                                       \
