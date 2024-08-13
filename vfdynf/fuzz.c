@@ -178,9 +178,10 @@ BOOLEAN AVrfFuzzProbability(
     return ((AVrfFuzzRandom() % 1000000) < Probability);
 }
 
-VFDYNF_FUZZ_BUFFER_CLASS AVrfpFuzzClassifyBuffer(
+BOOLEAN AVrfpFuzzClassifyBuffer(
     _In_reads_bytes_(*Length) PBYTE Buffer,
-    _Inout_ PSIZE_T Length
+    _Inout_ PSIZE_T Length,
+    _Out_ PVFDYNF_FUZZ_BUFFER_CLASS BufferClass
     )
 {
     SIZE_T length;
@@ -192,7 +193,8 @@ VFDYNF_FUZZ_BUFFER_CLASS AVrfpFuzzClassifyBuffer(
 
     if (length <= VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH)
     {
-        return VFDynfBufferData;
+        *BufferClass = VFDynfBufferData;
+        goto Exit;
     }
 
     sentinels = 0;
@@ -231,7 +233,8 @@ VFDYNF_FUZZ_BUFFER_CLASS AVrfpFuzzClassifyBuffer(
     //
     if (length <= VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH)
     {
-        return VFDynfBufferData;
+        *BufferClass = VFDynfBufferData;
+        goto Exit;
     }
 
     C_ASSERT(VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH > 2);
@@ -239,16 +242,22 @@ VFDYNF_FUZZ_BUFFER_CLASS AVrfpFuzzClassifyBuffer(
     percent = ((printable * 100) / length);
     if (percent >= 79)
     {
-        return VFDynfBufferAnsi;
+        *BufferClass = VFDynfBufferAnsi;
+        goto Exit;
     }
 
     percent = ((printable * 100) / (length / 2));
     if ((percent <= 100) && (percent >= 94))
     {
-        return VFDynfBufferUnicode;
+        *BufferClass = VFDynfBufferUnicode;
+        goto Exit;
     }
 
-    return VFDynfBufferData;
+    *BufferClass = VFDynfBufferData;
+
+Exit:
+
+    return (length > 0);
 }
 
 VOID AVrfpFuzzGetBufferRange(
@@ -285,7 +294,10 @@ VOID AVrfpFuzzBuffer(
     bufferLength = Length;
     corruptionBlocks = (1 + (AVrfFuzzRandom() % AVrfProperties.FuzzCorruptionBlocks));
 
-    bufferClass = AVrfpFuzzClassifyBuffer(bufferBytes, &bufferLength);
+    if (!AVrfpFuzzClassifyBuffer(bufferBytes, &bufferLength, &bufferClass))
+    {
+        return;
+    }
 
     for (ULONG i = 0; i < corruptionBlocks; i++)
     {
