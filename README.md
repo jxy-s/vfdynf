@@ -1,7 +1,8 @@
 # Application Verifier Dynamic Fault Injection
 
 `vfdynf.dll` is an application verifier provider that implements unique-stack
-based systematic fault injection to simulate low resource scenarios.
+based systematic fault injection to simulate low resource scenarios, fuzz
+resource access, and generally extend the capabilities of application verifier.
 
 ![](appvw.png)
 
@@ -10,28 +11,31 @@ The integration also works with the command line (the `TEST` type is `DynFault`)
 appverif DynFault ... -for TARGET ... [-with [TEST.]PROPERTY=VALUE ...]
 ```
 
-"Dynamic Fault Injection" (DynFault) is a replacement for "Low Resource Simulation"
-(LowRes) tests. LowRes is a probability-based (randomized) fault injection.
-In contrast, DynFault tracks stack hashes when determining where to inject faults.
-This provides better coverage when simulating low resource scenarios. DynFault
-injects failures for wait, heap, virtual memory, registry, file, event, section,
-and OLE string APIs. These are the same APIs as LowRes.
+## Fault Injection
 
-The ability to exclude modules in LowRes is limited. DynFault, in contrast, enables
-you to exclude stacks containing symbols matched by a set of regular expressions.
-Why is this helpful? I'll provide an example, which was the impetus for me reversing
-the undocumented parts of verifier to implement this library.
-[MSVC implemented debug iterators][msvc.dbgit] which are valuable to identify bugs but
-break `noexcept` contracts. For example, the default `std::string` constructor is marked
-`noexcept` but with debug iterators enabled an allocation could occur within it and throw
-an exception. The cpp exception handling then can't locate a handler past `noexcept`. The
-contract is such that if an exception would cross that boundary the implementation should
-terminate the program. Hopefully you can see the problem with the limited functionality
-of LowRes (you can't use it with debug iterators). To solve this DynFault has a
-property that allows you to define a list of regular expressions. When DynFault encounters
-a stack matching any expression in this list, that stack hash is excluded from fault
-injection. As an example, this regular expression tries to isolate stacks containing
-`std::basic_string`'s default constructor:
+"Dynamic Fault Injection" (DynFault) is a replacement for "Low Resource
+Simulation" (LowRes) tests. LowRes is a probability-based (randomized) fault
+injection. In contrast, DynFault tracks stack hashes when determining where to
+inject faults. This provides better coverage when simulating low resource
+scenarios. DynFault injects failures for wait, heap, virtual memory, registry,
+file, event, section, and OLE string APIs. These are the same APIs as LowRes.
+
+The ability to exclude modules in LowRes is limited. DynFault, in contrast,
+enables you to exclude stacks containing symbols matched by a set of regular
+expressions. Why is this helpful? I'll provide an example, which was the impetus
+for me reversing the undocumented parts of verifier to implement this library.
+[MSVC implemented debug iterators][msvc.dbgit] which are valuable to identify
+bugs but break `noexcept` contracts. For example, the default `std::string`
+constructor is marked `noexcept` but with debug iterators enabled an allocation
+could occur within it and throw an exception. The cpp exception handling then
+can't locate a handler past `noexcept`. The contract is such that if an
+exception would cross that boundary the implementation should terminate the
+program. Hopefully you can see the problem with the limited functionality of
+LowRes (you can't use it with debug iterators). To solve this DynFault has a
+property that allows you to define a list of regular expressions. When DynFault
+encounters a stack matching any expression in this list, that stack hash is
+excluded from fault injection. As an example, this regular expression tries to
+isolate stacks containing `std::basic_string`'s default constructor:
 
 ```
 \s.*!.*_Alloc_proxy<.*>\s.*!std::basic_string<.*>::basic_string<.*>\s
@@ -61,6 +65,19 @@ ntdll.dll!RtlUserThreadStart
 
 Enabling the best of both worlds - debug iterators and fault injection!
 
+## Fuzzing
+
+DynFault also supports fuzzing! The fuzzing options are disabled by default.
+To enable them, add the relevant bits to the `EnableFaultMask` property. You
+can use the same exclusions to exclude stacks from fuzzing as you would other
+fault types. DynFault can fuzz registry reads, file reads, section mappings,
+and network receives. The fuzzing approach attempts to classify and corrupt
+buffers in a targeted manner but also has a configurable probability of chaotic
+corruption. Fuzzing only corrupts buffers and values returned to the application
+from the operating system. The intention is to catch and identify programming
+errors and security vulnerabilities caused by making assumptions around
+integrity of data or time of check time of use.
+
 ## DynFault Properties (Options)
 
 | Name                        | Type        | Description |
@@ -70,7 +87,7 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | IncludeRegex                | String      | Includes fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
 | ExclusionsRegex             | MultiString | Excludes stack from fault injection when one of these regular expression matches the stack. |
 | DynamicFaultPeriod          | DWORD       | Clears dynamic stack fault injection tracking on this period, in milliseconds, zero does not clear tracking. |
-| EnableFaultMask             | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage, 10=FuzzReg, 11=FuzzFile, 12=FuzzMMap. |
+| EnableFaultMask             | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage, 10=FuzzReg, 11=FuzzFile, 12=FuzzMMap, 13=FuzzNet. |
 | FaultProbability            | DWORD       | Probability that a fault will be injected (0 - 1000000). |
 | FaultSeed                   | DWORD       | Seed used for fault randomization. A value of zero will generate a random seed. |
 | FuzzCorruptionBlocks        | DWORD       | Maximum number of blocks to corrupt when fuzzing. Larger numbers will impact performance, fuzzing logic will randomly loop between one and this maximum to apply corruption techniques on buffers. |
@@ -105,24 +122,40 @@ Enabling the best of both worlds - debug iterators and fault injection!
 | FuzzMMapExclusionsRegex     | MultiString | Excludes stack from section map fuzzing when one of these regular expression matches the stack. |
 | FuzzNetExclusionsRegex      | MultiString | Excludes stack from network fuzzing when one of these regular expression matches the stack. |
 
-## Fuzzing
-
-DynFault also supports fuzzing! The fuzzing options are disabled by default. To enable them, add the
-relevant bits to the `EnableFaultMask` property. You can use the same exclusions to exclude stacks
-from fuzzing as you would other fault types.
-
 ## Installation
 
-At this time there is no installer/script to automate installation. Here are the instructions to
-manually install the library:
+Install DynFault using application verifier by providing the DLL to `appverf.exe`
+using the `-installprovider` option. Alternatively, you can manually install the
+DLL and configure application verifier in the registry.
 
-1. copy `vfdynf.dll` to `C:\Windows\System32` (or `SysWOW64` for x86 support on an x64 OS)
-2. add `vfdynf.dll` to the "Application Verifier Global Settings" "Verified Providers" list (again `WOW6432Node` when appropriate)
-    - `HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{ApplicationVerifierGlobalSettings}`
-    - `VerifierProviders`
+### x64 Host
+```
+> C:\Windows\System32\appverif.exe -installprovider .\Release.x64\vfdynf.dll
+> C:\Windows\SysWOW64\appverif.exe -installprovider .\Release.x86\vfdynf.dll
+```
 
-At this point `vfdynf.dll` is "registered" with application verifier and it should show up in the options
-via the command line or in the user interface.
+### ARM64 Host
+```
+> C:\Windows\System32\appverif.exe -installprovider .\Release.ARM64EC\vfdynf.dll
+> C:\Windows\SysWOW64\appverif.exe -installprovider .\Release.x86\vfdynf.dll
+```
+
+### x86 Host
+```
+> C:\Windows\System32\appverif.exe -installprovider .\Release.x86\vfdynf.dll
+```
+
+### Manual
+
+1. Copy `vfdynf.dll` to `C:\Windows\System32` (and `SysWOW64` as appropriate).
+2. Add `vfdynf.dll` to the "Application Verifier Global Settings" "Verified
+   Providers" list (again `WOW6432Node` as appropriate).
+```
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\{ApplicationVerifierGlobalSettings}]
+"VerifierProviders"="vrfcore.dll vfbasics.dll vfcompat.dll vfluapriv.dll vfprint.dll vfnet.dll vfntlmless.dll vfnws.dll vfcuzz.dll vfdynf.dll"
+```
 
 ## Building
 
