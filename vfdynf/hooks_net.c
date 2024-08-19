@@ -31,7 +31,10 @@ Hook_WSARecv(
                        lpOverlapped,
                        lpCompletionRoutine);
 
-    if ((res == 0) && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
+    if ((res == 0) &&
+        !lpOverlapped &&
+        !lpCompletionRoutine &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
         {
@@ -75,7 +78,10 @@ Hook_WSARecvFrom(
                            lpOverlapped,
                            lpCompletionRoutine);
 
-    if ((res == 0) && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
+    if ((res == 0) &&
+        !lpOverlapped &&
+        !lpCompletionRoutine &&
+        AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
         {
