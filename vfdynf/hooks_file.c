@@ -137,7 +137,27 @@ Hook_NtQueryInformationFile(
     {
         if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
         {
-            IoStatusBlock->Information *= 2;
+            switch (AVrfFuzzRandom() % 10)
+            {
+                case 1: // do nothing
+                {
+                    break;
+                }
+                case 2: // small multiple
+                {
+                    IoStatusBlock->Information *= (2 + (AVrfFuzzRandom() % 5));
+                    break;
+                }
+                default: // round up to 4k boundary
+                {
+                    ULONG64 length;
+
+                    length = IoStatusBlock->Information;
+                    length = (((ULONG64)length + 0xfff) & ~0xfff);
+                    IoStatusBlock->Information = (ULONG_PTR)length;
+                    break;
+                }
+            }
         }
 
         return status;
