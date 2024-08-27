@@ -439,7 +439,7 @@ VerifierTlsSetValue(
 
 NTSYSAPI
 VOID
-NTAPI
+CDECL
 VerifierStopMessageEx(
     _In_ PAVRF_LAYER_DESCRIPTOR LayerDescriptor,
     _In_ ULONG_PTR Code,
