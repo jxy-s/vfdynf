@@ -285,6 +285,7 @@ typedef struct _AVRF_STACK_ENTRY
     BOOLEAN Excluded;
     ULONG64 FaultMask;
 } AVRF_STACK_ENTRY, *PAVRF_STACK_ENTRY;
+C_ASSERT(sizeof(AVRF_STACK_ENTRY) == 16);
 
 typedef struct _AVRF_STACK_TABLE_BUCKET
 {
