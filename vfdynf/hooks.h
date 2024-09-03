@@ -3,6 +3,9 @@
 */
 #pragma once
 
+#define AVrfHookIsCallerIncluded(type) \
+    AVrfIsCallerIncluded(type, VerifierGetAppCallerAddress(_ReturnAddress()))
+
 #define AVrfHookShouldFaultInject(type) \
     AVrfShouldFaultInject(type, VerifierGetAppCallerAddress(_ReturnAddress()))
 

@@ -81,7 +81,10 @@ Hook_NtReadFile(
 
     inputLength = Length;
 
-    AVrfFuzzFillMemory(Buffer, Length);
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_FILE))
+    {
+        AVrfFuzzFillMemory(Buffer, Length);
+    }
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
@@ -105,6 +108,7 @@ Hook_NtReadFile(
 
     if (!Event &&
         !ApcRoutine &&
+        inputLength &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
         AVrfFuzzBuffer(Buffer, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_FILE);
@@ -330,7 +334,7 @@ Hook_Common_ReadFile(
 
     inputLength = nNumberOfBytesToRead;
 
-    if (lpBuffer)
+    if (lpBuffer && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
         AVrfFuzzFillMemory(lpBuffer, inputLength);
     }
@@ -349,6 +353,7 @@ Hook_Common_ReadFile(
     if (result &&
         lpBuffer &&
         !lpOverlapped &&
+        inputLength &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
     {
         AVrfFuzzBuffer(lpBuffer,

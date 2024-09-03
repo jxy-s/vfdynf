@@ -264,6 +264,11 @@ VOID AVrfFaultProcessDetach(
     VOID
     );
 
+BOOLEAN AVrfIsCallerIncluded(
+    _In_ ULONG FaultType,
+    _In_opt_ _Maybenull_ PVOID CallerAddress
+    );
+
 BOOLEAN AVrfShouldFaultInject(
     _In_ ULONG FaultType,
     _In_opt_ _Maybenull_ PVOID CallerAddress

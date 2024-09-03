@@ -18,9 +18,12 @@ Hook_WSARecv(
 {
     int res;
 
-    for (ULONG i = 0; i < dwBufferCount; i++)
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
-        AVrfFuzzFillMemory(lpBuffers[i].buf, lpBuffers[i].len);
+        for (ULONG i = 0; i < dwBufferCount; i++)
+        {
+            AVrfFuzzFillMemory(lpBuffers[i].buf, lpBuffers[i].len);
+        }
     }
 
     res = Orig_WSARecv(s,
@@ -34,6 +37,7 @@ Hook_WSARecv(
     if ((res == 0) &&
         !lpOverlapped &&
         !lpCompletionRoutine &&
+        dwBufferCount &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
@@ -63,9 +67,12 @@ Hook_WSARecvFrom(
 {
     int res;
 
-    for (ULONG i = 0; i < dwBufferCount; i++)
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
-        AVrfFuzzFillMemory(lpBuffers[i].buf, lpBuffers[i].len);
+        for (ULONG i = 0; i < dwBufferCount; i++)
+        {
+            AVrfFuzzFillMemory(lpBuffers[i].buf, lpBuffers[i].len);
+        }
     }
 
     res = Orig_WSARecvFrom(s,
@@ -81,6 +88,7 @@ Hook_WSARecvFrom(
     if ((res == 0) &&
         !lpOverlapped &&
         !lpCompletionRoutine &&
+        dwBufferCount &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
@@ -105,7 +113,10 @@ Hook_recv(
 {
     int res;
 
-    AVrfFuzzFillMemory(buf, len);
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
+    {
+        AVrfFuzzFillMemory(buf, len);
+    }
 
     res = Orig_recv(s, buf, len, flags);
 
@@ -132,7 +143,10 @@ Hook_recvfrom(
 {
     int res;
 
-    AVrfFuzzFillMemory(buf, len);
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
+    {
+        AVrfFuzzFillMemory(buf, len);
+    }
 
     res = Orig_recvfrom(s, buf, len, flags, from, fromlen);
 

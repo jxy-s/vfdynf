@@ -395,9 +395,9 @@ BOOLEAN AVrfpIsStackOverriddenByRegex(
     return FALSE;
 }
 
-BOOLEAN AVrfpIsCallerIncluded(
-    _In_ PVOID CallerAddress,
-    _In_ ULONG FaultType
+BOOLEAN AVrfIsCallerIncluded(
+    _In_ ULONG FaultType,
+    _In_opt_ _Maybenull_ PVOID CallerAddress
     )
 {
     BOOLEAN result;
@@ -406,6 +406,22 @@ BOOLEAN AVrfpIsCallerIncluded(
     ULONG ldrDisp;
     PLIST_ENTRY modList;
     PPCRE2_CONTEXT typeContext;
+
+    if (!AVrfpFaultContext.Initialized)
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_WARNING_LEVEL,
+                   "AVRF: fault injection not yet initialized\n");
+        return FALSE;
+    }
+
+    if (!CallerAddress)
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_WARNING_LEVEL,
+                   "AVRF: caller address is null\n");
+        return FALSE;
+    }
 
     AVRF_ASSERT(AVrfpFaultContext.RegexInitialized);
 
@@ -550,7 +566,7 @@ BOOLEAN AVrfShouldFaultInject(
         return FALSE;
     }
 
-    if (!AVrfpIsCallerIncluded(CallerAddress, FaultType))
+    if (!AVrfIsCallerIncluded(FaultType, CallerAddress))
     {
         return FALSE;
     }

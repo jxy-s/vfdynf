@@ -302,7 +302,8 @@ Hook_NtQueryKey(
 {
     NTSTATUS status;
 
-    if (KeyInformation)
+    if (KeyInformation &&
+        AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(KeyInformation, Length);
     }
@@ -346,7 +347,8 @@ Hook_NtQueryValueKey(
 {
     NTSTATUS status;
 
-    if (KeyValueInformation)
+    if (KeyValueInformation &&
+        AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(KeyValueInformation, Length);
     }
@@ -396,7 +398,10 @@ Hook_NtQueryMultipleValueKey(
 
     inputLength = *BufferLength;
 
-    AVrfFuzzFillMemory(ValueBuffer, inputLength);
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
+    {
+        AVrfFuzzFillMemory(ValueBuffer, inputLength);
+    }
 
     status = Orig_NtQueryMultipleValueKey(KeyHandle,
                                           ValueEntries,
@@ -447,7 +452,8 @@ Hook_NtEnumerateKey(
 {
     NTSTATUS status;
 
-    if (KeyInformation)
+    if (KeyInformation &&
+        AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(KeyInformation, Length);
     }
@@ -492,7 +498,8 @@ Hook_NtEnumerateValueKey(
 {
     NTSTATUS status;
 
-    if (KeyValueInformation)
+    if (KeyValueInformation &&
+        AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(KeyValueInformation, Length);
     }
@@ -866,7 +873,7 @@ Hook_Common_RegQueryMultipleValuesA(
 
     inputLength = ldwTotsize ? *ldwTotsize : 0;
 
-    if (lpValueBuf)
+    if (lpValueBuf && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(lpValueBuf, inputLength);
     }
@@ -919,7 +926,7 @@ Hook_Common_RegQueryMultipleValuesW(
 
     inputLength = ldwTotsize ? *ldwTotsize : 0;
 
-    if (lpValueBuf)
+    if (lpValueBuf && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(lpValueBuf, inputLength);
     }
@@ -974,7 +981,7 @@ Hook_Common_RegQueryValueExA(
 
     inputLength = lpcbData ? *lpcbData : 0;
 
-    if (lpData)
+    if (lpData && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(lpData, inputLength);
     }
@@ -1035,7 +1042,7 @@ Hook_Common_RegQueryValueExW(
 
     inputLength = lpcbData ? *lpcbData : 0;
 
-    if (lpData)
+    if (lpData && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(lpData, inputLength);
     }
@@ -1106,7 +1113,7 @@ Hook_Common_RegGetValueA(
 
     inputLength = pcbData ? *pcbData : 0;
 
-    if (pvData)
+    if (pvData && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(pvData, inputLength);
     }
@@ -1190,7 +1197,7 @@ Hook_Common_RegGetValueW(
 
     inputLength = pcbData ? *pcbData : 0;
 
-    if (pvData)
+    if (pvData && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
         AVrfFuzzFillMemory(pvData, inputLength);
     }
@@ -1329,14 +1336,17 @@ Hook_Common_RegEnumKeyExA(
     inputNameLength = *lpcchName;
     inputClassLength = lpcchClass ? *lpcchClass : 0;
 
-    if (lpName)
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzFillMemory(lpName, inputNameLength * sizeof(CHAR));
-    }
+        if (lpName)
+        {
+            AVrfFuzzFillMemory(lpName, inputNameLength * sizeof(CHAR));
+        }
 
-    if (lpClass)
-    {
-        AVrfFuzzFillMemory(lpClass, inputClassLength * sizeof(CHAR));
+        if (lpClass)
+        {
+            AVrfFuzzFillMemory(lpClass, inputClassLength * sizeof(CHAR));
+        }
     }
 
     status = Orig_RegEnumKeyExA(hKey,
@@ -1398,14 +1408,17 @@ Hook_Common_RegEnumKeyExW(
     inputNameLength = *lpcchName;
     inputClassLength = lpcchClass ? *lpcchClass : 0;
 
-    if (lpName)
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzFillMemory(lpName, inputNameLength * sizeof(WCHAR));
-    }
+        if (lpName)
+        {
+            AVrfFuzzFillMemory(lpName, inputNameLength * sizeof(WCHAR));
+        }
 
-    if (lpClass)
-    {
-        AVrfFuzzFillMemory(lpClass, inputClassLength * sizeof(WCHAR));
+        if (lpClass)
+        {
+            AVrfFuzzFillMemory(lpClass, inputClassLength * sizeof(WCHAR));
+        }
     }
 
     status = Orig_RegEnumKeyExW(hKey,
@@ -1468,14 +1481,17 @@ Hook_Common_RegEnumValueA(
     inputNameLength = *lpcchValueName;
     inputLength = lpcbData ? *lpcbData : 0;
 
-    if (lpValueName)
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzFillMemory(lpValueName, inputNameLength * sizeof(CHAR));
-    }
+        if (lpValueName)
+        {
+            AVrfFuzzFillMemory(lpValueName, inputNameLength * sizeof(CHAR));
+        }
 
-    if (lpData)
-    {
-        AVrfFuzzFillMemory(lpData, inputLength);
+        if (lpData)
+        {
+            AVrfFuzzFillMemory(lpData, inputLength);
+        }
     }
 
     status = Orig_RegEnumValueA(hKey,
@@ -1563,14 +1579,17 @@ Hook_Common_RegEnumValueW(
     inputNameLength = *lpcchValueName;
     inputLength = lpcbData ? *lpcbData : 0;
 
-    if (lpValueName)
+    if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
-        AVrfFuzzFillMemory(lpValueName, inputNameLength * sizeof(WCHAR));
-    }
+        if (lpValueName)
+        {
+            AVrfFuzzFillMemory(lpValueName, inputNameLength * sizeof(WCHAR));
+        }
 
-    if (lpData)
-    {
-        AVrfFuzzFillMemory(lpData, inputLength);
+        if (lpData)
+        {
+            AVrfFuzzFillMemory(lpData, inputLength);
+        }
     }
 
     status = Orig_RegEnumValueW(hKey,
