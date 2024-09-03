@@ -14,6 +14,8 @@ Hook_NtCreateEvent(
     _In_ BOOLEAN InitialState
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
     {
         return STATUS_NO_MEMORY;
@@ -34,6 +36,8 @@ Hook_NtOpenEvent(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
     {
         return STATUS_NO_MEMORY;
@@ -52,6 +56,8 @@ Hook_Common_CreateEventA(
     _In_opt_ LPCSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -74,6 +80,8 @@ Hook_Common_CreateEventW(
     _In_opt_ LPCWSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -95,6 +103,8 @@ Hook_Common_OpenEventA(
     _In_ LPCSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -113,6 +123,8 @@ Hook_Common_OpenEventW(
     _In_ LPCWSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_EVENT))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;

@@ -3,14 +3,39 @@
 */
 #pragma once
 
-#define AVrfHookIsCallerIncluded(type) \
-    AVrfIsCallerIncluded(type, VerifierGetAppCallerAddress(_ReturnAddress()))
+typedef struct _AVRF_HOOK_CONTEXT
+{
+    PVOID CallerAddress;
+} AVRF_HOOK_CONTEXT, *PAVRF_HOOK_CONTEXT;
 
-#define AVrfHookShouldFaultInject(type) \
-    AVrfShouldFaultInject(type, VerifierGetAppCallerAddress(_ReturnAddress()))
+#define AVRF_HOOK_CONTEXT()                                                   \
+AVRF_HOOK_CONTEXT _hc;                                                        \
+PAVRF_HOOK_CONTEXT _hcp;                                                      \
+_hc.CallerAddress = NULL;                                                     \
+_hcp = &_hc;
 
-#define AVrfHookShouldVerifierStop() \
-    AVrfShouldVerifierStop(VerifierGetAppCallerAddress(_ReturnAddress()))
+#define AVRF_HOOK_WITH_CONTEXT(context)                                       \
+PAVRF_HOOK_CONTEXT _hcp;                                                      \
+_hcp = context;
+
+#define AVrfHookGetContext() _hcp
+
+#define AVrfHookIsCallerIncluded(type)                                        \
+AVrfIsCallerIncluded(                                                         \
+    type,                                                                     \
+    _hcp->CallerAddress ? _hcp->CallerAddress                                 \
+    : (_hcp->CallerAddress = VerifierGetAppCallerAddress(_ReturnAddress())))
+
+#define AVrfHookShouldFaultInject(type)                                       \
+AVrfShouldFaultInject(                                                        \
+    type,                                                                     \
+    _hcp->CallerAddress ? _hcp->CallerAddress                                 \
+    : (_hcp->CallerAddress = VerifierGetAppCallerAddress(_ReturnAddress())))
+
+#define AVrfHookShouldVerifierStop()                                          \
+AVrfShouldVerifierStop(                                                       \
+    _hcp->CallerAddress ? _hcp->CallerAddress                                 \
+    : (_hcp->CallerAddress = VerifierGetAppCallerAddress(_ReturnAddress())))
 
 #ifdef VFDYNF_HOOKS_PRIVATE
 #define VFDYNF_ORIG_QUAL
@@ -25,7 +50,7 @@
     typedef Func_##name* PFunc_##name;
 
 #define VFDYNF_DECLARE_HOOK(ret, conv, name, params)                          \
-    ret conv Hook_##name params;                             \
+    ret conv Hook_##name params;                                              \
     VFDYNF_ORIG_QUAL ret (conv *Orig_##name) params VFDYNF_ORIG_INIT;         \
     VFDYNF_DECLAR_HOOK_TYPEDEF(ret, conv, name, params)
 

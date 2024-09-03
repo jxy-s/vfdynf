@@ -100,6 +100,8 @@ Hook_NtCreateSection(
     _In_opt_ HANDLE FileHandle
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         return STATUS_NO_MEMORY;
@@ -128,6 +130,8 @@ Hook_NtCreateSectionEx(
     _In_ ULONG ExtendedParameterCount
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         return STATUS_NO_MEMORY;
@@ -152,6 +156,8 @@ Hook_NtOpenSection(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         return STATUS_NO_MEMORY;
@@ -178,6 +184,8 @@ Hook_NtMapViewOfSection(
     NTSTATUS status;
     SIZE_T regionSize;
     BOOLEAN strict;
+
+    AVRF_HOOK_CONTEXT();
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
@@ -236,6 +244,8 @@ Hook_NtMapViewOfSectionEx(
     NTSTATUS status;
     SIZE_T regionSize;
     BOOLEAN strict;
+
+    AVRF_HOOK_CONTEXT();
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
@@ -321,6 +331,8 @@ Hook_Common_CreateFileMappingW(
     _In_opt_ LPCWSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -347,6 +359,8 @@ Hook_Common_CreateFileMappingA(
     _In_opt_ LPCSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -370,6 +384,8 @@ Hook_Common_OpenFileMappingW(
     _In_ LPCWSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -390,6 +406,8 @@ Hook_Common_OpenFileMappingA(
     _In_ LPCSTR lpName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -414,6 +432,8 @@ Hook_Common_MapViewOfFile(
 {
     LPVOID result;
     SIZE_T regionSize;
+
+    AVRF_HOOK_CONTEXT();
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {
@@ -463,6 +483,8 @@ Hook_Common_MapViewOfFileEx(
 {
     LPVOID result;
     SIZE_T regionSize;
+
+    AVRF_HOOK_CONTEXT();
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_SECTION))
     {

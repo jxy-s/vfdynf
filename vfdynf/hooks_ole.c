@@ -10,6 +10,8 @@ Hook_SysAllocString(
     _In_opt_z_ const OLECHAR * psz
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_OLE))
     {
         return NULL;
@@ -25,6 +27,8 @@ Hook_SysReAllocString(
     _In_opt_z_ const OLECHAR* psz
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_OLE))
     {
         return 0;
@@ -40,6 +44,8 @@ Hook_SysAllocStringLen(
     UINT ui
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_OLE))
     {
         return NULL;
@@ -56,6 +62,8 @@ Hook_SysReAllocStringLen(
     _In_ unsigned int len
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_OLE))
     {
         return 0;
@@ -71,6 +79,8 @@ Hook_SysAllocStringByteLen(
     _In_ UINT len
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_OLE))
     {
         return NULL;

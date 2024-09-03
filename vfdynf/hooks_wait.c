@@ -12,6 +12,8 @@ Hook_NtWaitForSingleObject(
     _In_opt_ PLARGE_INTEGER Timeout
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (Timeout && (Timeout->QuadPart != 0) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
@@ -31,6 +33,8 @@ Hook_NtWaitForMultipleObjects(
     _In_opt_ PLARGE_INTEGER Timeout
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (Timeout && (Timeout->QuadPart != 0) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
     {
@@ -52,6 +56,8 @@ Hook_Common_WaitForSingleObject(
     _In_ DWORD dwMilliseconds
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if ((dwMilliseconds != 0) &&
         (dwMilliseconds != INFINITE) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
@@ -71,6 +77,8 @@ Hook_Common_WaitForSingleObjectEx(
     _In_ BOOL bAlertable
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if ((dwMilliseconds != 0) &&
         (dwMilliseconds != INFINITE) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
@@ -91,6 +99,8 @@ Hook_Common_WaitForMultipleObjects(
     _In_ DWORD dwMilliseconds
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if ((dwMilliseconds != 0) &&
         (dwMilliseconds != INFINITE) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))
@@ -115,6 +125,8 @@ Hook_Common_WaitForMultipleObjectsEx(
     _In_ BOOL bAlertable
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if ((dwMilliseconds != 0) &&
         (dwMilliseconds != INFINITE) &&
         AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_WAIT))

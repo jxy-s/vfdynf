@@ -15,6 +15,8 @@ Hook_NtAllocateVirtualMemory(
     _In_ ULONG Protect
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_VMEM))
     {
         return STATUS_NO_MEMORY;
@@ -40,6 +42,8 @@ Hook_NtAllocateVirtualMemoryEx(
     _In_ ULONG ExtendedParameterCount
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_VMEM))
     {
         return STATUS_NO_MEMORY;
@@ -64,6 +68,8 @@ Hook_Common_VirtualAlloc(
     _In_ DWORD flProtect
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_VMEM))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -84,6 +90,8 @@ Hook_Common_VirtualAllocEx(
     _In_ DWORD flProtect
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_VMEM))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;

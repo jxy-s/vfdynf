@@ -20,6 +20,8 @@ Hook_NtCreateFile(
     _In_ ULONG EaLength
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
     {
         return STATUS_NO_MEMORY;
@@ -49,6 +51,8 @@ Hook_NtOpenFile(
     _In_ ULONG OpenOptions
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
     {
         return STATUS_NO_MEMORY;
@@ -78,6 +82,8 @@ Hook_NtReadFile(
 {
     NTSTATUS status;
     ULONG inputLength;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = Length;
 
@@ -128,6 +134,8 @@ Hook_NtQueryInformationFile(
     )
 {
     NTSTATUS status;
+
+    AVRF_HOOK_CONTEXT();
 
     status = Orig_NtQueryInformationFile(FileHandle,
                                          IoStatusBlock,
@@ -275,6 +283,8 @@ Hook_Common_CreateFileA(
     _In_opt_ HANDLE hTemplateFile
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -303,6 +313,8 @@ Hook_Common_CreateFileW(
     _In_opt_ HANDLE hTemplateFile
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FILE))
     {
         NtCurrentTeb()->LastErrorValue = ERROR_OUTOFMEMORY;
@@ -331,6 +343,8 @@ Hook_Common_ReadFile(
 {
     BOOL result;
     ULONG inputLength;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = nNumberOfBytesToRead;
 
@@ -392,6 +406,8 @@ Hook_Common_GetFileInformationByHandle(
 {
     BOOL result;
 
+    AVRF_HOOK_CONTEXT();
+
     result = Orig_GetFileInformationByHandle(hFile, lpFileInformation);
 
     if (result && AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
@@ -418,6 +434,8 @@ Hook_Common_GetFileSize(
     _Out_opt_ LPDWORD lpFileSizeHigh
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldVerifierStop())
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -443,6 +461,8 @@ Hook_Common_GetFileSizeEx(
     )
 {
     BOOL result;
+
+    AVRF_HOOK_CONTEXT();
 
     result = Orig_GetFileSizeEx(hFile, lpFileSize);
 

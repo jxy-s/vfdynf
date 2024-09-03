@@ -37,9 +37,12 @@ VOID AVrfpPreFuzzKeyValueLength(
 VOID AVrfpFuzzKeyInformation(
     _In_ KEY_INFORMATION_CLASS KeyInformationClass,
     _Inout_updates_bytes_(Length) PVOID KeyInformation,
-    _In_ ULONG Length
+    _In_ ULONG Length,
+    _In_ PVOID Context
     )
 {
+    AVRF_HOOK_WITH_CONTEXT(Context);
+
     switch (KeyInformationClass)
     {
         case KeyBasicInformation:
@@ -124,9 +127,12 @@ VOID AVrfpFuzzKeyInformation(
 VOID AVrfpFuzzKeyValueInformation(
     _In_ KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
     _Inout_updates_bytes_(Length) PVOID KeyValueInformation,
-    _In_ ULONG Length
+    _In_ ULONG Length,
+    _In_ PVOID Context
     )
 {
+    AVRF_HOOK_WITH_CONTEXT(Context);
+
     switch (KeyValueInformationClass)
     {
         case KeyValueBasicInformation:
@@ -236,6 +242,8 @@ Hook_NtCreateKey(
     _Out_opt_ PULONG Disposition
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return STATUS_NO_MEMORY;
@@ -258,6 +266,8 @@ Hook_NtOpenKey(
     _In_ POBJECT_ATTRIBUTES ObjectAttributes
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return STATUS_NO_MEMORY;
@@ -277,6 +287,8 @@ Hook_NtSetValueKey(
     _In_ ULONG DataSize
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return STATUS_NO_MEMORY;
@@ -301,6 +313,8 @@ Hook_NtQueryKey(
     )
 {
     NTSTATUS status;
+
+    AVRF_HOOK_CONTEXT();
 
     if (KeyInformation &&
         AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
@@ -328,7 +342,10 @@ Hook_NtQueryKey(
 
     if (NT_SUCCESS(status) && KeyInformation)
     {
-        AVrfpFuzzKeyInformation(KeyInformationClass, KeyInformation, Length);
+        AVrfpFuzzKeyInformation(KeyInformationClass,
+                                KeyInformation,
+                                Length,
+                                AVrfHookGetContext());
     }
 
     return status;
@@ -346,6 +363,8 @@ Hook_NtQueryValueKey(
     )
 {
     NTSTATUS status;
+
+    AVRF_HOOK_CONTEXT();
 
     if (KeyValueInformation &&
         AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
@@ -376,7 +395,8 @@ Hook_NtQueryValueKey(
     {
         AVrfpFuzzKeyValueInformation(KeyValueInformationClass,
                                      KeyValueInformation,
-                                     Length);
+                                     Length,
+                                     AVrfHookGetContext());
     }
 
     return status;
@@ -395,6 +415,8 @@ Hook_NtQueryMultipleValueKey(
 {
     NTSTATUS status;
     ULONG inputLength;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = *BufferLength;
 
@@ -452,6 +474,8 @@ Hook_NtEnumerateKey(
 {
     NTSTATUS status;
 
+    AVRF_HOOK_CONTEXT();
+
     if (KeyInformation &&
         AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
@@ -479,7 +503,10 @@ Hook_NtEnumerateKey(
 
     if (NT_SUCCESS(status) && KeyInformation)
     {
-        AVrfpFuzzKeyInformation(KeyInformationClass, KeyInformation, Length);
+        AVrfpFuzzKeyInformation(KeyInformationClass,
+                                KeyInformation,
+                                Length,
+                                AVrfHookGetContext());
     }
 
     return status;
@@ -497,6 +524,8 @@ Hook_NtEnumerateValueKey(
     )
 {
     NTSTATUS status;
+
+    AVRF_HOOK_CONTEXT();
 
     if (KeyValueInformation &&
         AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
@@ -527,7 +556,8 @@ Hook_NtEnumerateValueKey(
     {
         AVrfpFuzzKeyValueInformation(KeyValueInformationClass,
                                      KeyValueInformation,
-                                     Length);
+                                     Length,
+                                     AVrfHookGetContext());
     }
 
     return status;
@@ -542,6 +572,8 @@ Hook_Common_RegCreateKeyA(
     _Out_ PHKEY phkResult
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -560,6 +592,8 @@ Hook_Common_RegCreateKeyW(
     _Out_ PHKEY phkResult
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -584,6 +618,8 @@ Hook_Common_RegCreateKeyExA(
     _Out_opt_ LPDWORD lpdwDisposition
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -616,6 +652,8 @@ Hook_Common_RegCreateKeyExW(
     _Out_opt_ LPDWORD lpdwDisposition
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -642,6 +680,8 @@ Hook_Common_RegOpenKeyA(
     _Out_ PHKEY phkResult
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -660,6 +700,8 @@ Hook_Common_RegOpenKeyW(
     _Out_ PHKEY phkResult
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -680,6 +722,8 @@ Hook_Common_RegOpenKeyExA(
     _Out_ PHKEY phkResult
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -704,6 +748,8 @@ Hook_Common_RegOpenKeyExW(
     _Out_ PHKEY phkResult
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         *phkResult = NULL;
@@ -728,6 +774,8 @@ Hook_Common_RegSetValueA(
     _In_ DWORD cbData
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return ERROR_OUTOFMEMORY;
@@ -747,6 +795,8 @@ Hook_Common_RegSetValueW(
     _In_ DWORD cbData
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return ERROR_OUTOFMEMORY;
@@ -767,6 +817,8 @@ Hook_Common_RegSetValueExA(
     _In_ DWORD cbData
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return ERROR_OUTOFMEMORY;
@@ -792,6 +844,8 @@ Hook_Common_RegSetValueExW(
     _In_ DWORD cbData
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return ERROR_OUTOFMEMORY;
@@ -815,6 +869,8 @@ Hook_Common_RegQueryValueA(
     _Inout_opt_ PLONG lpcbData
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldVerifierStop())
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -841,6 +897,8 @@ Hook_Common_RegQueryValueW(
     _Inout_opt_ PLONG lpcbData
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldVerifierStop())
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -870,6 +928,8 @@ Hook_Common_RegQueryMultipleValuesA(
 {
     LSTATUS status;
     ULONG inputLength;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = ldwTotsize ? *ldwTotsize : 0;
 
@@ -923,6 +983,8 @@ Hook_Common_RegQueryMultipleValuesW(
 {
     LSTATUS status;
     ULONG inputLength;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = ldwTotsize ? *ldwTotsize : 0;
 
@@ -978,6 +1040,8 @@ Hook_Common_RegQueryValueExA(
     LSTATUS status;
     ULONG inputLength;
     ULONG type;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = lpcbData ? *lpcbData : 0;
 
@@ -1039,6 +1103,8 @@ Hook_Common_RegQueryValueExW(
     LSTATUS status;
     ULONG inputLength;
     ULONG type;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = lpcbData ? *lpcbData : 0;
 
@@ -1110,6 +1176,8 @@ Hook_Common_RegGetValueA(
     LSTATUS status;
     ULONG inputLength;
     ULONG type;
+
+    AVRF_HOOK_CONTEXT();
 
     inputLength = pcbData ? *pcbData : 0;
 
@@ -1195,6 +1263,8 @@ Hook_Common_RegGetValueW(
     ULONG inputLength;
     ULONG type;
 
+    AVRF_HOOK_CONTEXT();
+
     inputLength = pcbData ? *pcbData : 0;
 
     if (pvData && AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
@@ -1273,6 +1343,8 @@ Hook_Common_RegEnumKeyA(
     _In_ DWORD cchName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldVerifierStop())
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -1299,6 +1371,8 @@ Hook_Common_RegEnumKeyW(
     _In_ DWORD cchName
     )
 {
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookShouldVerifierStop())
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -1335,6 +1409,8 @@ Hook_Common_RegEnumKeyExA(
 
     inputNameLength = *lpcchName;
     inputClassLength = lpcchClass ? *lpcchClass : 0;
+
+    AVRF_HOOK_CONTEXT();
 
     if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_REG))
     {
@@ -1404,6 +1480,8 @@ Hook_Common_RegEnumKeyExW(
     LSTATUS status;
     ULONG inputNameLength;
     ULONG inputClassLength;
+
+    AVRF_HOOK_CONTEXT();
 
     inputNameLength = *lpcchName;
     inputClassLength = lpcchClass ? *lpcchClass : 0;
@@ -1477,6 +1555,8 @@ Hook_Common_RegEnumValueA(
     ULONG inputNameLength;
     ULONG inputLength;
     ULONG type;
+
+    AVRF_HOOK_CONTEXT();
 
     inputNameLength = *lpcchValueName;
     inputLength = lpcbData ? *lpcbData : 0;
@@ -1575,6 +1655,8 @@ Hook_Common_RegEnumValueW(
     ULONG inputNameLength;
     ULONG inputLength;
     ULONG type;
+
+    AVRF_HOOK_CONTEXT();
 
     inputNameLength = *lpcchValueName;
     inputLength = lpcbData ? *lpcbData : 0;

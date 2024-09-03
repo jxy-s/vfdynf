@@ -5,9 +5,12 @@
 #include <hooks.h>
 
 VOID AVrfpCheckHeapAllocLimit(
-    _In_ SIZE_T Size
+    _In_ SIZE_T Size,
+    _In_ PVOID Context
     )
 {
+    AVRF_HOOK_WITH_CONTEXT(Context);
+
     if (Size > AVrfProperties.HeapReasonableAllocLimit)
     {
         if (AVrfHookShouldVerifierStop())
@@ -31,7 +34,9 @@ Hook_RtlAllocateHeap(
     _In_ SIZE_T Size
     )
 {
-    AVrfpCheckHeapAllocLimit(Size);
+    AVRF_HOOK_CONTEXT();
+
+    AVrfpCheckHeapAllocLimit(Size, AVrfHookGetContext());
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
@@ -63,7 +68,9 @@ Hook_RtlReAllocateHeap(
     _In_ SIZE_T Size
     )
 {
-    AVrfpCheckHeapAllocLimit(Size);
+    AVRF_HOOK_CONTEXT();
+
+    AVrfpCheckHeapAllocLimit(Size, AVrfHookGetContext());
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
@@ -94,7 +101,9 @@ Hook_Common_GlobalAlloc(
     _In_ SIZE_T dwBytes
     )
 {
-    AVrfpCheckHeapAllocLimit(dwBytes);
+    AVRF_HOOK_CONTEXT();
+
+    AVrfpCheckHeapAllocLimit(dwBytes, AVrfHookGetContext());
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
@@ -114,7 +123,9 @@ Hook_Common_GlobalReAlloc(
     _In_ UINT uFlags
     )
 {
-    AVrfpCheckHeapAllocLimit(dwBytes);
+    AVRF_HOOK_CONTEXT();
+
+    AVrfpCheckHeapAllocLimit(dwBytes, AVrfHookGetContext());
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
@@ -133,7 +144,9 @@ Hook_Common_LocalAlloc(
     _In_ SIZE_T uBytes
     )
 {
-    AVrfpCheckHeapAllocLimit(uFlags);
+    AVRF_HOOK_CONTEXT();
+
+    AVrfpCheckHeapAllocLimit(uFlags, AVrfHookGetContext());
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {
@@ -153,7 +166,9 @@ Hook_Common_LocalReAlloc(
     _In_ UINT uFlags
     )
 {
-    AVrfpCheckHeapAllocLimit(uBytes);
+    AVRF_HOOK_CONTEXT();
+
+    AVrfpCheckHeapAllocLimit(uBytes, AVrfHookGetContext());
 
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_HEAP))
     {

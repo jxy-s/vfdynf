@@ -18,6 +18,8 @@ Hook_WSARecv(
 {
     int res;
 
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
@@ -67,6 +69,8 @@ Hook_WSARecvFrom(
 {
     int res;
 
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
         for (ULONG i = 0; i < dwBufferCount; i++)
@@ -113,6 +117,8 @@ Hook_recv(
 {
     int res;
 
+    AVRF_HOOK_CONTEXT();
+
     if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
         AVrfFuzzFillMemory(buf, len);
@@ -142,6 +148,8 @@ Hook_recvfrom(
     )
 {
     int res;
+
+    AVRF_HOOK_CONTEXT();
 
     if (AVrfHookIsCallerIncluded(VFDYNF_FAULT_TYPE_FUZZ_NET))
     {
