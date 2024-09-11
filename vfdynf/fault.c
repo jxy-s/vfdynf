@@ -10,6 +10,12 @@ typedef struct _VFDYNF_EXCLUSION_REGEX
     PPCRE2_CONTEXT Regex;
 } VFDYNF_EXCLUSION_REGEX, *PVFDYNF_EXCLUSION_REGEX;
 
+typedef struct _VFDYNF_FAULT_COUNT
+{
+    volatile LONG False;
+    volatile LONG True;
+} VFDYNF_FAULT_COUNT, *PVFDYNF_FAULT_COUNT;
+
 typedef struct _VFDYNF_FAULT_CONTEXT
 {
     BOOLEAN Initialized;
@@ -21,6 +27,7 @@ typedef struct _VFDYNF_FAULT_CONTEXT
     BOOLEAN RegexInitialized;
     PCRE2_CONTEXT Include;
     VFDYNF_EXCLUSION_REGEX Exclusions;
+    VFDYNF_FAULT_COUNT TypeCount[VFDYNF_FAULT_TYPE_COUNT];
     PCRE2_CONTEXT TypeInclude[VFDYNF_FAULT_TYPE_COUNT];
     VFDYNF_EXCLUSION_REGEX TypeExclusions[VFDYNF_FAULT_TYPE_COUNT];
     BYTE SymInfoBuffer[sizeof(SYMBOL_INFOW) + ((MAX_SYM_NAME + 1) * sizeof(WCHAR))];
@@ -41,6 +48,7 @@ static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
     .RegexInitialized = FALSE,
     .Include = { 0 },
     .Exclusions = { 0 },
+    .TypeCount = { 0 },
     .TypeInclude = { 0 },
     .TypeExclusions = { 0 },
     .SymInfoBuffer = { 0 },
@@ -523,6 +531,7 @@ BOOLEAN AVrfShouldFaultInject(
 {
     BOOLEAN result;
     BOOLEAN releaseLock;
+    PVFDYNF_FAULT_COUNT faultCount;
     ULONG lastErrorValue;
     NTSTATUS lastStatusValue;
     ULONG hash;
@@ -533,6 +542,7 @@ BOOLEAN AVrfShouldFaultInject(
 
     result = FALSE;
     releaseLock = FALSE;
+    faultCount = NULL;
 
     //
     // This function can be called from a hook and could change the last error
@@ -571,6 +581,14 @@ BOOLEAN AVrfShouldFaultInject(
     {
         goto Exit;
     }
+
+    //
+    // After VerifierShouldFaultInject is called verifier has updated its
+    // internal tracking that will inject a fault here (see: !avrf -flt).
+    // But since we might override that decision, usually due to user defined
+    // exclusions, we track our own fault counters when exiting this function.
+    //
+    faultCount = &AVrfpFaultContext.TypeCount[AVrfpFaultTypeIndex(FaultType)];
 
     if (!AVrfpFaultDelayInitOnce())
     {
@@ -900,6 +918,11 @@ Exit:
     if (releaseLock)
     {
         RtlLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
+    }
+
+    if (faultCount)
+    {
+        InterlockedIncrement(result ? &faultCount->True : &faultCount->False);
     }
 
     NtCurrentTeb()->LastErrorValue = lastErrorValue;
