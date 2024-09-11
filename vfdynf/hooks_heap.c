@@ -47,7 +47,7 @@ Hook_RtlAllocateHeap(
             exceptionRecord.ExceptionCode = (DWORD)STATUS_NO_MEMORY;
             exceptionRecord.ExceptionFlags = 0;
             exceptionRecord.ExceptionRecord = NULL;
-            exceptionRecord.ExceptionAddress = VerifierGetAppCallerAddress(_ReturnAddress());
+            exceptionRecord.ExceptionAddress = AVrfHookCallerAddress();
             exceptionRecord.NumberParameters = 0;
 
             RtlRaiseException(&exceptionRecord);
@@ -81,7 +81,7 @@ Hook_RtlReAllocateHeap(
             exceptionRecord.ExceptionCode = (DWORD)STATUS_NO_MEMORY;
             exceptionRecord.ExceptionFlags = 0;
             exceptionRecord.ExceptionRecord = NULL;
-            exceptionRecord.ExceptionAddress = VerifierGetAppCallerAddress(_ReturnAddress());
+            exceptionRecord.ExceptionAddress = AVrfHookCallerAddress();
             exceptionRecord.NumberParameters = 0;
 
             RtlRaiseException(&exceptionRecord);

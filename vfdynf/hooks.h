@@ -20,22 +20,18 @@ _hcp = context;
 
 #define AVrfHookGetContext() _hcp
 
+#define AVrfHookCallerAddress()                                               \
+_hcp->CallerAddress ? _hcp->CallerAddress                                     \
+: (_hcp->CallerAddress = VerifierGetAppCallerAddress(_ReturnAddress()))
+
 #define AVrfHookIsCallerIncluded(type)                                        \
-AVrfIsCallerIncluded(                                                         \
-    type,                                                                     \
-    _hcp->CallerAddress ? _hcp->CallerAddress                                 \
-    : (_hcp->CallerAddress = VerifierGetAppCallerAddress(_ReturnAddress())))
+AVrfIsCallerIncluded(type, AVrfHookCallerAddress())
 
 #define AVrfHookShouldFaultInject(type)                                       \
-AVrfShouldFaultInject(                                                        \
-    type,                                                                     \
-    _hcp->CallerAddress ? _hcp->CallerAddress                                 \
-    : (_hcp->CallerAddress = VerifierGetAppCallerAddress(_ReturnAddress())))
+AVrfShouldFaultInject(type, AVrfHookCallerAddress())
 
 #define AVrfHookShouldVerifierStop()                                          \
-AVrfShouldVerifierStop(                                                       \
-    _hcp->CallerAddress ? _hcp->CallerAddress                                 \
-    : (_hcp->CallerAddress = VerifierGetAppCallerAddress(_ReturnAddress())))
+AVrfShouldVerifierStop(AVrfHookCallerAddress())
 
 #ifdef VFDYNF_HOOKS_PRIVATE
 #define VFDYNF_ORIG_QUAL
