@@ -522,17 +522,32 @@ BOOLEAN AVrfShouldFaultInject(
     )
 {
     BOOLEAN result;
+    BOOLEAN releaseLock;
+    ULONG lastErrorValue;
+    NTSTATUS lastStatusValue;
     ULONG hash;
     PVOID frames[250];
     USHORT count;
     PAVRF_STACK_ENTRY stackEntry;
+    UNICODE_STRING stackSymbols;
+
+    result = FALSE;
+    releaseLock = FALSE;
+
+    //
+    // This function can be called from a hook and could change the last error
+    // and status values. Save them to be restored when we exit this function.
+    //
+    lastErrorValue = NtCurrentTeb()->LastErrorValue;
+    lastStatusValue = NtCurrentTeb()->LastStatusValue;
 
     if (!AVrfpFaultContext.Initialized)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_WARNING_LEVEL,
                    "AVRF: fault injection not yet initialized\n");
-        return FALSE;
+
+        goto Exit;
     }
 
     if (!CallerAddress)
@@ -540,7 +555,8 @@ BOOLEAN AVrfShouldFaultInject(
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_WARNING_LEVEL,
                    "AVRF: caller address is null\n");
-        return FALSE;
+
+        goto Exit;
     }
 
     if (!BooleanFlagOn(AVrfProperties.EnableFaultMask, FaultType))
@@ -548,32 +564,33 @@ BOOLEAN AVrfShouldFaultInject(
         //
         // Fault type is not enabled.
         //
-        return FALSE;
+        goto Exit;
     }
 
     if (!VerifierShouldFaultInject(AVrfpFaultTypeClass(FaultType), CallerAddress))
     {
-        return FALSE;
+        goto Exit;
     }
 
     if (!AVrfpFaultDelayInitOnce())
     {
-        return FALSE;
+        goto Exit;
     }
 
     if (AVrfInDelayLoadDll(CallerAddress))
     {
-        return FALSE;
+        goto Exit;
     }
 
     if (!AVrfIsCallerIncluded(FaultType, CallerAddress))
     {
-        return FALSE;
+        goto Exit;
     }
 
     count = RtlCaptureStackBackTrace(1, ARRAYSIZE(frames), frames, &hash);
 
     RtlEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
+    releaseLock = TRUE;
 
     if (AVrfProperties.DynamicFaultPeroid)
     {
@@ -595,7 +612,6 @@ BOOLEAN AVrfShouldFaultInject(
         // Do not fault inject if we've back in this routine. This can happen
         // while we're resolving symbols.
         //
-        result = FALSE;
         goto Exit;
     }
 
@@ -611,7 +627,6 @@ BOOLEAN AVrfShouldFaultInject(
 
         if (stackEntry->Excluded)
         {
-            result = FALSE;
             goto Exit;
         }
 
@@ -625,7 +640,6 @@ BOOLEAN AVrfShouldFaultInject(
         //
         // We've already injected a fault for this stack and fault type.
         //
-        result = FALSE;
         goto Exit;
     }
 
@@ -642,7 +656,6 @@ BOOLEAN AVrfShouldFaultInject(
                    DPFLTR_ERROR_LEVEL,
                    "AVRF: failed to insert new stack entry!\n");
 
-        result = FALSE;
         goto Exit;
     }
 
@@ -676,7 +689,6 @@ BOOLEAN AVrfShouldFaultInject(
     // preallocated buffer that will satisfy the maximum possible length of
     // a UNICODE_STRING.
     //
-    UNICODE_STRING stackSymbols;
     stackSymbols.Length = 0;
     stackSymbols.MaximumLength = sizeof(AVrfpFaultContext.StackSymbolBuffer);
     stackSymbols.Buffer = AVrfpFaultContext.StackSymbolBuffer;
@@ -747,7 +759,6 @@ BOOLEAN AVrfShouldFaultInject(
 
             AVrfRemoveStackEntry(&AVrfpFaultContext.StackTable, stackEntry);
 
-            result = FALSE;
             goto Exit;
         }
         if (ldrDisp != LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED)
@@ -758,7 +769,6 @@ BOOLEAN AVrfShouldFaultInject(
 
             AVrfRemoveStackEntry(&AVrfpFaultContext.StackTable, stackEntry);
 
-            result = FALSE;
             goto Exit;
         }
 
@@ -875,7 +885,6 @@ BOOLEAN AVrfShouldFaultInject(
             // Cache the decision for this stack hash.
             //
             stackEntry->Excluded = TRUE;
-            result = FALSE;
             goto Exit;
         }
     }
@@ -888,7 +897,13 @@ BOOLEAN AVrfShouldFaultInject(
 
 Exit:
 
-    RtlLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
+    if (releaseLock)
+    {
+        RtlLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
+    }
+
+    NtCurrentTeb()->LastErrorValue = lastErrorValue;
+    NtCurrentTeb()->LastStatusValue = lastStatusValue;
 
     return result;
 }
