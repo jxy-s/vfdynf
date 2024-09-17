@@ -610,6 +610,19 @@ BOOLEAN AVrfShouldFaultInject(
     AVrfEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
     releaseLock = TRUE;
 
+    if (AVrfpFaultContext.CriticalSection.RecursionCount > 1)
+    {
+        //
+        // Do not fault inject if we're back in this routine. This can happen
+        // while we're resolving symbols.
+        //
+        // N.B. It is important to check this before potentially resetting
+        // the table based on fault period below. Else the caller that landed
+        // us back here would have the table reset out from underneath it.
+        //
+        goto Exit;
+    }
+
     if (AVrfProperties.DynamicFaultPeroid)
     {
         if (!AVrfpFaultContext.LastClear)
@@ -622,15 +635,6 @@ BOOLEAN AVrfShouldFaultInject(
             AVrfpFaultContext.LastClear = NtGetTickCount64();
             AVrfClearStackTable(&AVrfpFaultContext.StackTable);
         }
-    }
-
-    if (AVrfpFaultContext.CriticalSection.RecursionCount > 1)
-    {
-        //
-        // Do not fault inject if we've back in this routine. This can happen
-        // while we're resolving symbols.
-        //
-        goto Exit;
     }
 
     stackEntry = AVrfLookupStackEntry(&AVrfpFaultContext.StackTable, hash);
