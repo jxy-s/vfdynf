@@ -55,6 +55,60 @@
 #define AVRF_ASSERT(_exp) ((void)0)
 #endif
 
+FORCEINLINE
+VOID
+AVrfInitializeCriticalSection(
+    _Out_ PRTL_CRITICAL_SECTION CriticalSection
+    )
+{
+    NTSTATUS status;
+
+    status = RtlInitializeCriticalSection(CriticalSection);
+
+    AVRF_ASSERT(NT_SUCCESS(status));
+}
+
+FORCEINLINE
+VOID
+AVrfDeleteCriticalSection(
+    _Inout_ PRTL_CRITICAL_SECTION CriticalSection
+    )
+{
+    NTSTATUS status;
+
+    status = RtlDeleteCriticalSection(CriticalSection);
+
+    AVRF_ASSERT(NT_SUCCESS(status));
+}
+
+_Acquires_exclusive_lock_(*CriticalSection)
+FORCEINLINE
+VOID
+AVrfEnterCriticalSection(
+    _Inout_ PRTL_CRITICAL_SECTION CriticalSection
+    )
+{
+    NTSTATUS status;
+
+    status = RtlEnterCriticalSection(CriticalSection);
+
+    AVRF_ASSERT(NT_SUCCESS(status));
+}
+
+_Releases_exclusive_lock_(*CriticalSection)
+FORCEINLINE
+VOID
+AVrfLeaveCriticalSection(
+    _Inout_ PRTL_CRITICAL_SECTION CriticalSection
+    )
+{
+    NTSTATUS status;
+
+    status = RtlLeaveCriticalSection(CriticalSection);
+
+    AVRF_ASSERT(NT_SUCCESS(status));
+}
+
 #define VFDYNF_FAULT_TYPE_WAIT            0x00000001ul
 #define VFDYNF_FAULT_TYPE_HEAP            0x00000002ul
 #define VFDYNF_FAULT_TYPE_VMEM            0x00000004ul

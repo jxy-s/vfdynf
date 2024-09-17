@@ -569,7 +569,6 @@ PVOID AVrfFuzzMemoryMapping(
     _In_ SIZE_T RegionSize
     )
 {
-    NTSTATUS status;
     PVOID baseAddress;
     PVFDYNF_FUZZ_MMAP_ENTRY entry;
 
@@ -584,9 +583,7 @@ PVOID AVrfFuzzMemoryMapping(
         return BaseAddress;
     }
 
-    status = RtlEnterCriticalSection(&AVrfpFuzzContext.CriticalSection);
-
-    AVRF_ASSERT(NT_SUCCESS(status));
+    AVrfEnterCriticalSection(&AVrfpFuzzContext.CriticalSection);
 
     if (AVrfpFuzzContext.MMapEntryCount < VFDYNF_FUZZ_MMAP_COUNT)
     {
@@ -620,7 +617,7 @@ PVOID AVrfFuzzMemoryMapping(
         baseAddress = BaseAddress;
     }
 
-    RtlLeaveCriticalSection(&AVrfpFuzzContext.CriticalSection);
+    AVrfLeaveCriticalSection(&AVrfpFuzzContext.CriticalSection);
 
     return baseAddress;
 }
@@ -629,14 +626,11 @@ PVOID AVrfForgetFuzzedMemoryMapping(
     _In_ PVOID BaseAddress
     )
 {
-    NTSTATUS status;
     PVOID baseAddress;
 
     baseAddress = BaseAddress;
 
-    status = RtlEnterCriticalSection(&AVrfpFuzzContext.CriticalSection);
-
-    AVRF_ASSERT(NT_SUCCESS(status));
+    AVrfEnterCriticalSection(&AVrfpFuzzContext.CriticalSection);
 
     for (ULONG i = 0; i < AVrfpFuzzContext.MMapEntryCount; i++)
     {
@@ -663,7 +657,7 @@ PVOID AVrfForgetFuzzedMemoryMapping(
         break;
     }
 
-    RtlLeaveCriticalSection(&AVrfpFuzzContext.CriticalSection);
+    AVrfLeaveCriticalSection(&AVrfpFuzzContext.CriticalSection);
 
     return baseAddress;
 }
@@ -672,13 +666,7 @@ BOOLEAN AVrfFuzzProcessAttach(
     VOID
     )
 {
-    NTSTATUS status;
-
-    status = RtlInitializeCriticalSection(&AVrfpFuzzContext.CriticalSection);
-    if (!NT_SUCCESS(status))
-    {
-        return FALSE;
-    }
+    AVrfInitializeCriticalSection(&AVrfpFuzzContext.CriticalSection);
 
     AVrfpFuzzContext.Initialized = TRUE;
 
@@ -694,7 +682,7 @@ VOID AVrfFuzzProcessDetach(
         return;
     }
 
-    RtlDeleteCriticalSection(&AVrfpFuzzContext.CriticalSection);
+    AVrfDeleteCriticalSection(&AVrfpFuzzContext.CriticalSection);
 
     AVrfpFuzzContext.Initialized = FALSE;
 }

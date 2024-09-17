@@ -509,7 +509,7 @@ VOID AVrfDisableCurrentThreadFaultInjection(
     VOID
     )
 {
-    RtlEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
+    AVrfEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
 }
 
 VOID AVrfEnableCurrentThreadFaultInjection(
@@ -521,7 +521,7 @@ VOID AVrfEnableCurrentThreadFaultInjection(
     // where we don't want it with the critical section, so hijack it instead.
     //
 #pragma prefast(suppress : 26110)
-    RtlLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
+    AVrfLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
 }
 
 BOOLEAN AVrfShouldFaultInject(
@@ -607,7 +607,7 @@ BOOLEAN AVrfShouldFaultInject(
 
     count = RtlCaptureStackBackTrace(1, ARRAYSIZE(frames), frames, &hash);
 
-    RtlEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
+    AVrfEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
     releaseLock = TRUE;
 
     if (AVrfProperties.DynamicFaultPeroid)
@@ -917,7 +917,7 @@ Exit:
 
     if (releaseLock)
     {
-        RtlLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
+        AVrfLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
     }
 
     if (faultCount)
@@ -955,7 +955,6 @@ BOOLEAN AVrfFaultProcessAttach(
     VOID
     )
 {
-    NTSTATUS status;
     ULONG err;
 
     if (AVrfpFaultContext.Initialized)
@@ -1059,16 +1058,7 @@ BOOLEAN AVrfFaultProcessAttach(
         VerifierSetFaultInjectionSeed(AVrfProperties.FaultSeed);
     }
 
-    status = RtlInitializeCriticalSection(&AVrfpFaultContext.CriticalSection);
-    if (!NT_SUCCESS(status))
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to initialize critical section (0x%08x)\n",
-                   status);
-        __debugbreak();
-        return FALSE;
-    }
+    AVrfInitializeCriticalSection(&AVrfpFaultContext.CriticalSection);
 
     DbgPrintEx(DPFLTR_VERIFIER_ID,
                DPFLTR_INFO_LEVEL,
@@ -1089,7 +1079,7 @@ VOID AVrfFaultProcessDetach(
 
     AVrfpFaultContext.Initialized = FALSE;
 
-    RtlDeleteCriticalSection(&AVrfpFaultContext.CriticalSection);
+    AVrfDeleteCriticalSection(&AVrfpFaultContext.CriticalSection);
 
     if (AVrfpFaultContext.Exclusions.Regex)
     {

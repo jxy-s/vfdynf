@@ -58,7 +58,7 @@ VOID AVrfGuardToConvertToInPageError(
         return;
     }
 
-    status = RtlEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
+    AVrfEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
 
     AVRF_ASSERT(NT_SUCCESS(status));
 
@@ -79,21 +79,18 @@ VOID AVrfGuardToConvertToInPageError(
         __debugbreak();
     }
 
-    RtlLeaveCriticalSection(&AVrfpExceptContext.CriticalSection);
+    AVrfLeaveCriticalSection(&AVrfpExceptContext.CriticalSection);
 }
 
 BOOLEAN AVrfpIsGuardedAddress(
     _In_ PVOID Address
     )
 {
-    NTSTATUS status;
     BOOLEAN result;
 
     result = FALSE;
 
-    status = RtlEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
-
-    AVRF_ASSERT(NT_SUCCESS(status));
+    AVrfEnterCriticalSection(&AVrfpExceptContext.CriticalSection);
 
     for (ULONG i = 0; i < AVrfpExceptContext.GuardEntryCount; i++)
     {
@@ -123,7 +120,7 @@ BOOLEAN AVrfpIsGuardedAddress(
         //
     }
 
-    RtlLeaveCriticalSection(&AVrfpExceptContext.CriticalSection);
+    AVrfLeaveCriticalSection(&AVrfpExceptContext.CriticalSection);
 
     return result;
 }
@@ -158,25 +155,19 @@ BOOLEAN AVrfExceptProcessAttach(
     VOID
     )
 {
-    NTSTATUS status;
-
     if (AVrfpExceptContext.Handle)
     {
         return TRUE;
     }
 
-    status = RtlInitializeCriticalSection(&AVrfpExceptContext.CriticalSection);
-    if (!NT_SUCCESS(status))
-    {
-        return FALSE;
-    }
+    AVrfInitializeCriticalSection(&AVrfpExceptContext.CriticalSection);
 
     AVrfpExceptContext.Handle =
         RtlAddVectoredExceptionHandler(ULONG_MAX, AVrfpVectoredExceptionHandler);
 
     if (!AVrfpExceptContext.Handle)
     {
-        RtlDeleteCriticalSection(&AVrfpExceptContext.CriticalSection);
+        AVrfDeleteCriticalSection(&AVrfpExceptContext.CriticalSection);
 
         return FALSE;
     }
@@ -195,7 +186,7 @@ VOID AVrfExceptProcessDetach(
 
     RtlRemoveVectoredExceptionHandler(AVrfpExceptContext.Handle);
 
-    RtlDeleteCriticalSection(&AVrfpExceptContext.CriticalSection);
+    AVrfDeleteCriticalSection(&AVrfpExceptContext.CriticalSection);
 
     AVrfpExceptContext.Handle = NULL;
 }
