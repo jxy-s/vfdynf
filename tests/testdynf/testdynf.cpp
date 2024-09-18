@@ -5,6 +5,19 @@
 #include <iostream>
 #include <assert.h>
 
+#define LogPrintID(format, ...)                                               \
+    printf("[%04x:%04x %04x] " format "\n",                                   \
+           (USHORT)GetCurrentProcessId(),                                     \
+           (USHORT)GetCurrentThreadId(),                                      \
+           (USHORT)Id,                                                        \
+           __VA_ARGS__)
+
+#define LogPrint(format, ...)                                                 \
+    printf("[%04x:%04x     ] " format "\n",                                   \
+           (USHORT)GetCurrentProcessId(),                                     \
+           (USHORT)GetCurrentThreadId(),                                      \
+           __VA_ARGS__)
+
 void DoStlTest(uint32_t Id)
 {
     std::string stuff;
@@ -50,7 +63,7 @@ void DoStlTest(uint32_t Id)
     }
     catch (const std::bad_alloc&)
     {
-        printf("[%lu] caught allocation failure\n", Id);
+        LogPrintID("caught allocation failure");
     }
 }
 
@@ -66,7 +79,7 @@ void DoHeapExceptionTest(uint32_t Id)
     }
     __except (EXCEPTION_EXECUTE_HANDLER)
     {
-        printf("[%lu] caught heap allocate exception\n", Id);
+        LogPrintID("caught heap allocate exception");
         memory = NULL;
     }
 
@@ -105,7 +118,7 @@ void DoInPageTestDataFile(uint32_t Id)
                        NULL);
     if (file == INVALID_HANDLE_VALUE)
     {
-        printf("[%lu] failed to open data file\n", Id);
+        LogPrintID("failed to open data file");
         goto Exit;
     }
 
@@ -117,14 +130,14 @@ void DoInPageTestDataFile(uint32_t Id)
                                  NULL);
     if (!section)
     {
-        printf("[%lu] failed to create data section\n", Id);
+        LogPrintID("failed to create data section");
         goto Exit;
     }
 
     address = MapViewOfFile(section, FILE_MAP_READ, 0, 0, 0);
     if (!address)
     {
-        printf("[%lu] failed to map data section\n", Id);
+        LogPrintID("failed to map data section");
         goto Exit;
     }
 
@@ -134,12 +147,12 @@ void DoInPageTestDataFile(uint32_t Id)
 
         if (*(PUSHORT)buffer != IMAGE_DOS_SIGNATURE)
         {
-            printf("[%lu] caught mmap fuzz for data file\n", Id);
+            LogPrintID("caught mmap fuzz for data file");
         }
     }
     __except (InPageExceptionFilter(GetExceptionInformation()))
     {
-        printf("[%lu] caught in-page failure for data file\n", Id);
+        LogPrintID("caught in-page failure for data file");
     }
 
 Exit:
@@ -179,7 +192,7 @@ void DoInPageTestImageFile(uint32_t Id)
                        NULL);
     if (file == INVALID_HANDLE_VALUE)
     {
-        printf("[%lu] failed to open image file\n", Id);
+        LogPrintID("failed to open image file");
         goto Exit;
     }
 
@@ -191,14 +204,14 @@ void DoInPageTestImageFile(uint32_t Id)
                                  NULL);
     if (!section)
     {
-        printf("[%lu] failed to create image section\n", Id);
+        LogPrintID("failed to create image section");
         goto Exit;
     }
 
     address = MapViewOfFile(section, FILE_MAP_READ, 0, 0, 0);
     if (!address)
     {
-        printf("[%lu] failed to map image section\n", Id);
+        LogPrintID("failed to map image section");
         goto Exit;
     }
 
@@ -211,7 +224,7 @@ void DoInPageTestImageFile(uint32_t Id)
             //
             // N.B. we choose not to inject fuzzing for image files
             //
-            printf("[%lu] FAILURE, caught mmap fuzz for image file\n", Id);
+            LogPrintID("FAILURE, caught mmap fuzz for image file");
             DebugBreak();
         }
     }
@@ -220,7 +233,7 @@ void DoInPageTestImageFile(uint32_t Id)
         //
         // N.B. we choose to not inject in-page errors for image files
         //
-        printf("[%lu] FAILURE, caught in-page failure for image file\n", Id);
+        LogPrintID("FAILURE, caught in-page failure for image file");
         DebugBreak();
     }
 
@@ -262,7 +275,7 @@ void DoInPageTestImageFileNoExecute(uint32_t Id)
                        NULL);
     if (file == INVALID_HANDLE_VALUE)
     {
-        printf("[%lu] failed to open image (no execute) file\n", Id);
+        LogPrintID("failed to open image (no execute) file");
         goto Exit;
     }
 
@@ -274,14 +287,14 @@ void DoInPageTestImageFileNoExecute(uint32_t Id)
                                  NULL);
     if (!section)
     {
-        printf("[%lu] failed to create image (no execute) section\n", Id);
+        LogPrintID("failed to create image (no execute) section");
         goto Exit;
     }
 
     address = MapViewOfFile(section, FILE_MAP_READ, 0, 0, 0);
     if (!address)
     {
-        printf("[%lu] failed to map image (no execute) section\n", Id);
+        LogPrintID("failed to map image (no execute) section");
         goto Exit;
     }
 
@@ -291,12 +304,12 @@ void DoInPageTestImageFileNoExecute(uint32_t Id)
 
         if (*(PUSHORT)buffer != IMAGE_DOS_SIGNATURE)
         {
-            printf("[%lu] caught mmap fuzz for image (no execute) file\n", Id);
+            LogPrintID("caught mmap fuzz for image (no execute) file");
         }
     }
     __except (InPageExceptionFilter(GetExceptionInformation()))
     {
-        printf("[%lu] caught in-page failure for image (no execute) file\n", Id);
+        LogPrintID("caught in-page failure for image (no execute) file");
     }
 
 Exit:
@@ -334,14 +347,14 @@ void DoInPageTestPagingFile(uint32_t Id)
                                  L"TestVFDYNFSection");
     if (!section)
     {
-        printf("[%lu] failed to create paging file section\n", Id);
+        LogPrintID("failed to create paging file section");
         goto Exit;
     }
 
     address = MapViewOfFile(section, FILE_MAP_READ | FILE_MAP_WRITE, 0, 0, 0);
     if (!address)
     {
-        printf("[%lu] failed to map paging file section\n", Id);
+        LogPrintID("failed to map paging file section");
         goto Exit;
     }
 
@@ -354,7 +367,7 @@ void DoInPageTestPagingFile(uint32_t Id)
         //
         // N.B. we should not inject in-page failures for paging file mappings
         //
-        printf("[%lu] FAILURE, caught in-page failure for paging file\n", Id);
+        LogPrintID("FAILURE, caught in-page failure for paging file");
         DebugBreak();
     }
 
@@ -390,29 +403,29 @@ void DoReadFileTest(uint32_t Id)
                        NULL);
     if (file == INVALID_HANDLE_VALUE)
     {
-        printf("[%lu] failed to open data file\n", Id);
+        LogPrintID("failed to open data file");
         goto Exit;
     }
 
     ULONG bytesRead;
     if (!ReadFile(file, buffer, sizeof(buffer), &bytesRead, NULL))
     {
-        printf("[%lu] failed to read file\n", Id);
+        LogPrintID("failed to read file");
         goto Exit;
     }
 
     if (bytesRead != sizeof(buffer))
     {
-        printf("[%lu] failed to read all requested bytes\n", Id);
+        LogPrintID("failed to read all requested bytes");
     }
 
     if (bytesRead < sizeof(IMAGE_DOS_SIGNATURE))
     {
-        printf("[%lu] failed to read enough data\n", Id);
+        LogPrintID("failed to read enough data");
     }
     else if (*(PUSHORT)buffer != IMAGE_DOS_SIGNATURE)
     {
-        printf("[%lu] caught file read fuzzing\n", Id);
+        LogPrintID("caught file read fuzzing");
     }
 
 Exit:
@@ -440,7 +453,7 @@ void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG Data
     }
     else
     {
-        printf("[%lu] failed to create registry key\n", Id);
+        LogPrintID("failed to create registry key");
     }
 
     status = RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -450,7 +463,7 @@ void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG Data
                            &key);
     if (status != ERROR_SUCCESS)
     {
-        printf("[%lu] failed to open registry key\n", Id);
+        LogPrintID("failed to open registry key");
         key = NULL;
         goto Exit;
     }
@@ -466,16 +479,16 @@ void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG Data
     {
         if (dataSize != DataSize)
         {
-            printf("[%lu] caught registry size fuzzing\n", Id);
+            LogPrintID("caught registry size fuzzing");
         }
         else if (memcmp(buffer, Data, DataSize))
         {
-            printf("[%lu] caught registry data fuzzing\n", Id);
+            LogPrintID("caught registry data fuzzing");
         }
     }
     else
     {
-        printf("[%lu] failed to query registry key\n", Id);
+        LogPrintID("failed to query registry key");
     }
 
     status = RegSetValueExW(key,
@@ -486,7 +499,7 @@ void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG Data
                             DataSize);
     if (status != ERROR_SUCCESS)
     {
-        printf("[%lu] failed to set registry key\n", Id);
+        LogPrintID("failed to set registry key");
     }
 
 Exit:
@@ -495,6 +508,20 @@ Exit:
     {
         RegCloseKey(key);
     }
+}
+
+void LoadUnloadLibraryTest(uint32_t Id)
+{
+    HMODULE module;
+
+    module = LoadLibraryW(L"cfgmgr32.dll");
+    if (!module)
+    {
+        LogPrintID("failed to load library");
+        return;
+    }
+
+    FreeLibrary(module);
 }
 
 void DoInPageTest(uint32_t Id)
@@ -516,6 +543,7 @@ void DoTest(uint32_t Id)
     DoReadFileTest(Id);
     DoRegTest(Id, L"TestDWORD", REG_DWORD, &RegDword, sizeof(ULONG));
     DoRegTest(Id, L"TestString", REG_SZ, (PVOID)RegString, sizeof(RegString));
+    LoadUnloadLibraryTest(Id);
 }
 
 #define RECURSE_TEST(x)                                                       \
@@ -540,6 +568,7 @@ RECURSE_TEST(7);
 RECURSE_TEST(8);
 RECURSE_TEST(9);
 
+#define CONCURRENCY              3
 #define LOOP_LIMIT               10
 #define ENABLE_TEST_TYPE_DEFAULT 1
 #define ENABLE_TEST_TYPE_RECURSE 1
@@ -547,29 +576,33 @@ RECURSE_TEST(9);
 
 #define DO_RECURSE_TEST(x) DoTestRecurse##x(i, i + (LOOP_LIMIT * x))
 
-void DoTestDefault()
+DWORD WINAPI DoTestDefaultWorker(PVOID Context)
 {
-    puts("----DEFAULT-------------------------------------------------------");
+    LogPrint("----DEFAULT-------------------------------------------------------");
     for (uint32_t i = 0; i < LOOP_LIMIT; i++)
     {
         DoTest(i);
     }
-    puts("------------------------------------------------------------------");
+    LogPrint("------------------------------------------------------------------");
+
+    return 0;
 }
 
-void DoTestRecurse()
+DWORD WINAPI DoTestRecurseWorker(PVOID Context)
 {
-    puts("----RECURSE-------------------------------------------------------");
+    LogPrint("----RECURSE-------------------------------------------------------");
     for (uint32_t i = 0; i < LOOP_LIMIT; i++)
     {
         DO_RECURSE_TEST(0);
     }
-    puts("------------------------------------------------------------------");
+    LogPrint("------------------------------------------------------------------");
+
+    return 0;
 }
 
-void DoTestStress()
+DWORD WINAPI DoTestStressWorker(PVOID Context)
 {
-    puts("----STRESS--------------------------------------------------------");
+    LogPrint("----STRESS--------------------------------------------------------");
     for (uint32_t i = 0; i < LOOP_LIMIT; i++)
     {
         DO_RECURSE_TEST(0);
@@ -583,7 +616,62 @@ void DoTestStress()
         DO_RECURSE_TEST(8);
         DO_RECURSE_TEST(9);
     }
-    puts("------------------------------------------------------------------");
+    LogPrint("------------------------------------------------------------------");
+
+    return 0;
+}
+
+void DoWork(PTHREAD_START_ROUTINE Routine)
+{
+    ULONG count;
+    HANDLE threads[CONCURRENCY];
+
+    for (ULONG i = 0; i < CONCURRENCY; i++)
+    {
+        threads[i] = CreateThread(NULL, 0, Routine, NULL, 0, NULL);
+        if (!threads[i])
+        {
+            LogPrint("failed to create thread");
+        }
+    }
+
+    count = 0;
+
+    for (ULONG i = 0; i < CONCURRENCY; i++)
+    {
+        if (threads[i])
+        {
+            count++;
+        }
+        else
+        {
+            memmove(&threads[i],
+                    &threads[i + 1],
+                    (CONCURRENCY - (i + 1)) * sizeof(HANDLE));
+        }
+    }
+
+    WaitForMultipleObjects(count, threads, TRUE, INFINITE);
+
+    for (ULONG i = 0; i < count; i++)
+    {
+        CloseHandle(threads[i]);
+    }
+}
+
+void DoTestDefault()
+{
+    DoWork(DoTestDefaultWorker);
+}
+
+void DoTestRecurse()
+{
+    DoWork(DoTestRecurseWorker);
+}
+
+void DoTestStress()
+{
+    DoWork(DoTestStressWorker);
 }
 
 int main(int argc, const char* argv[])
