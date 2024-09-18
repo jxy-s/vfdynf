@@ -109,6 +109,25 @@ AVrfLeaveCriticalSection(
     AVRF_ASSERT(NT_SUCCESS(status));
 }
 
+FORCEINLINE
+VOID
+WriteReleaseBoolean(
+    _Out_ _Interlocked_operand_ BOOLEAN volatile* Destination,
+    _In_ BOOLEAN Value
+    )
+{
+    WriteRelease8((CHAR volatile*)Destination, (CHAR)Value);
+}
+
+FORCEINLINE
+BOOLEAN
+ReadAcquireBoolean(
+    _In_ _Interlocked_operand_ BOOLEAN const volatile *Source
+    )
+{
+    return (BOOLEAN)ReadAcquire8((CHAR const volatile*)Source);
+}
+
 #define VFDYNF_FAULT_TYPE_WAIT            0x00000001ul
 #define VFDYNF_FAULT_TYPE_HEAP            0x00000002ul
 #define VFDYNF_FAULT_TYPE_VMEM            0x00000004ul
