@@ -547,6 +547,9 @@ VOID NTAPI AVrfpDllLoadCallback(
     _In_ PVOID Reserved
     )
 {
+    //
+    // N.B. This routine is NOT called with the loader lock held.
+    //
     UNREFERENCED_PARAMETER(DllName);
     UNREFERENCED_PARAMETER(DllBase);
     UNREFERENCED_PARAMETER(DllSize);
@@ -562,6 +565,9 @@ VOID NTAPI AVrfpDllUnlodCallback(
     _In_ PVOID Reserved
     )
 {
+    //
+    // N.B. This routine is called with the loader lock held.
+    //
     UNREFERENCED_PARAMETER(DllName);
     UNREFERENCED_PARAMETER(DllBase);
     UNREFERENCED_PARAMETER(DllSize);
