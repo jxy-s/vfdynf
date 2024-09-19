@@ -73,9 +73,8 @@ VOID AVrfGuardToConvertToInPageError(
     }
     else
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: out of guard page slots!");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "out of guard page slots");
+
         __debugbreak();
     }
 

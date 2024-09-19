@@ -133,10 +133,10 @@ BOOLEAN NTAPI AVrfpFuzzRunOnceRoutine(
 
     if (!NT_SUCCESS(status))
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to initialize fuzz vector (0x%08x)\n",
-                   status);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "failed to initialize fuzz vector (0x%08x)",
+                     status);
+
         __debugbreak();
         return FALSE;
     }
@@ -607,9 +607,7 @@ PVOID AVrfFuzzMemoryMapping(
     }
     else
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: out of fuzzing mmap slots!");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "out of fuzzing mmap slots");
         __debugbreak();
 
         RtlFreeHeap(RtlProcessHeap(), 0, baseAddress);

@@ -178,34 +178,30 @@ BOOL CALLBACK AVrfpSymRegsteredSymbolCallback(
     {
         case CBA_DEFERRED_SYMBOL_LOAD_COMPLETE:
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_INFO_LEVEL,
-                       "AVRF: loaded symbols %ls\n",
-                       info->FileName);
+            AVrfDbgPrint(DPFLTR_INFO_LEVEL,
+                         "loaded symbols %ls",
+                         info->FileName);
             break;
         }
         case CBA_DEFERRED_SYMBOL_LOAD_FAILURE:
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to loaded symbols %ls\n",
-                       info->FileName);
+            AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                         "failed to loaded symbols %ls",
+                         info->FileName);
             break;
         }
         case CBA_DEFERRED_SYMBOL_LOAD_PARTIAL:
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_WARNING_LEVEL,
-                       "AVRF: partially loaded symbols %ls\n",
-                       info->FileName);
+            AVrfDbgPrint(DPFLTR_WARNING_LEVEL,
+                         "partially loaded symbols %ls",
+                         info->FileName);
             break;
         }
         case CBA_SYMBOLS_UNLOADED:
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_INFO_LEVEL,
-                       "AVRF: unloaded symbols %ls\n",
-                       info->FileName);
+            AVrfDbgPrint(DPFLTR_INFO_LEVEL,
+                         "unloaded symbols %ls",
+                         info->FileName);
             break;
         }
         default:
@@ -232,10 +228,9 @@ BOOLEAN NTAPI AVrfpSymRunOnceRoutine(
     {
         if (!Delay_SymInitializeW(NtCurrentProcess(), NULL, FALSE))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to initialize symbols (%lu)\n",
-                       NtCurrentTeb()->LastErrorValue);
+            AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                         "failed to initialize symbols (%lu)",
+                         NtCurrentTeb()->LastErrorValue);
 
             result = FALSE;
             goto Exit;
@@ -247,10 +242,9 @@ BOOLEAN NTAPI AVrfpSymRunOnceRoutine(
                                   AVrfProperties.SymbolSearchPath,
                                   FALSE))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to initialize symbols (%lu)\n",
-                       NtCurrentTeb()->LastErrorValue);
+            AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                         "failed to initialize symbols (%lu)",
+                         NtCurrentTeb()->LastErrorValue);
 
             result = FALSE;
             goto Exit;
@@ -396,10 +390,9 @@ NTSTATUS AVrfpSymResolveSymbols(
         status = RtlAppendUnicodeStringToString(&Sym->StackSymbols, &symbol);
         if (!NT_SUCCESS(status))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_WARNING_LEVEL,
-                       "AVRF: failed to append symbol to stack string (0x%08x)!\n",
-                       status);
+            AVrfDbgPrint(DPFLTR_WARNING_LEVEL,
+                         "failed to append symbol to stack string (0x%08x)",
+                         status);
 
             status = STATUS_SUCCESS;
             goto Exit;
@@ -408,10 +401,9 @@ NTSTATUS AVrfpSymResolveSymbols(
         status = RtlAppendUnicodeToString(&Sym->StackSymbols, L"\n");
         if (!NT_SUCCESS(status))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_WARNING_LEVEL,
-                       "AVRF: failed to append new line to stack string (0x%08x)!\n",
-                       status);
+            AVrfDbgPrint(DPFLTR_WARNING_LEVEL,
+                         "failed to append new line to stack string (0x%08x)",
+                         status);
 
             status = STATUS_SUCCESS;
             goto Exit;
@@ -474,10 +466,7 @@ NTSTATUS AVrfpSymDllLoad(
 
     if (!AVrfEnumLoadedModules(AVrfpSymDllLoadModuleCallback, &context))
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to locate %ls\n",
-                   Sym->DllName);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL, "failed to locate %ls", Sym->DllName);
 
         return STATUS_NOT_FOUND;
     }
@@ -496,11 +485,10 @@ NTSTATUS AVrfpSymDllLoad(
                                 0) &&
         NtCurrentTeb()->LastErrorValue)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: SymLoadModuleExW failed %ls (%lu)\n",
-                   Sym->DllName,
-                   NtCurrentTeb()->LastErrorValue);
+        AVrfDbgPrint(DPFLTR_WARNING_LEVEL,
+                     "SymLoadModuleExW failed %ls (%lu)",
+                     Sym->DllName,
+                     NtCurrentTeb()->LastErrorValue);
     }
 
     AVrfLeaveCriticalSection(&AVrfpSymContext.CriticalSection);
@@ -749,10 +737,9 @@ BOOLEAN AVrfSymProcessAttach(
                            FALSE);
     if (!NT_SUCCESS(status))
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to create symbol provider event (0x%08x)\n",
-                   status);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "failed to create symbol provider event (0x%08x)",
+                     status);
 
         return FALSE;
     }
@@ -772,10 +759,9 @@ BOOLEAN AVrfSymProcessAttach(
         NtClose(AVrfpSymContext.WorkQueueEvent);
         AVrfpSymContext.WorkQueueEvent = NULL;
 
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to create symbol provider thread (0x%08x)\n",
-                   status);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "failed to create symbol provider thread (0x%08x)",
+                     status);
 
         return FALSE;
     }

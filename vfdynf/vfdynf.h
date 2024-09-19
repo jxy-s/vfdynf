@@ -49,6 +49,21 @@
 #define DPFLTR_VERIFIER_ID 93
 #endif DPFLTR_MASK
 
+#define AVrfDbgPrint(level, format, ...)                                      \
+DbgPrintEx(DPFLTR_VERIFIER_ID,                                                \
+           level,                                                             \
+           "AVRF [%04x:%04x]: " format "\n",                                  \
+           (USHORT)(ULONG_PTR)NtCurrentProcessId(),                           \
+           (USHORT)(ULONG_PTR)NtCurrentThreadId(),                            \
+           __VA_ARGS__)
+
+#define AVrfDbgPuts(level, string)                                            \
+DbgPrintEx(DPFLTR_VERIFIER_ID,                                                \
+           level,                                                             \
+           "AVRF [%04x:%04x]: " string "\n",                                  \
+           (USHORT)(ULONG_PTR)NtCurrentProcessId(),                           \
+           (USHORT)(ULONG_PTR)NtCurrentThreadId())
+
 #ifdef _DEBUG
 #define AVRF_ASSERT(_exp) _Analysis_assume_(_exp); if (!(_exp)) __debugbreak()
 #else

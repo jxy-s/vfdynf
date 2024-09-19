@@ -625,9 +625,8 @@ VOID AVrfpRefreshLoadedModuleList(
         module = RtlAllocateHeap(RtlProcessHeap(), 0, size);
         if (!module)
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to allocate module entry\n");
+            AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to allocate module entry");
+
             __debugbreak();
             continue;
         }
@@ -852,9 +851,9 @@ BOOLEAN AVrfpProviderProcessVerifier(
     desc = (PRTL_VERIFIER_PROVIDER_DESCRIPTOR*)Reserved;
     if (!desc)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: expected descriptor output parameter is null");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL,
+                    "expected descriptor output parameter is null");
+
         return FALSE;
     }
 
@@ -863,10 +862,10 @@ BOOLEAN AVrfpProviderProcessVerifier(
     status = VerifierRegisterProvider(Module, &AVrfpProviderDescriptor);
     if (!NT_SUCCESS(status))
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: provider registration failed (0x%08x)",
-                   status);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "provider registration failed (0x%08x)",
+                     status);
+
         return FALSE;
     }
 
@@ -885,10 +884,10 @@ BOOLEAN AVrfpProviderProcessAttach(
                                   0);
     if (err != ERROR_SUCCESS)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: layer registration failed (%lu)",
-                   err);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "layer registration failed (%lu)",
+                     err);
+
         return FALSE;
     }
 
@@ -906,54 +905,48 @@ BOOLEAN AVrfpProviderProcessAttach(
 
     if (!AVrfLinkHooks())
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to link hooks");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to link hooks");
+
         __debugbreak();
         return FALSE;
     }
 
     if (!AVrfSymProcessAttach())
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to setup symbol provider");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to setup symbol provider");
+
         __debugbreak();
         return FALSE;
     }
 
     if (!AVrfStopProcessAttach())
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to setup stop handling");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to setup stop handling");
+
         __debugbreak();
         return FALSE;
     }
 
     if (!AVrfFuzzProcessAttach())
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to setup fuzzing");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to setup fuzzing");
+
         __debugbreak();
         return FALSE;
     }
 
     if (!AVrfExceptProcessAttach())
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to set exception handler");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to set exception handler");
+
         __debugbreak();
         return FALSE;
     }
 
     if (!AVrfFaultProcessAttach())
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to setup fault injection");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to setup fault injection");
+
         __debugbreak();
         return FALSE;
     }

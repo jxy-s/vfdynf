@@ -90,11 +90,11 @@ BOOLEAN NTAPI AVrfpDelayLoad(
         status = LdrLoadDll(NULL, NULL, &dllEntry->DllName, &baseAddress);
         if (!NT_SUCCESS(status))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to delay load %wZ (0x%08x)\n",
-                       &dllEntry->DllName,
-                       status);
+            AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                         "failed to delay load %wZ (0x%08x)",
+                         &dllEntry->DllName,
+                         status);
+
             goto Exit;
         }
 
@@ -110,12 +110,12 @@ BOOLEAN NTAPI AVrfpDelayLoad(
                                             entry->Store);
             if (!NT_SUCCESS(status))
             {
-                DbgPrintEx(DPFLTR_VERIFIER_ID,
-                           DPFLTR_ERROR_LEVEL,
-                           "AVRF: failed to delay load %wZ!%wZ (0x%08x)\n",
-                           &dllEntry->DllName,
-                           &entry->ProcedureName,
-                           status);
+                AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                             "failed to delay load %wZ!%hZ (0x%08x)",
+                             &dllEntry->DllName,
+                             &entry->ProcedureName,
+                             status);
+
                 __debugbreak();
                 goto Exit;
             }

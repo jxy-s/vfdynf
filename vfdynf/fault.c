@@ -113,9 +113,8 @@ BOOLEAN AVrfpInitExclusionsRegexInternal(
                                        count * sizeof(PCRE2_HANDLE));
     if (!Exclusion->Regex)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to allocate exclusion regex!\n");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to allocate exclusion regex");
+
         __debugbreak();
         return FALSE;
     }
@@ -137,10 +136,10 @@ BOOLEAN AVrfpInitExclusionsRegexInternal(
         status = Pcre2Compile(&regex, &pattern);
         if (!NT_SUCCESS(status))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed processing regex! (0x%08x)\n",
-                       status);
+            AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                         "regex failed to compile (0x%08x)",
+                         status);
+
             __debugbreak();
             return FALSE;
         }
@@ -198,10 +197,10 @@ BOOLEAN AVrfpInitIncludeRegex(
         status = Pcre2Compile(&AVrfpFaultContext.IncludeRegex, &pattern);
         if (!NT_SUCCESS(status))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed processing regex! (0x%08x)\n",
-                       status);
+            AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                         "regex failed to compile (0x%08x)",
+                         status);
+
             __debugbreak();
             return FALSE;
         }
@@ -219,10 +218,10 @@ BOOLEAN AVrfpInitIncludeRegex(
         status = Pcre2Compile(&AVrfpFaultContext.TypeIncludeRegex[i], &pattern);
         if (!NT_SUCCESS(status))
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed processing regex! (0x%08x)\n",
-                       status);
+            AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                         "regex failed to compile (0x%08x)",
+                         status);
+
             __debugbreak();
             return FALSE;
         }
@@ -340,19 +339,11 @@ BOOLEAN AVrfIsCallerIncluded(
 
     if (!AVrfpFaultContext.Initialized)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: fault injection not yet initialized\n");
-
         return FALSE;
     }
 
     if (!CallerAddress)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: caller address is null\n");
-
         return FALSE;
     }
 
@@ -486,9 +477,7 @@ VOID AVrfpCacheFaultInjectResult(
                                           StackHash);
         if (!stackEntry)
         {
-            DbgPrintEx(DPFLTR_VERIFIER_ID,
-                       DPFLTR_ERROR_LEVEL,
-                       "AVRF: failed to insert new stack entry!\n");
+            AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to insert new stack entry");
 
             goto Exit;
         }
@@ -526,19 +515,11 @@ BOOLEAN AVrfShouldFaultInject(
 
     if (!AVrfpFaultContext.Initialized)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: fault injection not yet initialized\n");
-
         goto Exit;
     }
 
     if (!CallerAddress)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: caller address is null\n");
-
         goto Exit;
     }
 
@@ -609,10 +590,9 @@ BOOLEAN AVrfShouldFaultInject(
                                &AVrfpFaultContext.SymTimeout);
     if (status != STATUS_SUCCESS)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: AVrfSymGetSymbol failed (0x%08x)\n",
-                   status);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "AVrfSymGetSymbol failed (0x%08x)",
+                     status);
 
         goto Exit;
     }
@@ -677,9 +657,9 @@ BOOLEAN AVrfFaultProcessAttach(
 
     if (!AVrfpInitRegex())
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to initialized exclusions regex!\n");
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL,
+                    "failed to initialize exclusions regex");
+
         __debugbreak();
         return FALSE;
     }
@@ -688,10 +668,10 @@ BOOLEAN AVrfFaultProcessAttach(
                                               &AVrfpFaultContext.TypeBase);
     if (err != ERROR_SUCCESS)
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed to register fault injection provider (%lu)\n",
-                   err);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "failed to register fault injection provider (%lu)",
+                     err);
+
         return FALSE;
     }
 
@@ -757,10 +737,9 @@ BOOLEAN AVrfFaultProcessAttach(
         seed = HandleToULong(NtCurrentThreadId()) ^ NtGetTickCount();
         rand = RtlRandomEx(&seed);
 
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_INFO_LEVEL,
-                   "AVRF: generated and using random fault injection seed %lu\n",
-                   rand);
+        AVrfDbgPrint(DPFLTR_INFO_LEVEL,
+                     "generated and using random fault injection seed %lu",
+                     rand);
 
         VerifierSetFaultInjectionSeed(rand);
     }
@@ -771,9 +750,7 @@ BOOLEAN AVrfFaultProcessAttach(
 
     AVrfInitializeCriticalSection(&AVrfpFaultContext.CriticalSection);
 
-    DbgPrintEx(DPFLTR_VERIFIER_ID,
-               DPFLTR_INFO_LEVEL,
-               "AVRF: dynamic fault injection initialized\n");
+    AVrfDbgPuts(DPFLTR_INFO_LEVEL, "dynamic fault injection initialized");
 
     AVrfpFaultContext.Initialized = TRUE;
     return TRUE;

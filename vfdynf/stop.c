@@ -78,10 +78,10 @@ BOOLEAN AVrfStopProcessAttach(
     status = Pcre2Compile(&AVrfpStopRegex, &pattern);
     if (!NT_SUCCESS(status))
     {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_ERROR_LEVEL,
-                   "AVRF: failed processing regex! (0x%08x)\n",
-                   status);
+        AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                     "regex failed to compile (0x%08x)",
+                     status);
+
         __debugbreak();
         return FALSE;
     }
