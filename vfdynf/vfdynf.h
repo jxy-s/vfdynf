@@ -55,6 +55,8 @@
 #define AVRF_ASSERT(_exp) ((void)0)
 #endif
 
+#define AVRF_TIMEOUT(ms) { .QuadPart = (-10000ll * (ms)) }
+
 FORCEINLINE
 VOID
 AVrfInitializeCriticalSection(
