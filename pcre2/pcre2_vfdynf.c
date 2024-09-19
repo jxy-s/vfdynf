@@ -92,35 +92,23 @@ NTSTATUS Pcre2ErrorToNtStatus(
 }
 
 VOID Pcre2Close(
-    _In_ PPCRE2_CONTEXT Pcre2
+    _In_ PCRE2_HANDLE Pcre2Handle
     )
 {
-    if (Pcre2->MatchData)
-    {
-        pcre2_match_data_free((pcre2_match_data*)Pcre2->MatchData);
-        Pcre2->MatchData = NULL;
-    }
-
-    if (Pcre2->Code)
-    {
-        pcre2_code_free((pcre2_code*)Pcre2->Code);
-        Pcre2->Code = NULL;
-    }
+    pcre2_code_free((pcre2_code*)Pcre2Handle);
 }
 
 _Must_inspect_result_
 NTSTATUS Pcre2Compile(
-    _Out_ PPCRE2_CONTEXT Pcre2,
+    _Out_ PPCRE2_HANDLE Pcre2Handle,
     _In_ PUNICODE_STRING Pattern
     )
 {
     pcre2_code* code;
-    pcre2_match_data* matchData;
     int errorCode;
     size_t errorOffset;
 
-    Pcre2->Code = NULL;
-    Pcre2->MatchData = NULL;
+    *Pcre2Handle = NULL;
 
     code = pcre2_compile((PCRE2_SPTR16)Pattern->Buffer,
                          Pattern->Length / sizeof(WCHAR),
@@ -133,33 +121,59 @@ NTSTATUS Pcre2Compile(
         return Pcre2ErrorToNtStatus(errorCode);
     }
 
-    matchData = pcre2_match_data_create_from_pattern(code, NULL);
-    if (!matchData)
-    {
-        pcre2_code_free(code);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    Pcre2->Code = code;
-    Pcre2->MatchData = matchData;
+    *Pcre2Handle = (PCRE2_HANDLE)code;
 
     return STATUS_SUCCESS;
 }
 
-BOOLEAN Pcre2Match(
-    _In_ PPCRE2_CONTEXT Pcre2,
-    _In_ PUNICODE_STRING Pattern
+_Must_inspect_result_
+NTSTATUS Pcre2MatchEx(
+    _In_ PCRE2_HANDLE Pcre2Handle,
+    _In_ PUNICODE_STRING String,
+    _Out_ PBOOLEAN Match
     )
 {
+    pcre2_code* code;
+    pcre2_match_data* matchData;
     int offset;
 
-    offset = pcre2_match((pcre2_code*)Pcre2->Code,
-                         (PCRE2_SPTR16)Pattern->Buffer,
-                         Pattern->Length / sizeof(WCHAR),
+    *Match = FALSE;
+
+    code = (pcre2_code*)Pcre2Handle;
+
+    matchData = pcre2_match_data_create_from_pattern(code, NULL);
+    if (!matchData)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    offset = pcre2_match(code,
+                         (PCRE2_SPTR16)String->Buffer,
+                         String->Length / sizeof(WCHAR),
                          0,
                          0,
-                         (pcre2_match_data*)Pcre2->MatchData,
+                         matchData,
                          NULL);
 
-    return (offset >= 0);
+    pcre2_match_data_free(matchData);
+
+    *Match = (offset >= 0);
+
+    return STATUS_SUCCESS;
+}
+
+
+BOOLEAN Pcre2Match(
+    _In_ PCRE2_HANDLE Pcre2Handle,
+    _In_ PUNICODE_STRING String
+    )
+{
+    BOOLEAN match;
+
+    if (NT_SUCCESS(Pcre2MatchEx(Pcre2Handle, String, &match)))
+    {
+        return match;
+    }
+
+    return FALSE;
 }

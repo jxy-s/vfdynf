@@ -9,7 +9,7 @@ typedef struct _VFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT
     BOOLEAN Result;
 } VFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT, *PVFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT;
 
-static PCRE2_CONTEXT StopRegex = { NULL, NULL };
+static PCRE2_HANDLE AVrfpStopRegex = NULL;
 
 _Function_class_(AVRF_MODULE_ENUM_CALLBACK)
 BOOLEAN NTAPI AVrfpVerifierStopModuleEnumCallback(
@@ -24,9 +24,9 @@ BOOLEAN NTAPI AVrfpVerifierStopModuleEnumCallback(
     if ((context->CallerAddress >= Module->BaseAddress) &&
         (context->CallerAddress < Module->EndAddress))
     {
-        if (StopRegex.Code)
+        if (AVrfpStopRegex)
         {
-            context->Result = Pcre2Match(StopRegex.Code, &Module->BaseName);
+            context->Result = Pcre2Match(AVrfpStopRegex, &Module->BaseName);
         }
         else
         {
@@ -36,7 +36,7 @@ BOOLEAN NTAPI AVrfpVerifierStopModuleEnumCallback(
         return TRUE;
     }
 
-    if (!StopRegex.Code)
+    if (!AVrfpStopRegex)
     {
         //
         // Only check the primary module if a regex wasn't provided.
@@ -75,7 +75,7 @@ BOOLEAN AVrfStopProcessAttach(
         return TRUE;
     }
 
-    status = Pcre2Compile(&StopRegex, &pattern);
+    status = Pcre2Compile(&AVrfpStopRegex, &pattern);
     if (!NT_SUCCESS(status))
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -93,8 +93,9 @@ VOID AVrfStopProcessDetach(
     VOID
     )
 {
-    if (StopRegex.Code)
+    if (AVrfpStopRegex)
     {
-        Pcre2Close(&StopRegex);
+        Pcre2Close(AVrfpStopRegex);
+        AVrfpStopRegex = NULL;
     }
 }

@@ -7,14 +7,14 @@
 typedef struct _VFDYNF_FAULT_ENUM_MODULES_CONTEXT
 {
     PVOID CallerAddress;
-    PPCRE2_CONTEXT TypeInclude;
+    PCRE2_HANDLE Regex;
     BOOLEAN Result;
 } VFDYNF_FAULT_ENUM_MODULES_CONTEXT, *PVFDYNF_FAULT_ENUM_MODULES_CONTEXT;
 
 typedef struct _VFDYNF_EXCLUSION_REGEX
 {
     ULONG Count;
-    PPCRE2_CONTEXT Regex;
+    PPCRE2_HANDLE Regex;
 } VFDYNF_EXCLUSION_REGEX, *PVFDYNF_EXCLUSION_REGEX;
 
 typedef struct _VFDYNF_FAULT_COUNT
@@ -32,10 +32,10 @@ typedef struct _VFDYNF_FAULT_CONTEXT
     ULONG64 LastClear;
     AVRF_STACK_TABLE StackTable;
     BOOLEAN RegexInitialized;
-    PCRE2_CONTEXT Include;
+    PCRE2_HANDLE IncludeRegex;
     VFDYNF_EXCLUSION_REGEX Exclusions;
     VFDYNF_FAULT_COUNT TypeCount[VFDYNF_FAULT_TYPE_COUNT];
-    PCRE2_CONTEXT TypeInclude[VFDYNF_FAULT_TYPE_COUNT];
+    PCRE2_HANDLE TypeIncludeRegex[VFDYNF_FAULT_TYPE_COUNT];
     VFDYNF_EXCLUSION_REGEX TypeExclusions[VFDYNF_FAULT_TYPE_COUNT];
     BYTE SymInfoBuffer[sizeof(SYMBOL_INFOW) + ((MAX_SYM_NAME + 1) * sizeof(WCHAR))];
     WCHAR SymbolBuffer[MAX_SYM_NAME + 1 + MAX_PATH];
@@ -53,10 +53,10 @@ static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
     .LastClear = 0,
     .StackTable = { 0 },
     .RegexInitialized = FALSE,
-    .Include = { 0 },
+    .IncludeRegex = { 0 },
     .Exclusions = { 0 },
     .TypeCount = { 0 },
-    .TypeInclude = { 0 },
+    .TypeIncludeRegex = { 0 },
     .TypeExclusions = { 0 },
     .SymInfoBuffer = { 0 },
     .SymbolBuffer = { 0 },
@@ -226,7 +226,7 @@ BOOLEAN AVrfpInitExclusionsRegexInternal(
     Exclusion->Count = count;
     Exclusion->Regex = RtlAllocateHeap(RtlProcessHeap(),
                                        0,
-                                       count * sizeof(PCRE2_CONTEXT));
+                                       count * sizeof(PCRE2_HANDLE));
     if (!Exclusion->Regex)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -242,7 +242,7 @@ BOOLEAN AVrfpInitExclusionsRegexInternal(
     {
         NTSTATUS status;
         UNICODE_STRING pattern;
-        PCRE2_CONTEXT pcre2;
+        PCRE2_HANDLE regex;
 
         RtlInitUnicodeString(&pattern, &Pattern[offset]);
         if (!pattern.Length)
@@ -250,7 +250,7 @@ BOOLEAN AVrfpInitExclusionsRegexInternal(
             break;
         }
 
-        status = Pcre2Compile(&pcre2, &pattern);
+        status = Pcre2Compile(&regex, &pattern);
         if (!NT_SUCCESS(status))
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -263,7 +263,7 @@ BOOLEAN AVrfpInitExclusionsRegexInternal(
 
         AVRF_ASSERT(count < Exclusion->Count);
 
-        Exclusion->Regex[count++] = pcre2;
+        Exclusion->Regex[count++] = regex;
 
         offset += ((pattern.Length / sizeof(WCHAR)) + 1);
     }
@@ -311,7 +311,7 @@ BOOLEAN AVrfpInitIncludeRegex(
 
     if (pattern.Length)
     {
-        status = Pcre2Compile(&AVrfpFaultContext.Include, &pattern);
+        status = Pcre2Compile(&AVrfpFaultContext.IncludeRegex, &pattern);
         if (!NT_SUCCESS(status))
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -332,7 +332,7 @@ BOOLEAN AVrfpInitIncludeRegex(
             continue;
         }
 
-        status = Pcre2Compile(&AVrfpFaultContext.TypeInclude[i], &pattern);
+        status = Pcre2Compile(&AVrfpFaultContext.TypeIncludeRegex[i], &pattern);
         if (!NT_SUCCESS(status))
         {
             DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -392,7 +392,7 @@ BOOLEAN AVrfpIsStackOverriddenByRegex(
 
     for (ULONG i = 0; i < AVrfpFaultContext.Exclusions.Count; i++)
     {
-        if (Pcre2Match(&AVrfpFaultContext.Exclusions.Regex[i], StackSymbols))
+        if (Pcre2Match(AVrfpFaultContext.Exclusions.Regex[i], StackSymbols))
         {
             return TRUE;
         }
@@ -401,7 +401,7 @@ BOOLEAN AVrfpIsStackOverriddenByRegex(
     typeExclusions = &AVrfpFaultContext.TypeExclusions[AVrfpFaultTypeIndex(FaultType)];
     for (ULONG i = 0; i < typeExclusions->Count; i++)
     {
-        if (Pcre2Match(&typeExclusions->Regex[i], StackSymbols))
+        if (Pcre2Match(typeExclusions->Regex[i], StackSymbols))
         {
             return TRUE;
         }
@@ -423,18 +423,18 @@ BOOLEAN NTAPI AVrfpFaultModuleEnumCallback(
     if ((context->CallerAddress >= Module->BaseAddress) &&
         (context->CallerAddress < Module->EndAddress))
     {
-        if (AVrfpFaultContext.Include.Code)
+        if (AVrfpFaultContext.IncludeRegex)
         {
-            if (Pcre2Match(AVrfpFaultContext.Include.Code, &Module->BaseName))
+            if (Pcre2Match(AVrfpFaultContext.IncludeRegex, &Module->BaseName))
             {
                 context->Result = TRUE;
                 return TRUE;
             }
         }
 
-        if (context->TypeInclude)
+        if (context->Regex)
         {
-            if (Pcre2Match(context->TypeInclude, &Module->BaseName))
+            if (Pcre2Match(context->Regex, &Module->BaseName))
             {
                 context->Result = TRUE;
                 return TRUE;
@@ -474,9 +474,9 @@ BOOLEAN AVrfIsCallerIncluded(
 
     AVRF_ASSERT(AVrfpFaultContext.RegexInitialized);
 
-    context.TypeInclude = &AVrfpFaultContext.TypeInclude[AVrfpFaultTypeIndex(FaultType)];
+    context.Regex = AVrfpFaultContext.TypeIncludeRegex[AVrfpFaultTypeIndex(FaultType)];
 
-    if (!AVrfpFaultContext.Include.Code && !context.TypeInclude->Code)
+    if (!AVrfpFaultContext.IncludeRegex && !context.Regex)
     {
         return TRUE;
     }
@@ -1072,7 +1072,10 @@ VOID AVrfFaultProcessDetach(
     {
         for (ULONG i = 0; i < AVrfpFaultContext.Exclusions.Count; i++)
         {
-            Pcre2Close(&AVrfpFaultContext.Exclusions.Regex[i]);
+            if (AVrfpFaultContext.Exclusions.Regex[i])
+            {
+                Pcre2Close(AVrfpFaultContext.Exclusions.Regex[i]);
+            }
         }
 
         RtlFreeHeap(RtlProcessHeap(), 0, AVrfpFaultContext.Exclusions.Regex);
@@ -1091,7 +1094,10 @@ VOID AVrfFaultProcessDetach(
         {
             for (ULONG j = 0; j < entry->Count; j++)
             {
-                Pcre2Close(&entry->Regex[j]);
+                if (entry->Regex[j])
+                {
+                    Pcre2Close(&entry->Regex[j]);
+                }
             }
 
             RtlFreeHeap(RtlProcessHeap(), 0, entry->Regex);
@@ -1100,17 +1106,16 @@ VOID AVrfFaultProcessDetach(
         }
     }
 
-    Pcre2Close(&AVrfpFaultContext.Include);
+    Pcre2Close(AVrfpFaultContext.IncludeRegex);
 
     for (ULONG i = 0; i < VFDYNF_FAULT_TYPE_COUNT; i++)
     {
-        Pcre2Close(&AVrfpFaultContext.TypeInclude[i]);
+        if (AVrfpFaultContext.TypeIncludeRegex[i])
+        {
+            Pcre2Close(AVrfpFaultContext.TypeIncludeRegex[i]);
+            AVrfpFaultContext.TypeIncludeRegex[i] = NULL;
+        }
     }
 
     AVrfFreeStackTable(&AVrfpFaultContext.StackTable);
-
-    if (AVrfpFaultContext.SymInitialized)
-    {
-        Delay_SymCleanup(NtCurrentProcess());
-    }
 }

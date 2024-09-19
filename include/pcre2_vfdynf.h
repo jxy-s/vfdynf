@@ -18,24 +18,28 @@ extern "C"
 {
 #endif
 
-typedef struct _PCRE2_CONTEXT
-{
-    PVOID Code;
-    PVOID MatchData;
-} PCRE2_CONTEXT, *PPCRE2_CONTEXT;
+typedef PVOID PCRE2_HANDLE;
+typedef PCRE2_HANDLE* PPCRE2_HANDLE;
 
 VOID Pcre2Close(
-    _In_ PPCRE2_CONTEXT Pcre2Handle
+    _In_ PCRE2_HANDLE Pcre2Handle
     );
 
 _Must_inspect_result_
 NTSTATUS Pcre2Compile(
-    _Out_ PPCRE2_CONTEXT Pcre2Handle,
+    _Out_ PPCRE2_HANDLE Pcre2Handle,
     _In_ PUNICODE_STRING Pattern
     );
 
+_Must_inspect_result_
+NTSTATUS Pcre2MatchEx(
+    _In_ PCRE2_HANDLE Pcre2Handle,
+    _In_ PUNICODE_STRING String,
+    _Out_ PBOOLEAN Match
+    );
+
 BOOLEAN Pcre2Match(
-    _In_ PPCRE2_CONTEXT Pcre2Handle,
+    _In_ PCRE2_HANDLE Pcre2Handle,
     _In_ PUNICODE_STRING String
     );
 
