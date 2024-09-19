@@ -4,6 +4,13 @@
 #include <vfdynf.h>
 #include <delayld.h>
 
+typedef struct _VFDYNF_FAULT_ENUM_MODULES_CONTEXT
+{
+    PVOID CallerAddress;
+    PPCRE2_CONTEXT TypeInclude;
+    BOOLEAN Result;
+} VFDYNF_FAULT_ENUM_MODULES_CONTEXT, *PVFDYNF_FAULT_ENUM_MODULES_CONTEXT;
+
 typedef struct _VFDYNF_EXCLUSION_REGEX
 {
     ULONG Count;
@@ -403,23 +410,56 @@ BOOLEAN AVrfpIsStackOverriddenByRegex(
     return FALSE;
 }
 
+_Function_class_(AVRF_MODULE_ENUM_CALLBACK)
+BOOLEAN NTAPI AVrfpFaultModuleEnumCallback(
+    _In_ PAVRF_MODULE_ENTRY Module,
+    _In_ PVOID Context
+    )
+{
+    PVFDYNF_FAULT_ENUM_MODULES_CONTEXT context;
+
+    context = Context;
+
+    if ((context->CallerAddress >= Module->BaseAddress) &&
+        (context->CallerAddress < Module->EndAddress))
+    {
+        if (AVrfpFaultContext.Include.Code)
+        {
+            if (Pcre2Match(AVrfpFaultContext.Include.Code, &Module->BaseName))
+            {
+                context->Result = TRUE;
+                return TRUE;
+            }
+        }
+
+        if (context->TypeInclude)
+        {
+            if (Pcre2Match(context->TypeInclude, &Module->BaseName))
+            {
+                context->Result = TRUE;
+                return TRUE;
+            }
+        }
+
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 BOOLEAN AVrfIsCallerIncluded(
     _In_ ULONG FaultType,
     _In_opt_ _Maybenull_ PVOID CallerAddress
     )
 {
-    BOOLEAN result;
-    NTSTATUS status;
-    PVOID ldrCookie;
-    ULONG ldrDisp;
-    PLIST_ENTRY modList;
-    PPCRE2_CONTEXT typeContext;
+    VFDYNF_FAULT_ENUM_MODULES_CONTEXT context;
 
     if (!AVrfpFaultContext.Initialized)
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_WARNING_LEVEL,
                    "AVRF: fault injection not yet initialized\n");
+
         return FALSE;
     }
 
@@ -428,81 +468,24 @@ BOOLEAN AVrfIsCallerIncluded(
         DbgPrintEx(DPFLTR_VERIFIER_ID,
                    DPFLTR_WARNING_LEVEL,
                    "AVRF: caller address is null\n");
+
         return FALSE;
     }
 
     AVRF_ASSERT(AVrfpFaultContext.RegexInitialized);
 
-    typeContext = &AVrfpFaultContext.TypeInclude[AVrfpFaultTypeIndex(FaultType)];
+    context.TypeInclude = &AVrfpFaultContext.TypeInclude[AVrfpFaultTypeIndex(FaultType)];
 
-    if (!AVrfpFaultContext.Include.Code && !typeContext->Code)
+    if (!AVrfpFaultContext.Include.Code && !context.TypeInclude->Code)
     {
         return TRUE;
     }
 
-    status = LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY,
-                               &ldrDisp,
-                               &ldrCookie);
-    if (!NT_SUCCESS(status))
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: failed to acquire loader lock (0x%08x)!\n",
-                   status);
+    context.Result = FALSE;
 
-        return FALSE;
-    }
+    AVrfEnumLoadedModules(AVrfpFaultModuleEnumCallback, &context);
 
-    if (ldrDisp != LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED)
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: loader lock is busy!\n");
-
-        return FALSE;
-    }
-
-    result = FALSE;
-    modList = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
-
-    for (PLIST_ENTRY entry = modList->Flink;
-         entry != modList;
-         entry = entry->Flink)
-    {
-        PLDR_DATA_TABLE_ENTRY item;
-        PVOID end;
-
-        item = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-        end = Add2Ptr(item->DllBase, item->SizeOfImage);
-
-        if ((CallerAddress >= item->DllBase) && (CallerAddress < end))
-        {
-            if (AVrfpFaultContext.Include.Code)
-            {
-                if (Pcre2Match(&AVrfpFaultContext.Include, &item->BaseDllName))
-                {
-                    result = TRUE;
-                    break;
-                }
-            }
-
-            if (typeContext->Code)
-            {
-                if (Pcre2Match(typeContext, &item->BaseDllName))
-                {
-                    result = TRUE;
-                    break;
-                }
-            }
-
-            break;
-        }
-    }
-
-    LdrUnlockLoaderLock(0, ldrCookie);
-
-    return result;
+    return context.Result;
 }
 
 VOID AVrfDisableCurrentThreadFaultInjection(

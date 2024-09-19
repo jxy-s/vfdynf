@@ -227,6 +227,31 @@ BOOLEAN AVrfRunOnce(
     _In_ BOOLEAN Async
     );
 
+typedef struct _AVRF_MODULE_ENTRY
+{
+    LIST_ENTRY Entry;
+    PVOID BaseAddress;
+    PVOID EndAddress;
+    UNICODE_STRING BaseName;
+    UNICODE_STRING FullName;
+    BYTE Buffer[ANYSIZE_ARRAY];
+} AVRF_MODULE_ENTRY, *PAVRF_MODULE_ENTRY;
+
+typedef
+_Function_class_(AVRF_MODULE_ENUM_CALLBACK)
+BOOLEAN
+NTAPI
+AVRF_MODULE_ENUM_CALLBACK(
+    _In_ PAVRF_MODULE_ENTRY Module,
+    _In_opt_ PVOID Context
+    );
+typedef AVRF_MODULE_ENUM_CALLBACK* PAVRF_MODULE_ENUM_CALLBACK;
+
+BOOLEAN AVrfEnumLoadedModules(
+    _In_ PAVRF_MODULE_ENUM_CALLBACK Callback,
+    _In_opt_ PVOID Context
+    );
+
 // stop.c
 
 BOOLEAN AVrfShouldVerifierStop(

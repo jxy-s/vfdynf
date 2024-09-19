@@ -48,15 +48,34 @@ static AVRF_DELAY_LOAD_DLL AVrfpDelayLoadDlls[] =
 
 static AVRF_RUN_ONCE AVrfpDelayLoadOnce = AVRF_RUN_ONCE_INIT;
 
+_Function_class_(AVRF_MODULE_ENUM_CALLBACK)
+BOOLEAN NTAPI AVrfpDelayLoadModuleEnumCallback(
+    _In_ PAVRF_MODULE_ENTRY Module,
+    _In_ PVOID Context
+    )
+{
+    UNREFERENCED_PARAMETER(Context);
+
+    for (PAVRF_DELAY_LOAD_DLL dllEntry = AVrfpDelayLoadDlls;
+         dllEntry->Entries;
+         dllEntry = dllEntry + 1)
+    {
+        if (Module->BaseAddress == dllEntry->BaseAddress)
+        {
+            dllEntry->EndAddress = Module->EndAddress;
+            return FALSE;
+        }
+    }
+
+    return FALSE;
+}
+
 _Function_class_(AVRF_RUN_ONCE_ROUTINE)
 BOOLEAN NTAPI AVrfpDelayLoad(
     VOID
     )
 {
     NTSTATUS status;
-    PVOID ldrCookie;
-    ULONG ldrDisp;
-    PLIST_ENTRY modList;
 
     status = STATUS_SUCCESS;
 
@@ -101,51 +120,7 @@ BOOLEAN NTAPI AVrfpDelayLoad(
         }
     }
 
-    status = LdrLockLoaderLock(0, &ldrDisp, &ldrCookie);
-    if (!NT_SUCCESS(status))
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: failed to acquire loader lock (0x%08x)!\n",
-                   status);
-
-        __debugbreak();
-        goto Exit;
-    }
-    if (ldrDisp != LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED)
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: loader lock is busy!\n");
-
-        status = STATUS_LOCK_NOT_GRANTED;
-        __debugbreak();
-        goto Exit;
-    }
-
-    modList = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
-
-    for (PAVRF_DELAY_LOAD_DLL dllEntry = AVrfpDelayLoadDlls;
-         dllEntry->Entries;
-         dllEntry = dllEntry + 1)
-    {
-        for (PLIST_ENTRY entry = modList->Flink;
-             entry != modList;
-             entry = entry->Flink)
-        {
-            PLDR_DATA_TABLE_ENTRY item;
-
-            item = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-            if (item->DllBase == dllEntry->BaseAddress)
-            {
-                dllEntry->EndAddress = Add2Ptr(item->DllBase, item->SizeOfImage);
-                break;
-            }
-        }
-    }
-
-    LdrUnlockLoaderLock(0, ldrCookie);
+    AVrfEnumLoadedModules(AVrfpDelayLoadModuleEnumCallback, NULL);
 
 Exit:
 

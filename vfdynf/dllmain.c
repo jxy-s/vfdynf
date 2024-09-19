@@ -4,6 +4,9 @@
 #include <vfdynf.h>
 
 static BOOLEAN AVrfpLoadedAsVerifier = FALSE;
+static BOOLEAN AVrfpModuleListInitialized = FALSE;
+static RTL_SRWLOCK AVrfpModuleListLock = RTL_SRWLOCK_INIT;
+static LIST_ENTRY AVrfpModulesList = { 0 };
 
 VFDYNF_PROPERTIES AVrfProperties =
 {
@@ -540,6 +543,201 @@ BOOLEAN AVrfRunOnce(
     return (res == AVRF_RUN_ONCE_COMPLETED);
 }
 
+BOOLEAN AVrfEnumLoadedModules(
+    _In_ PAVRF_MODULE_ENUM_CALLBACK Callback,
+    _In_opt_ PVOID Context
+    )
+{
+    BOOLEAN result;
+
+    result = FALSE;
+
+    RtlAcquireSRWLockShared(&AVrfpModuleListLock);
+
+    if (!AVrfpModuleListInitialized)
+    {
+        goto Exit;
+    }
+
+    for (PLIST_ENTRY entry = AVrfpModulesList.Flink;
+         entry != &AVrfpModulesList;
+         entry = entry->Flink)
+    {
+        PAVRF_MODULE_ENTRY module;
+
+        module = CONTAINING_RECORD(entry, AVRF_MODULE_ENTRY, Entry);
+
+        if (Callback(module, Context))
+        {
+            result = TRUE;
+            break;
+        }
+    }
+
+Exit:
+
+    RtlReleaseSRWLockShared(&AVrfpModuleListLock);
+
+    return result;
+}
+
+VOID AVrfpRefreshLoadedModuleList(
+    VOID
+    )
+{
+    ULONG ldrDisp;
+    PVOID ldrCookie;
+    LIST_ENTRY newList;
+    PLIST_ENTRY listEntry;
+    PAVRF_MODULE_ENTRY module;
+    LIST_ENTRY oldList;
+
+    InitializeListHead(&newList);
+
+    LdrLockLoaderLock(0, &ldrDisp, &ldrCookie);
+
+    listEntry = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
+
+    for (PLIST_ENTRY entry = listEntry->Flink;
+         entry != listEntry;
+         entry = entry->Flink)
+    {
+        PLDR_DATA_TABLE_ENTRY ldr;
+        ULONG size;
+
+        ldr = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        size = sizeof(AVRF_MODULE_ENTRY);
+        size += ldr->FullDllName.Length + sizeof(WCHAR);
+        size += ldr->BaseDllName.Length + sizeof(WCHAR);
+
+        module = RtlAllocateHeap(RtlProcessHeap(), 0, size);
+        if (!module)
+        {
+            DbgPrintEx(DPFLTR_VERIFIER_ID,
+                       DPFLTR_ERROR_LEVEL,
+                       "AVRF: failed to allocate module entry\n");
+            __debugbreak();
+            continue;
+        }
+
+        RtlZeroMemory(module, size);
+
+        module->BaseAddress = ldr->DllBase;
+        module->EndAddress = Add2Ptr(ldr->DllBase, ldr->SizeOfImage);
+
+        module->FullName.Length = 0;
+        module->FullName.MaximumLength = ldr->FullDllName.Length + sizeof(WCHAR);
+        module->FullName.Buffer = (PWCH)module->Buffer;
+
+        module->BaseName.Length = 0;
+        module->BaseName.MaximumLength = ldr->BaseDllName.Length + sizeof(WCHAR);
+        module->BaseName.Buffer = (PWCH)&module->Buffer[module->FullName.MaximumLength];
+
+        RtlCopyUnicodeString(&module->FullName, &ldr->FullDllName);
+        RtlCopyUnicodeString(&module->BaseName, &ldr->BaseDllName);
+
+        InsertTailList(&newList, &module->Entry);
+    }
+
+    if (ldrDisp == LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED)
+    {
+        LdrUnlockLoaderLock(0, ldrCookie);
+    }
+
+    InitializeListHead(&oldList);
+
+    RtlAcquireSRWLockExclusive(&AVrfpModuleListLock);
+
+    if (!IsListEmpty(&AVrfpModulesList))
+    {
+        listEntry = AVrfpModulesList.Flink;
+        RemoveEntryList(&AVrfpModulesList);
+        InitializeListHead(&AVrfpModulesList);
+        AppendTailList(&oldList, listEntry);
+    }
+
+    if (!IsListEmpty(&newList))
+    {
+        listEntry = newList.Flink;
+        RemoveEntryList(&newList);
+        InitializeListHead(&newList);
+        AppendTailList(&AVrfpModulesList, listEntry);
+    }
+
+    RtlReleaseSRWLockExclusive(&AVrfpModuleListLock);
+
+    while (!IsListEmpty(&oldList))
+    {
+        module = CONTAINING_RECORD(RemoveHeadList(&oldList),
+                                   AVRF_MODULE_ENTRY,
+                                   Entry);
+        RtlFreeHeap(RtlProcessHeap(), 0, module);
+    }
+}
+
+VOID AVrfpInitModulesList(
+    VOID
+    )
+{
+    InitializeListHead(&AVrfpModulesList);
+    AVrfpRefreshLoadedModuleList();
+    AVrfpModuleListInitialized = TRUE;
+}
+
+VOID AVrfpDeleteModuleList(
+    VOID
+    )
+{
+    if (!AVrfpModuleListInitialized)
+    {
+        return;
+    }
+
+    while (!IsListEmpty(&AVrfpModulesList))
+    {
+        PAVRF_MODULE_ENTRY entry;
+
+        entry = CONTAINING_RECORD(RemoveTailList(&AVrfpModulesList),
+                                  AVRF_MODULE_ENTRY,
+                                  Entry);
+
+        RtlFreeHeap(RtlProcessHeap(), 0, entry);
+    }
+}
+
+VOID AVrfpTrackModule(
+    _In_z_ PCWSTR DllName,
+    _In_ PVOID DllBase,
+    _In_ SIZE_T DllSize
+    )
+{
+    UNREFERENCED_PARAMETER(DllName);
+    UNREFERENCED_PARAMETER(DllBase);
+    UNREFERENCED_PARAMETER(DllSize);
+
+    if (AVrfpModuleListInitialized)
+    {
+        AVrfpRefreshLoadedModuleList();
+    }
+}
+
+VOID AVrfpUnTrackModule(
+    _In_z_ PCWSTR DllName,
+    _In_ PVOID DllBase,
+    _In_ SIZE_T DllSize
+    )
+{
+    UNREFERENCED_PARAMETER(DllName);
+    UNREFERENCED_PARAMETER(DllBase);
+    UNREFERENCED_PARAMETER(DllSize);
+
+    if (AVrfpModuleListInitialized)
+    {
+        AVrfpRefreshLoadedModuleList();
+    }
+}
+
 VOID NTAPI AVrfpDllLoadCallback(
     _In_z_ PCWSTR DllName,
     _In_ PVOID DllBase,
@@ -550,11 +748,9 @@ VOID NTAPI AVrfpDllLoadCallback(
     //
     // N.B. This routine is NOT called with the loader lock held.
     //
-    UNREFERENCED_PARAMETER(DllName);
-    UNREFERENCED_PARAMETER(DllBase);
-    UNREFERENCED_PARAMETER(DllSize);
     UNREFERENCED_PARAMETER(Reserved);
 
+    AVrfpTrackModule(DllName, DllBase, DllSize);
     AVrfLinkHooks();
 }
 
@@ -568,10 +764,9 @@ VOID NTAPI AVrfpDllUnlodCallback(
     //
     // N.B. This routine is called with the loader lock held.
     //
-    UNREFERENCED_PARAMETER(DllName);
-    UNREFERENCED_PARAMETER(DllBase);
-    UNREFERENCED_PARAMETER(DllSize);
     UNREFERENCED_PARAMETER(Reserved);
+
+    AVrfpUnTrackModule(DllName, DllBase, DllSize);
 }
 
 VOID NTAPI AVrfpNtdllHeapFreeCallback(
@@ -694,6 +889,8 @@ BOOLEAN AVrfpProviderProcessAttach(
         return TRUE;
     }
 
+    AVrfpInitModulesList();
+
     if (!AVrfLinkHooks())
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -747,12 +944,10 @@ VOID AVrfpProviderProcessDetach(
     )
 {
     AVrfFaultProcessDetach();
-
     AVrfExceptProcessDetach();
-
     AVrfFuzzProcessDetach();
-
     AVrfStopProcessDetach();
+    AVrfpDeleteModuleList();
 
     VerifierUnregisterLayer(Module, &AVrfLayerDescriptor);
 }

@@ -3,80 +3,62 @@
 */
 #include <vfdynf.h>
 
+typedef struct _VFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT
+{
+    PVOID CallerAddress;
+    BOOLEAN Result;
+} VFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT, *PVFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT;
+
 static PCRE2_CONTEXT StopRegex = { NULL, NULL };
+
+_Function_class_(AVRF_MODULE_ENUM_CALLBACK)
+BOOLEAN NTAPI AVrfpVerifierStopModuleEnumCallback(
+    _In_ PAVRF_MODULE_ENTRY Module,
+    _In_ PVOID Context
+    )
+{
+    PVFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT context;
+
+    context = Context;
+
+    if ((context->CallerAddress >= Module->BaseAddress) &&
+        (context->CallerAddress < Module->EndAddress))
+    {
+        if (StopRegex.Code)
+        {
+            context->Result = Pcre2Match(StopRegex.Code, &Module->BaseName);
+        }
+        else
+        {
+            context->Result = TRUE;
+        }
+
+        return TRUE;
+    }
+
+    if (!StopRegex.Code)
+    {
+        //
+        // Only check the primary module if a regex wasn't provided.
+        //
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 BOOLEAN AVrfShouldVerifierStop(
     _In_opt_ _Maybenull_ PVOID CallerAddress
     )
 {
-    BOOLEAN result;
-    NTSTATUS status;
-    PVOID ldrCookie;
-    ULONG ldrDisp;
-    PLIST_ENTRY modList;
+    VFDYNF_VERIFIER_STOP_MODULE_ENUM_CONTEXT context;
 
-    status = LdrLockLoaderLock(LDR_LOCK_LOADER_LOCK_FLAG_TRY_ONLY,
-                               &ldrDisp,
-                               &ldrCookie);
-    if (!NT_SUCCESS(status))
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: failed to acquire loader lock (0x%08x)!\n",
-                   status);
+    context.CallerAddress = CallerAddress;
+    context.Result = FALSE;
 
-        return FALSE;
-    }
+    AVrfEnumLoadedModules(AVrfpVerifierStopModuleEnumCallback, &context);
 
-    if (ldrDisp != LDR_LOCK_LOADER_LOCK_DISPOSITION_LOCK_ACQUIRED)
-    {
-        DbgPrintEx(DPFLTR_VERIFIER_ID,
-                   DPFLTR_WARNING_LEVEL,
-                   "AVRF: loader lock is busy!\n");
-
-        return FALSE;
-    }
-
-    result = FALSE;
-    modList = &NtCurrentPeb()->Ldr->InLoadOrderModuleList;
-
-    for (PLIST_ENTRY entry = modList->Flink;
-         entry != modList;
-         entry = entry->Flink)
-    {
-        PLDR_DATA_TABLE_ENTRY item;
-        PVOID end;
-
-        item = CONTAINING_RECORD(entry, LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
-
-        end = Add2Ptr(item->DllBase, item->SizeOfImage);
-
-        if ((CallerAddress >= item->DllBase) && (CallerAddress < end))
-        {
-            if (StopRegex.Code)
-            {
-                result = Pcre2Match(&StopRegex, &item->BaseDllName);
-            }
-            else
-            {
-                result = TRUE;
-            }
-
-            break;
-        }
-
-        if (!StopRegex.Code)
-        {
-            //
-            // Only check the primary module if a regex wasn't provided.
-            //
-            break;
-        }
-    }
-
-    LdrUnlockLoaderLock(0, ldrCookie);
-
-    return result;
+    return context.Result;
 }
 
 BOOLEAN AVrfStopProcessAttach(
