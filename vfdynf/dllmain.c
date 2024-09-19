@@ -23,6 +23,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .FuzzChaosProbability = 250000,
     .FuzzSizeTruncateProbability = 250000,
     .HeapReasonableAllocLimit = (1 << 30), // 1 GiB
+    .EnableFaultsInLdrPath = TRUE,
     .TypeIncludeRegex = { 0 },
     .TypeExclusionsRegex = { 0 },
 };
@@ -138,6 +139,16 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"Limit which is considered a reasonable single heap allocation. If "
         L"the size a single heap allocation exceeds this limit a verifier "
         L"stop is raised.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_BOOLEAN,
+        L"EnableFaultsInLdrPath",
+        &AVrfProperties.EnableFaultsInLdrPath,
+        sizeof(AVrfProperties.EnableFaultsInLdrPath),
+        L"Enables fault injection when in the loader path. When disabled the "
+        L"fault logic will check if the current thread is inside of the loader "
+        L"path and skip fault injection if it is.",
         NULL
     },
     {

@@ -195,6 +195,7 @@ typedef struct _VFDYNF_PROPERTIES
     ULONG FuzzChaosProbability;
     ULONG FuzzSizeTruncateProbability;
     ULONG64 HeapReasonableAllocLimit;
+    BOOLEAN EnableFaultsInLdrPath;
     WCHAR StopRegex[VFDYN_REGEX_MAX_LENGTH];
     WCHAR TypeIncludeRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_REGEX_MAX_LENGTH];
     WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_REGEX_MAX_LENGTH];
