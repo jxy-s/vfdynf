@@ -30,6 +30,8 @@ static AVRF_DELAY_LOAD_ENTRY AVrfpDelayLoadDbgHelp[] =
     AVRF_DELAY_LOAD(SymFromAddrW),
     AVRF_DELAY_LOAD(SymInitializeW),
     AVRF_DELAY_LOAD(SymSetOptions),
+    AVRF_DELAY_LOAD(SymLoadModuleExW),
+    AVRF_DELAY_LOAD(SymUnloadModule64),
     { RTL_CONSTANT_STRING(""), NULL }
 };
 

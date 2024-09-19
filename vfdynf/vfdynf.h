@@ -274,6 +274,43 @@ BOOLEAN AVrfLinkHooks(
     VOID
     );
 
+// symprv.c
+
+BOOLEAN AVrfSymProcessAttach(
+    VOID
+    );
+
+VOID AVrfSymProcessDetach(
+    VOID
+    );
+
+VOID AVrfSymDllLoad(
+    _In_z_ PCWSTR DllName,
+    _In_ PVOID DllBase,
+    _In_ SIZE_T DllSize
+    );
+
+VOID AVrfSymDllUnload(
+    _In_z_ PCWSTR DllName,
+    _In_ PVOID DllBase,
+    _In_ SIZE_T DllSize
+    );
+
+BOOLEAN AvrfIsSymProviderThread(
+    VOID
+    );
+
+NTSTATUS AVrfSymGetSymbols(
+    _In_ PVOID Frames,
+    _In_ ULONG FramesCount,
+    _Out_ PUNICODE_STRING* StackSymbols,
+    _In_opt_ PLARGE_INTEGER Timeout
+    );
+
+VOID AVrfSymFreeSymbols(
+    _In_ PUNICODE_STRING StackSymbols
+    );
+
 // except.c
 
 VOID AVrfGuardToConvertToInPageError(

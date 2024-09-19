@@ -751,6 +751,7 @@ VOID NTAPI AVrfpDllLoadCallback(
     UNREFERENCED_PARAMETER(Reserved);
 
     AVrfpTrackModule(DllName, DllBase, DllSize);
+    AVrfSymDllLoad(DllName, DllBase, DllSize);
     AVrfLinkHooks();
 }
 
@@ -767,6 +768,7 @@ VOID NTAPI AVrfpDllUnlodCallback(
     UNREFERENCED_PARAMETER(Reserved);
 
     AVrfpUnTrackModule(DllName, DllBase, DllSize);
+    AVrfSymDllUnload(DllName, DllBase, DllSize);
 }
 
 VOID NTAPI AVrfpNtdllHeapFreeCallback(
@@ -900,6 +902,15 @@ BOOLEAN AVrfpProviderProcessAttach(
         return FALSE;
     }
 
+    if (!AVrfSymProcessAttach())
+    {
+        DbgPrintEx(DPFLTR_VERIFIER_ID,
+                   DPFLTR_ERROR_LEVEL,
+                   "AVRF: failed to setup symbol provider");
+        __debugbreak();
+        return FALSE;
+    }
+
     if (!AVrfStopProcessAttach())
     {
         DbgPrintEx(DPFLTR_VERIFIER_ID,
@@ -947,6 +958,7 @@ VOID AVrfpProviderProcessDetach(
     AVrfExceptProcessDetach();
     AVrfFuzzProcessDetach();
     AVrfStopProcessDetach();
+    AVrfSymProcessDetach();
     AVrfpDeleteModuleList();
 
     VerifierUnregisterLayer(Module, &AVrfLayerDescriptor);

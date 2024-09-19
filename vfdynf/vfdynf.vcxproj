@@ -415,6 +415,7 @@
     <ClCompile Include="dllmain.c" />
     <ClCompile Include="fault.c" />
     <ClCompile Include="stop.c" />
+    <ClCompile Include="symprv.c" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="vfdynf.rc" />

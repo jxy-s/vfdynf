@@ -19,6 +19,7 @@
     <ClCompile Include="stop.c" />
     <ClCompile Include="delayld.c" />
     <ClCompile Include="hooks_net.c" />
+    <ClCompile Include="symprv.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vfdynf.h" />

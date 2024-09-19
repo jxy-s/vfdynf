@@ -94,3 +94,25 @@ SymRegisterCallbackW64, (
     _In_ PSYMBOL_REGISTERED_CALLBACK64 CallbackFunction,
     _In_ ULONG64 UserContext
     ));
+
+VFDYNF_DECLARE_DELAYLD(
+DWORD64,
+IMAGEAPI,
+SymLoadModuleExW, (
+    _In_ HANDLE hProcess,
+    _In_opt_ HANDLE hFile,
+    _In_opt_ PCWSTR ImageName,
+    _In_opt_ PCWSTR ModuleName,
+    _In_ DWORD64 BaseOfDll,
+    _In_ DWORD DllSize,
+    _In_opt_ PMODLOAD_DATA Data,
+    _In_opt_ DWORD Flags
+    ));
+
+VFDYNF_DECLARE_DELAYLD(
+BOOL,
+IMAGEAPI,
+SymUnloadModule64, (
+    _In_ HANDLE hProcess,
+    _In_ DWORD64 BaseOfDll
+    ));
