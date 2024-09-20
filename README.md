@@ -90,10 +90,12 @@ integrity of data or time of check time of use.
 | EnableFaultMask             | QWORD       | Mask of which fault types are enabled. Bit 1=Wait, 2=Heap, 3=VMem, 4=Reg, 5=File, 6=Event, 7=Section, 8=Ole, 9=InPage, 10=FuzzReg, 11=FuzzFile, 12=FuzzMMap, 13=FuzzNet. |
 | FaultProbability            | DWORD       | Probability that a fault will be injected (0 - 1000000). |
 | FaultSeed                   | DWORD       | Seed used for fault randomization. A value of zero will generate a random seed. |
+| FuzzSeed                    | DWORD       | Seed used for fuzz randomization. A value of zero will generate a random fuzzing vector. |
 | FuzzCorruptionBlocks        | DWORD       | Maximum number of blocks to corrupt when fuzzing. Larger numbers will impact performance, fuzzing logic will randomly loop between one and this maximum to apply corruption techniques on buffers. |
 | FuzzChaosProbability        | DWORD       | The probability (0 - 1000000) a corruption block will overwrite a portion of buffer with random data. Otherwise various corruption techniques are applied to the buffer in a less chaotic manner. |
 | FuzzSizeTruncateProbability | DWORD       | The probability (0 - 1000000) that data lengths will be truncated to a random value below the actual length of the output data. |
 | HeapReasonableAllocLimit    | QWORD       | Limit which is considered a reasonable single heap allocation. If the size a single heap allocation exceeds this limit a verifier stop is raised. |
+| EnableFaultsInLdrPath       | Boolean     | Enables fault injection when in the loader path. When disabled the fault logic will check if the current thread is inside of the loader path and skip fault injection if it is. |
 | StopRegex                   | String      | Regular expression to check against the immediate caller module name when a verifier stop is about to be raised. If the module does not match this regular expression the verifier stop does not occur. Defaults to matching only the application module. |
 | WaitIncludeRegex            | MultiString | Includes wait fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
 | HeapIncludeRegex            | MultiString | Includes heap fault injection for the immediate calling module when this regular expression matches the module name. When not provided all modules are included. |
