@@ -588,8 +588,19 @@ BOOLEAN AVrfShouldFaultInject(
                                count,
                                &stackSymbols,
                                &AVrfpFaultContext.SymTimeout);
+    if (status == STATUS_DEVICE_NOT_READY)
+    {
+        //
+        // Expected when the symbol provider is not yet fully initialized.
+        //
+        goto Exit;
+    }
     if (status != STATUS_SUCCESS)
     {
+        //
+        // Usually STATUS_TIMEOUT. Symbol resolution might be contending with
+        // the loader or generally could not respond in within the time limit.
+        //
         AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
                      "AVrfSymGetSymbol failed (0x%08x)",
                      status);
