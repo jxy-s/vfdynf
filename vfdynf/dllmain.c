@@ -23,7 +23,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .FuzzChaosProbability = 250000,
     .FuzzSizeTruncateProbability = 250000,
     .HeapReasonableAllocLimit = (1 << 30), // 1 GiB
-    .EnableFaultsInLdrPath = TRUE,
+    .EnableFaultsInLdrPath = FALSE,
     .TypeIncludeRegex = { 0 },
     .TypeExclusionsRegex = { 0 },
 };
