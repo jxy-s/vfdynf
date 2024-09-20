@@ -19,6 +19,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .EnableFaultMask = VFDYNF_FAULT_DEFAULT_MASK,
     .FaultProbability = 1000000,
     .FaultSeed = 0,
+    .FuzzSeed = 0,
     .FuzzCorruptionBlocks = 100,
     .FuzzChaosProbability = 250000,
     .FuzzSizeTruncateProbability = 250000,
@@ -101,6 +102,14 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"Seed used for fault randomization. A value of zero will generate a "
         L"random seed.",
         NULL
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"FuzzSeed",
+        &AVrfProperties.FuzzSeed,
+        sizeof(AVrfProperties.FuzzSeed),
+        L"Seed used for fuzz randomization. A value of zero will generate a "
+        L"random fuzzing vector.",
     },
     {
         AVRF_PROPERTY_DWORD,

@@ -208,6 +208,7 @@ typedef struct _VFDYNF_PROPERTIES
     ULONG64 EnableFaultMask;
     ULONG FaultProbability;
     ULONG FaultSeed;
+    ULONG FuzzSeed;
     ULONG FuzzCorruptionBlocks;
     ULONG FuzzChaosProbability;
     ULONG FuzzSizeTruncateProbability;

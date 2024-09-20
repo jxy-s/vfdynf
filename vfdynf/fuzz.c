@@ -34,6 +34,8 @@ typedef enum _VFDYNF_FUZZ_BUFFER_CLASS
 typedef struct _VFDYNF_FUZZ_CONTEXT
 {
     BOOLEAN Initialized;
+    ULONG ActiveSeed;
+    ULONG RtlRandomSeed;
     volatile LONG Index;
     BYTE Vector[0x4000];
     RTL_CRITICAL_SECTION CriticalSection;
@@ -48,6 +50,8 @@ static AVRF_RUN_ONCE AVrfpFuzzRunOnce = AVRF_RUN_ONCE_INIT;
 static VFDYNF_FUZZ_CONTEXT AVrfpFuzzContext =
 {
     .Initialized = FALSE,
+    .ActiveSeed = 0,
+    .RtlRandomSeed = 0,
     .Index = 0,
     .Vector = { 0 },
     .CriticalSection = { 0 },
@@ -149,6 +153,17 @@ ULONG AVrfFuzzRandom(
     )
 {
     ULONG index;
+
+    if (AVrfProperties.FaultSeed)
+    {
+        //
+        // The user configured a specific seed to use with fuzzing, use
+        // RtlRandomEx instead of the vector we would normally generate.
+        //
+        // N.B. RtlRandomSeed is set to the FaultSeed to during initialization.
+        //
+        return RtlRandomEx(&AVrfpFuzzContext.RtlRandomSeed);
+    }
 
     if (!AVrfDelayLoadInitOnce() ||
         !AVrfRunOnce(&AVrfpFuzzRunOnce, AVrfpFuzzRunOnceRoutine, FALSE))
@@ -665,6 +680,18 @@ BOOLEAN AVrfFuzzProcessAttach(
     )
 {
     AVrfInitializeCriticalSection(&AVrfpFuzzContext.CriticalSection);
+
+    if (AVrfProperties.FuzzSeed)
+    {
+        //
+        // The user wants to use a specific seed for fuzzing instead of a
+        // completely random vector. Set ActiveSeed to record the seed that
+        // was specified by the user. RtlRandomSeed is then passed as the
+        // in/out parameter to RtlRandomEx.
+        //
+        AVrfpFuzzContext.ActiveSeed = AVrfProperties.FuzzSeed;
+        AVrfpFuzzContext.RtlRandomSeed = AVrfProperties.FuzzSeed;
+    }
 
     AVrfpFuzzContext.Initialized = TRUE;
 
