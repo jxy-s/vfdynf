@@ -26,6 +26,7 @@ typedef struct _VFDYNF_FAULT_COUNT
 typedef struct _VFDYNF_FAULT_CONTEXT
 {
     BOOLEAN Initialized;
+    ULONG ActiveSeed;
     ULONG TypeBase;
     LARGE_INTEGER SymTimeout;
     RTL_CRITICAL_SECTION CriticalSection;
@@ -42,6 +43,7 @@ typedef struct _VFDYNF_FAULT_CONTEXT
 static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
 {
     .Initialized = FALSE,
+    .ActiveSeed = 0,
     .TypeBase = ULONG_MAX,
     .SymTimeout = AVRF_TIMEOUT(1000),
     .CriticalSection = { 0 },
@@ -756,10 +758,12 @@ BOOLEAN AVrfFaultProcessAttach(
                      rand);
 
         VerifierSetFaultInjectionSeed(rand);
+        AVrfpFaultContext.ActiveSeed = rand;
     }
     else
     {
         VerifierSetFaultInjectionSeed(AVrfProperties.FaultSeed);
+        AVrfpFaultContext.ActiveSeed = AVrfProperties.FaultSeed;
     }
 
     AVrfInitializeCriticalSection(&AVrfpFaultContext.CriticalSection);
