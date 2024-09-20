@@ -384,11 +384,14 @@ VOID AVrfEnableCurrentThreadFaultInjection(
 
 BOOLEAN AVrfpShouldFaultInjectCached(
     _In_ ULONG FaultType,
-    _In_ ULONG StackHash
+    _In_ ULONG StackHash,
+    _Inout_ PBOOLEAN FaultInject
     )
 {
     BOOLEAN result;
     PAVRF_STACK_ENTRY stackEntry;
+
+    result = FALSE;
 
     AVrfEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
 
@@ -397,7 +400,8 @@ BOOLEAN AVrfpShouldFaultInjectCached(
         //
         // Do not fault inject if we're recursing on this lock.
         //
-        result = FALSE;
+        *FaultInject = FALSE;
+        result = TRUE;
         goto Exit;
     }
 
@@ -415,8 +419,6 @@ BOOLEAN AVrfpShouldFaultInjectCached(
         {
             AVrfpFaultContext.LastClear = NtGetTickCount64();
             AVrfClearStackTable(&AVrfpFaultContext.StackTable);
-
-            result = TRUE;
             goto Exit;
         }
     }
@@ -425,7 +427,6 @@ BOOLEAN AVrfpShouldFaultInjectCached(
                                       StackHash);
     if (!stackEntry || (stackEntry->Hash != StackHash))
     {
-        result = TRUE;
         goto Exit;
     }
 
@@ -437,17 +438,19 @@ BOOLEAN AVrfpShouldFaultInjectCached(
     //
     if (stackEntry->Excluded)
     {
-        result = FALSE;
+        *FaultInject = FALSE;
     }
     else if (!BooleanFlagOn(stackEntry->FaultMask, FaultType))
     {
         SetFlag(stackEntry->FaultMask, FaultType);
-        result = TRUE;
+        *FaultInject = TRUE;
     }
     else
     {
-        result = FALSE;
+        *FaultInject = FALSE;
     }
+
+    result = TRUE;
 
 Exit:
 
@@ -562,7 +565,7 @@ BOOLEAN AVrfShouldFaultInject(
 
     count = RtlCaptureStackBackTrace(1, ARRAYSIZE(frames), frames, &stackHash);
 
-    if (!AVrfpShouldFaultInjectCached(FaultType, stackHash))
+    if (AVrfpShouldFaultInjectCached(FaultType, stackHash, &result))
     {
         goto Exit;
     }
