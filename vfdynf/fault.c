@@ -358,6 +358,7 @@ BOOLEAN AVrfIsCallerIncluded(
         return TRUE;
     }
 
+    context.CallerAddress = CallerAddress;
     context.Result = FALSE;
 
     AVrfEnumLoadedModules(AVrfpFaultModuleEnumCallback, &context);
