@@ -31,7 +31,7 @@ typedef struct _VFDYNF_SYM_SYMBOLS
 {
     DECLSPEC_ALIGN(16) UNICODE_STRING StackSymbols;
     ULONG FramesCount;
-    PVOID Frames[100];
+    PVOID Frames[250];
     WCHAR SymbolBuffer[MAX_SYM_NAME + MAX_PATH + 1];
     DECLSPEC_ALIGN(16) WCHAR StackSymbolBuffer[UNICODE_STRING_MAX_CHARS];
 } VFDYNF_SYM_SYMBOLS, *PVFDYNF_SYM_SYMBOLS;
@@ -622,6 +622,8 @@ NTSTATUS AVrfSymGetSymbols(
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    FramesCount = min(FramesCount, ARRAYSIZE(sym->Symbols.Frames));
 
     RtlCopyMemory(sym->Symbols.Frames, Frames, FramesCount * sizeof(PVOID));
     sym->Symbols.FramesCount = FramesCount;
