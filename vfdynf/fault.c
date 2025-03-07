@@ -349,6 +349,11 @@ BOOLEAN AVrfIsCallerIncluded(
         return FALSE;
     }
 
+    if (!BooleanFlagOn(AVrfProperties.EnableFaultMask, FaultType))
+    {
+        return FALSE;
+    }
+
     AVRF_ASSERT(AVrfpFaultContext.RegexInitialized);
 
     context.Regex = AVrfpFaultContext.TypeIncludeRegex[AVrfpFaultTypeIndex(FaultType)];
