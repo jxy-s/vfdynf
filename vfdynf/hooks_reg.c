@@ -294,7 +294,8 @@ Hook_NtSetValueKey(
         return STATUS_NO_MEMORY;
     }
 
-    if (AVrfHookShouldVerifierStop() &&
+    if (AVrfProperties.EnableWriteFuzzedDataChecks &&
+        AVrfHookShouldVerifierStop() &&
         AVrfBufferIsPossiblyFuzzed(Data, DataSize))
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -793,7 +794,8 @@ Hook_Common_RegSetValueA(
         return ERROR_OUTOFMEMORY;
     }
 
-    if (AVrfHookShouldVerifierStop() &&
+    if (AVrfProperties.EnableWriteFuzzedDataChecks &&
+        AVrfHookShouldVerifierStop() &&
         AVrfBufferIsPossiblyFuzzed(lpData, cbData))
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -826,7 +828,8 @@ Hook_Common_RegSetValueW(
         return ERROR_OUTOFMEMORY;
     }
 
-    if (AVrfHookShouldVerifierStop() &&
+    if (AVrfProperties.EnableWriteFuzzedDataChecks &&
+        AVrfHookShouldVerifierStop() &&
         AVrfBufferIsPossiblyFuzzed(lpData, cbData))
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -860,7 +863,8 @@ Hook_Common_RegSetValueExA(
         return ERROR_OUTOFMEMORY;
     }
 
-    if (AVrfHookShouldVerifierStop() &&
+    if (AVrfProperties.EnableWriteFuzzedDataChecks &&
+        AVrfHookShouldVerifierStop() &&
         AVrfBufferIsPossiblyFuzzed(lpData, cbData))
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,
@@ -899,7 +903,8 @@ Hook_Common_RegSetValueExW(
         return ERROR_OUTOFMEMORY;
     }
 
-    if (AVrfHookShouldVerifierStop() &&
+    if (AVrfProperties.EnableWriteFuzzedDataChecks &&
+        AVrfHookShouldVerifierStop() &&
         AVrfBufferIsPossiblyFuzzed(lpData, cbData))
     {
         VerifierStopMessageEx(&AVrfLayerDescriptor,

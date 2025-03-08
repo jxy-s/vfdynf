@@ -25,6 +25,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .FuzzSizeTruncateProbability = 250000,
     .HeapReasonableAllocLimit = (1 << 30), // 1 GiB
     .EnableFaultsInLdrPath = FALSE,
+    .EnableWriteFuzzedDataChecks = TRUE,
     .TypeIncludeRegex = { 0 },
     .TypeExclusionsRegex = { 0 },
 };
@@ -158,6 +159,17 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"Enables fault injection when in the loader path. When disabled the "
         L"fault logic will check if the current thread is inside of the loader "
         L"path and skip fault injection if it is.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_BOOLEAN,
+        L"EnableWriteFuzzedDataChecks",
+        &AVrfProperties.EnableWriteFuzzedDataChecks,
+        sizeof(AVrfProperties.EnableWriteFuzzedDataChecks),
+        L"Enables checks of possibly writing a fuzzed buffer back to a system. "
+        L"Fuzzed data being written back to a system can cause corruption of "
+        L"the system. A resilient program would be capable of detecting the "
+        L"fuzzed corruption when reading and not write that back out.",
         NULL
     },
     {

@@ -499,17 +499,20 @@ VOID AVrfFuzzBuffer(
         remaining -= blockLength;
     }
 
-    //
-    // Logic elsewhere will try to detect if the buffer is possibly fuzzed.
-    // If the buffer is sufficiently large, ensure there are sentinel values
-    // at the end of the buffer for the check later.
-    //
-    // N.B. VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH is always >= VFDYNF_POSSIBLY_FUZZED_SENTINELS
-    //
-    if (Length >= VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH)
+    if (AVrfProperties.EnableWriteFuzzedDataChecks)
     {
-        AVrfFuzzFillMemory(Add2Ptr(Buffer, Length - VFDYNF_POSSIBLY_FUZZED_SENTINELS),
-                           VFDYNF_POSSIBLY_FUZZED_SENTINELS);
+        //
+        // Logic elsewhere will try to detect if the buffer is possibly fuzzed.
+        // If the buffer is sufficiently large, ensure there are sentinel values
+        // at the end of the buffer for the check later.
+        //
+        // N.B. VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH is always >= VFDYNF_POSSIBLY_FUZZED_SENTINELS
+        //
+        if (Length >= VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH)
+        {
+            AVrfFuzzFillMemory(Add2Ptr(Buffer, Length - VFDYNF_POSSIBLY_FUZZED_SENTINELS),
+                               VFDYNF_POSSIBLY_FUZZED_SENTINELS);
+        }
     }
 }
 
