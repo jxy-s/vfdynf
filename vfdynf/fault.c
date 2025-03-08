@@ -538,7 +538,7 @@ VOID AVrfpRecordLastFaultStack(
     // N.B. No lock is acquired but a thread is atomically given an index.
     // It is possible for multiple threads to write to the same tracking slot
     // at the same time. But this is just opportunistic tracking so we forgo
-    // and assurances around consistency, instead we go for speed.
+    // any assurances around consistency, instead we go for speed.
     //
 
     index = InterlockedIncrement(&AVrfpFaultContext.LastFaultStacksIndex);
