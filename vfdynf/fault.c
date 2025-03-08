@@ -4,6 +4,9 @@
 #include <vfdynf.h>
 #include <delayld.h>
 
+#define VRDYNF_FAULT_STACK_FRAMES 250
+#define VFDYNF_FAULT_STACKS_COUNT 32
+
 typedef struct _VFDYNF_FAULT_ENUM_MODULES_CONTEXT
 {
     PVOID CallerAddress;
@@ -23,6 +26,13 @@ typedef struct _VFDYNF_FAULT_COUNT
     volatile LONG True;
 } VFDYNF_FAULT_COUNT, *PVFDYNF_FAULT_COUNT;
 
+typedef struct _VFDYNF_FAULT_STACK
+{
+    ULONG StackHash;
+    ULONG FramesCount;
+    PVOID Frames[VRDYNF_FAULT_STACK_FRAMES];
+} VFDYNF_FAULT_STACK, *PVFDYNF_FAULT_STACK;
+
 typedef struct _VFDYNF_FAULT_CONTEXT
 {
     BOOLEAN Initialized;
@@ -38,6 +48,8 @@ typedef struct _VFDYNF_FAULT_CONTEXT
     VFDYNF_FAULT_COUNT TypeCount[VFDYNF_FAULT_TYPE_COUNT];
     PCRE2_HANDLE TypeIncludeRegex[VFDYNF_FAULT_TYPE_COUNT];
     VFDYNF_EXCLUSION_REGEX TypeExclusions[VFDYNF_FAULT_TYPE_COUNT];
+    volatile LONG LastFaultStacksIndex;
+    VFDYNF_FAULT_STACK LastFaultStacks[VFDYNF_FAULT_STACKS_COUNT];
 } VFDYNF_FAULT_CONTEXT, *PVFDYNF_FAULT_CONTEXT;
 
 static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
@@ -55,6 +67,8 @@ static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
     .TypeCount = { 0 },
     .TypeIncludeRegex = { 0 },
     .TypeExclusions = { 0 },
+    .LastFaultStacksIndex = 0,
+    .LastFaultStacks = { 0 },
 };
 
 ULONG AVrfpFaultTypeIndex(
@@ -508,6 +522,46 @@ Exit:
     AVrfLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
 }
 
+VOID AVrfpRecordLastFaultStack(
+    _In_ ULONG StackHash,
+    _In_count_(FramesCount) CONST PVOID* Frames,
+    _In_ ULONG FramesCount
+    )
+{
+    ULONG index;
+    PVFDYNF_FAULT_STACK stack;
+    ULONG count;
+    ULONG remaining;
+    ULONG i;
+
+    //
+    // N.B. No lock is acquired but a thread is atomically given an index.
+    // It is possible for multiple threads to write to the same tracking slot
+    // at the same time. But this is just opportunistic tracking so we forgo
+    // and assurances around consistency, instead we go for speed.
+    //
+
+    index = InterlockedIncrement(&AVrfpFaultContext.LastFaultStacksIndex);
+    stack = &AVrfpFaultContext.LastFaultStacks[index % VFDYNF_FAULT_STACKS_COUNT];
+
+    count = min(FramesCount, ARRAYSIZE(stack->Frames));
+    remaining = (ARRAYSIZE(stack->Frames) - count);
+
+    stack->StackHash = StackHash;
+
+    for (i = 0; i < count; i++)
+    {
+        stack->Frames[i] = Frames[i];
+    }
+
+    if (i < remaining)
+    {
+        stack->Frames[i] = NULL;
+    }
+
+    stack->FramesCount = FramesCount;
+}
+
 BOOLEAN AVrfShouldFaultInject(
     _In_ ULONG FaultType,
     _In_opt_ _Maybenull_ PVOID CallerAddress
@@ -517,12 +571,14 @@ BOOLEAN AVrfShouldFaultInject(
     NTSTATUS status;
     PVFDYNF_FAULT_COUNT faultCount;
     ULONG stackHash;
-    PVOID frames[250];
+    PVOID frames[VRDYNF_FAULT_STACK_FRAMES];
     USHORT count;
     PUNICODE_STRING stackSymbols;
 
     result = FALSE;
     faultCount = NULL;
+    stackHash = 0;
+    count = 0;
 
     if (!AVrfpFaultContext.Initialized)
     {
@@ -639,6 +695,11 @@ Exit:
     if (faultCount)
     {
         InterlockedIncrement(result ? &faultCount->True : &faultCount->False);
+
+        if (result)
+        {
+            AVrfpRecordLastFaultStack(stackHash, frames, count);
+        }
     }
 
     return result;

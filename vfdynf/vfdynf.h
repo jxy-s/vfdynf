@@ -324,7 +324,7 @@ BOOLEAN AvrfIsSymProviderThread(
     );
 
 NTSTATUS AVrfSymGetSymbols(
-    _In_ PVOID Frames,
+    _In_count_(FramesCount) CONST PVOID* Frames,
     _In_ ULONG FramesCount,
     _Out_ PUNICODE_STRING* StackSymbols,
     _In_opt_ PLARGE_INTEGER Timeout
