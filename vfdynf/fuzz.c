@@ -6,8 +6,8 @@
 
 #define VFDYNF_FUZZ_BLOCK_SIZE            (0x1000 / 4)
 #define VFDYNF_RAND_VECTOR_SIZE           0x4000
-#define VFDYNF_FUZZ_MMAP_COUNT            1024
-#define VFDYNF_FUZZED_BUFFERS_COUNT       1024
+#define VFDYNF_FUZZ_MMAP_COUNT            512
+#define VFDYNF_FUZZED_BUFFERS_COUNT       512
 #define VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH   (sizeof(ULONG64) * 2)
 #define VFDYNF_FUZZ_CLASSIFY_SENTINELS    5
 #define VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH 9
@@ -43,10 +43,10 @@ typedef struct _VFDYNF_FUZZ_CONTEXT
     volatile LONG Index;
     BYTE Vector[0x4000];
     RTL_CRITICAL_SECTION CriticalSection;
-    ULONG MMapEntryCount;
-    VFDYNF_FUZZ_MMAP_ENTRY MMapEntries[VFDYNF_FUZZ_MMAP_COUNT];
-    volatile LONG BufferIndex;
+    volatile LONG BufferIndex; // FuzzedBuffers index (% by VFDYNF_FUZZED_BUFFERS_COUNT)
+    ULONG MMapEntryCount;      // Number of MMapEntries
     VFDYNF_FUZZED_BUFFER_ENTRY FuzzedBuffers[VFDYNF_FUZZED_BUFFERS_COUNT];
+    VFDYNF_FUZZ_MMAP_ENTRY MMapEntries[VFDYNF_FUZZ_MMAP_COUNT];
 } VFDYNF_FUZZ_CONTEXT, *PVFDYNF_FUZZ_CONTEXT;
 
 static AVRF_RUN_ONCE AVrfpFuzzRunOnce = AVRF_RUN_ONCE_INIT;
