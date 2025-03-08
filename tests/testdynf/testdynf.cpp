@@ -484,6 +484,8 @@ void DoRegTest(uint32_t Id, PCWSTR ValueName, ULONG Type, PVOID Data, ULONG Data
         else if (memcmp(buffer, Data, DataSize))
         {
             LogPrintID("caught registry data fuzzing");
+            // Will verifier stop, uncomment for testing.
+            //RegSetValueExW(key, ValueName, 0, Type, buffer, sizeof(buffer));
         }
     }
     else

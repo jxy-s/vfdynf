@@ -221,6 +221,9 @@ typedef struct _VFDYNF_PROPERTIES
 
 #define VFDYNF_CODE_DEPRECATED_FUNCTION    0xdf01
 #define VFDYNF_CODE_HEAP_ALLOC_LIMIT       0xdf02
+#define VFDYNF_CODE_WRITE_FUZZED_DATA_REG  0xdf03
+#define VFDYNF_CODE_WRITE_FUZZED_DATA_FILE 0xdf04 // not yet implemented
+#define VFDYNF_CODE_WRITE_FUZZED_DATA_NET  0xdf05 // not yet implemented
 
 // dllmain.c
 
@@ -406,6 +409,11 @@ PVOID AVrfFuzzMemoryMapping(
 
 PVOID AVrfForgetFuzzedMemoryMapping(
     _In_ PVOID BaseAddress
+    );
+
+BOOLEAN AVrfBufferIsPossiblyFuzzed(
+    _In_reads_bytes_opt_(Length) CONST VOID* Buffer,
+    _In_ SIZE_T Length
     );
 
 // fault.c

@@ -10,6 +10,10 @@
 #define IDS_HEAP_ALLOC_LIMIT_DESCRIPTION       1005
 #define IDS_HEAP_ALLOC_LIMIT_MESSAGE           1006
 #define IDS_HEAP_ALLOC_LIMIT_PARAM_1           1007
+#define IDS_WRITE_FUZZED_DATA_DESCRIPTION      1008
+#define IDS_WRITE_FUZZED_DATA_MESSAGE          1009
+#define IDS_WRITE_FUZZED_DATA_PARAM_1          1010
+#define IDS_WRITE_FUZZED_DATA_PARAM_2          1011
 
 // Next default values for new objects
 //

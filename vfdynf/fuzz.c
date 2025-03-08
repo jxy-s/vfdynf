@@ -4,12 +4,16 @@
 #include <vfdynf.h>
 #include <delayld.h>
 
-#define VFDYNF_FUZZ_BLOCK_SIZE          (0x1000 / 4)
-#define VFDYNF_RAND_VECTOR_SIZE         0x4000
-#define VFDYNF_FUZZ_MMAP_COUNT          1024
-#define VFDYNF_FUZZED_BUFFERS_COUNT     1024
-#define VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH (sizeof(ULONG64) * 2)
-#define VFDYNF_FUZZ_CLASSIFY_SENTINELS  5
+#define VFDYNF_FUZZ_BLOCK_SIZE            (0x1000 / 4)
+#define VFDYNF_RAND_VECTOR_SIZE           0x4000
+#define VFDYNF_FUZZ_MMAP_COUNT            1024
+#define VFDYNF_FUZZED_BUFFERS_COUNT       1024
+#define VFDYNF_FUZZ_CLASSIFY_MIN_LENGTH   (sizeof(ULONG64) * 2)
+#define VFDYNF_FUZZ_CLASSIFY_SENTINELS    5
+#define VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH 9
+#define VFDYNF_POSSIBLY_FUZZED_SENTINELS  5
+
+C_ASSERT(VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH >= VFDYNF_POSSIBLY_FUZZED_SENTINELS);
 
 typedef struct _VFDYNF_FUZZ_MMAP_ENTRY
 {
@@ -494,6 +498,19 @@ VOID AVrfFuzzBuffer(
 
         remaining -= blockLength;
     }
+
+    //
+    // Logic elsewhere will try to detect if the buffer is possibly fuzzed.
+    // If the buffer is sufficiently large, ensure there are sentinel values
+    // at the end of the buffer for the check later.
+    //
+    // N.B. VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH is always >= VFDYNF_POSSIBLY_FUZZED_SENTINELS
+    //
+    if (Length >= VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH)
+    {
+        AVrfFuzzFillMemory(Add2Ptr(Buffer, Length - VFDYNF_POSSIBLY_FUZZED_SENTINELS),
+                           VFDYNF_POSSIBLY_FUZZED_SENTINELS);
+    }
 }
 
 VOID AVrfFuzzSize(
@@ -673,6 +690,35 @@ PVOID AVrfForgetFuzzedMemoryMapping(
     AVrfLeaveCriticalSection(&AVrfpFuzzContext.CriticalSection);
 
     return baseAddress;
+}
+
+BOOLEAN AVrfBufferIsPossiblyFuzzed(
+    _In_reads_bytes_opt_(Length) CONST VOID* Buffer,
+    _In_ SIZE_T Length
+    )
+{
+    //
+    // N.B. VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH is always >= VFDYNF_POSSIBLY_FUZZED_SENTINELS
+    //
+
+    if (!Buffer || (Length < VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH))
+    {
+        return FALSE;
+    }
+
+    for (ULONG i = 0; i < VFDYNF_POSSIBLY_FUZZED_SENTINELS; i++)
+    {
+        PBYTE byte;
+
+        byte = Add2Ptr(Buffer, (Length - VFDYNF_POSSIBLY_FUZZED_SENTINELS) + i);
+
+        if (*byte != VFDYNF_FUZZ_SENTINEL)
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 BOOLEAN AVrfFuzzProcessAttach(

@@ -294,6 +294,18 @@ Hook_NtSetValueKey(
         return STATUS_NO_MEMORY;
     }
 
+    if (AVrfHookShouldVerifierStop() &&
+        AVrfBufferIsPossiblyFuzzed(Data, DataSize))
+    {
+        VerifierStopMessageEx(&AVrfLayerDescriptor,
+                              VFDYNF_CODE_WRITE_FUZZED_DATA_REG,
+                              (ULONG_PTR)Data,
+                              DataSize,
+                              0,
+                              0,
+                              0);
+    }
+
     return Orig_NtSetValueKey(KeyHandle,
                               ValueName,
                               TitleIndex,
@@ -781,6 +793,18 @@ Hook_Common_RegSetValueA(
         return ERROR_OUTOFMEMORY;
     }
 
+    if (AVrfHookShouldVerifierStop() &&
+        AVrfBufferIsPossiblyFuzzed(lpData, cbData))
+    {
+        VerifierStopMessageEx(&AVrfLayerDescriptor,
+                              VFDYNF_CODE_WRITE_FUZZED_DATA_REG,
+                              (ULONG_PTR)lpData,
+                              cbData,
+                              0,
+                              0,
+                              0);
+    }
+
     return Orig_RegSetValueA(hKey, lpSubKey, dwType, lpData, cbData);
 }
 
@@ -800,6 +824,18 @@ Hook_Common_RegSetValueW(
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return ERROR_OUTOFMEMORY;
+    }
+
+    if (AVrfHookShouldVerifierStop() &&
+        AVrfBufferIsPossiblyFuzzed(lpData, cbData))
+    {
+        VerifierStopMessageEx(&AVrfLayerDescriptor,
+                              VFDYNF_CODE_WRITE_FUZZED_DATA_REG,
+                              (ULONG_PTR)lpData,
+                              cbData,
+                              0,
+                              0,
+                              0);
     }
 
     return Orig_RegSetValueW(hKey, lpSubKey, dwType, lpData, cbData);
@@ -822,6 +858,18 @@ Hook_Common_RegSetValueExA(
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return ERROR_OUTOFMEMORY;
+    }
+
+    if (AVrfHookShouldVerifierStop() &&
+        AVrfBufferIsPossiblyFuzzed(lpData, cbData))
+    {
+        VerifierStopMessageEx(&AVrfLayerDescriptor,
+                              VFDYNF_CODE_WRITE_FUZZED_DATA_REG,
+                              (ULONG_PTR)lpData,
+                              cbData,
+                              0,
+                              0,
+                              0);
     }
 
     return Orig_RegSetValueExA(hKey,
@@ -849,6 +897,18 @@ Hook_Common_RegSetValueExW(
     if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_REG))
     {
         return ERROR_OUTOFMEMORY;
+    }
+
+    if (AVrfHookShouldVerifierStop() &&
+        AVrfBufferIsPossiblyFuzzed(lpData, cbData))
+    {
+        VerifierStopMessageEx(&AVrfLayerDescriptor,
+                              VFDYNF_CODE_WRITE_FUZZED_DATA_REG,
+                              (ULONG_PTR)lpData,
+                              cbData,
+                              0,
+                              0,
+                              0);
     }
 
     return Orig_RegSetValueExW(hKey,
