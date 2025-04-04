@@ -5,6 +5,8 @@
 #include <delayld.h>
 #include <strsafe.h>
 
+#define VFDYNF_SYM_ABANDONED_THRESHOLD 500
+
 typedef union _VFDYNF_SYM_MODULE_ENUM_CONTEXT
 {
     struct
@@ -29,6 +31,7 @@ typedef enum _VFDYNF_SYM_REQUEST_TYPE
 
 typedef struct _VFDYNF_SYM_SYMBOLS
 {
+    volatile BOOLEAN Abandoned;
     DECLSPEC_ALIGN(16) UNICODE_STRING StackSymbols;
     ULONG FramesCount;
     PVOID Frames[250];
@@ -69,6 +72,7 @@ typedef struct _VFDYNF_SYMBOL_PROVDER_CONTEXT
     HANDLE WorkerThreadHandle;
     HANDLE WorkerThreadId;
     volatile HANDLE InitThreadId;
+    volatile LONG CurrentAbandoned;
     SLIST_HEADER WorkQueue;
     HANDLE WorkQueueEvent;
     SLIST_HEADER FreeList;
@@ -85,6 +89,7 @@ static VFDYNF_SYMBOL_PROVDER_CONTEX AVrfpSymContext =
     .CriticalSection = { 0 },
     .WorkerThreadHandle = NULL,
     .WorkerThreadId = NULL,
+    .CurrentAbandoned = 0,
     .InitThreadId = NULL,
     .WorkQueue = { 0 },
     .WorkQueueEvent = { 0 },
@@ -156,7 +161,28 @@ VOID AVrfpSymDereference(
 {
     if (!InterlockedDecrement(&Sym->RefCount))
     {
+        if (InterlockedExchangeAcquireBoolean(&Sym->Symbols.Abandoned, FALSE))
+            InterlockedDecrement((LONG volatile*)&AVrfpSymContext.CurrentAbandoned);
+
         RtlInterlockedPushEntrySList(&AVrfpSymContext.FreeList, &Sym->Entry);
+    }
+}
+
+VOID AVrfpSymAbandonSymbolsRequest(
+    _Inout_ PVFDYNF_SYM_REQUEST Sym
+    )
+{
+    ULONG abandoned;
+
+    abandoned = (ULONG)InterlockedIncrement(&AVrfpSymContext.CurrentAbandoned);
+
+    WriteReleaseBoolean(&Sym->Symbols.Abandoned, TRUE);
+
+    if (abandoned == VFDYNF_SYM_ABANDONED_THRESHOLD)
+    {
+        AVrfDbgPrint(DPFLTR_WARNING_LEVEL,
+                     "abandoned threshold reached %d",
+                     abandoned);
     }
 }
 
@@ -349,6 +375,17 @@ NTSTATUS AVrfpSymResolveSymbols(
 
         context.Sym.Frame = frame;
         context.Sym.Symbol = &symbol;
+
+        if (ReadAcquireBoolean(&Sym->Abandoned))
+        {
+            //
+            // The thread waiting on this to complete has timed out and no
+            // longer wants a result, stop processing. In situations where
+            // the work queue is backing up this helps with recovery.
+            //
+            status = STATUS_ABANDONED;
+            goto Exit;
+        }
 
         if (!AVrfEnumLoadedModules(AVrfpSymModuleEnumCallback, &context))
         {
@@ -626,9 +663,23 @@ NTSTATUS AVrfSymGetSymbols(
     )
 {
     NTSTATUS status;
+    ULONG abandoned;
     PVFDYNF_SYM_REQUEST sym;
 
     *StackSymbols = NULL;
+
+    abandoned = (ULONG)ReadAcquire(&AVrfpSymContext.CurrentAbandoned);
+    if (abandoned >= VFDYNF_SYM_ABANDONED_THRESHOLD)
+    {
+        //
+        // The number of queued an abandoned requests has reached a limit which
+        // justifies trying to allow the process to recover. Do not allow any
+        // more symbol resolution requests until the system drops back below
+        // the threshold. The worker thread is currently abandoning work in the
+        // queue in order to recover.
+        //
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     sym = AVrfpSymCreateRequest();
     if (!sym)
@@ -646,6 +697,7 @@ NTSTATUS AVrfSymGetSymbols(
     status = NtWaitForSingleObject(sym->Event, FALSE, Timeout);
     if (status != STATUS_SUCCESS)
     {
+        AVrfpSymAbandonSymbolsRequest(sym);
         AVrfpSymDereference(sym);
         return status;
     }

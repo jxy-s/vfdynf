@@ -139,10 +139,21 @@ WriteReleaseBoolean(
 FORCEINLINE
 BOOLEAN
 ReadAcquireBoolean(
-    _In_ _Interlocked_operand_ BOOLEAN const volatile *Source
+    _In_ _Interlocked_operand_ BOOLEAN const volatile* Source
     )
 {
     return (BOOLEAN)ReadAcquire8((CHAR const volatile*)Source);
+}
+
+FORCEINLINE
+BOOLEAN
+InterlockedExchangeAcquireBoolean(
+    _Inout_ _Interlocked_operand_ BOOLEAN volatile* Target,
+    _In_ BOOLEAN Value
+    )
+{
+    return (BOOLEAN)InterlockedExchangeAcquire8((CHAR volatile*)Target,
+                                                (CHAR)Value);
 }
 
 #define VFDYNF_FAULT_TYPE_WAIT            0x00000001ul
