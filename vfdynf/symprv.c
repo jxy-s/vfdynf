@@ -518,7 +518,20 @@ NTSTATUS NTAPI AVrfpSymWorker(
     _In_ PVOID ThreadParameter
     )
 {
+    KPRIORITY threadPriority;
+
     UNREFERENCED_PARAMETER(ThreadParameter);
+
+    //
+    // This thread has the potential to block all other threads in the process
+    // waiting on it to complete resolving symbols. It must take priority.
+    //
+    threadPriority = THREAD_PRIORITY_HIGHEST;
+
+    NtSetInformationThread(NtCurrentThread(),
+                           ThreadBasePriority,
+                           &threadPriority,
+                           sizeof(KPRIORITY));
 
     while (!ReadAcquireBoolean(&AVrfpSymContext.StopWorker))
     {
