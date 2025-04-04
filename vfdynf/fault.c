@@ -4,7 +4,7 @@
 #include <vfdynf.h>
 #include <delayld.h>
 
-#define VRDYNF_FAULT_STACK_FRAMES 250
+#define VFDYNF_FAULT_STACK_FRAMES 250
 #define VFDYNF_FAULT_STACKS_COUNT 32
 
 typedef struct _VFDYNF_FAULT_ENUM_MODULES_CONTEXT
@@ -30,7 +30,7 @@ typedef struct _VFDYNF_FAULT_STACK
 {
     ULONG StackHash;
     ULONG FramesCount;
-    PVOID Frames[VRDYNF_FAULT_STACK_FRAMES];
+    PVOID Frames[VFDYNF_FAULT_STACK_FRAMES];
 } VFDYNF_FAULT_STACK, *PVFDYNF_FAULT_STACK;
 
 typedef struct _VFDYNF_FAULT_CONTEXT
@@ -571,7 +571,7 @@ BOOLEAN AVrfShouldFaultInject(
     NTSTATUS status;
     PVFDYNF_FAULT_COUNT faultCount;
     ULONG stackHash;
-    PVOID frames[VRDYNF_FAULT_STACK_FRAMES];
+    PVOID frames[VFDYNF_FAULT_STACK_FRAMES];
     USHORT count;
     PUNICODE_STRING stackSymbols;
 
