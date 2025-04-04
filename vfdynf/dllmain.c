@@ -26,6 +26,8 @@ VFDYNF_PROPERTIES AVrfProperties =
     .HeapReasonableAllocLimit = (1 << 30), // 1 GiB
     .EnableFaultsInLdrPath = FALSE,
     .EnableWriteFuzzedDataChecks = TRUE,
+    .SymResolveTimeout = 1000,
+    .SymAbandonedThreshold = 200,
     .TypeIncludeRegex = { 0 },
     .TypeExclusionsRegex = { 0 },
 };
@@ -170,6 +172,31 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"Fuzzed data being written back to a system can cause corruption of "
         L"the system. A resilient program would be capable of detecting the "
         L"fuzzed corruption when reading and not write that back out.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"SymResolveTimeout",
+        &AVrfProperties.SymResolveTimeout,
+        sizeof(AVrfProperties.SymResolveTimeout),
+        L"Timeout, in milliseconds, that the fault injection logic waits for "
+        L"symbols to resolve. If this timeout is reached a fault is not "
+        L"injected. Tuning this parameter can be useful in stress testing "
+        L"workloads to allow forward progress if symbol resolution is slow.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"SymAbandonedThreshold",
+        &AVrfProperties.SymAbandonedThreshold,
+        sizeof(AVrfProperties.SymAbandonedThreshold),
+        L"When a symbol request times out it becomes abandoned in the worker "
+        L"queue. If the number of abandoned requests reaches this threshold, "
+        L"further requests to resolve symbols is walled off until the worker "
+        L"queue drains the abandoned requests. This provides an opportunity "
+        L"for the system to recover. Tuning this parameter can be useful in "
+        L"stress testing workloads to allow forward progress if symbol "
+        L"resolution is slow.",
         NULL
     },
     {

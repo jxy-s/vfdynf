@@ -38,7 +38,6 @@ typedef struct _VFDYNF_FAULT_CONTEXT
     BOOLEAN Initialized;
     ULONG ActiveSeed;
     ULONG TypeBase;
-    LARGE_INTEGER SymTimeout;
     RTL_CRITICAL_SECTION CriticalSection;
     ULONG64 LastClear;
     AVRF_STACK_TABLE StackTable;
@@ -57,7 +56,6 @@ static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
     .Initialized = FALSE,
     .ActiveSeed = 0,
     .TypeBase = ULONG_MAX,
-    .SymTimeout = AVRF_TIMEOUT(1000),
     .CriticalSection = { 0 },
     .LastClear = 0,
     .StackTable = { 0 },
@@ -574,6 +572,7 @@ BOOLEAN AVrfShouldFaultInject(
     PVOID frames[VFDYNF_FAULT_STACK_FRAMES];
     USHORT count;
     PUNICODE_STRING stackSymbols;
+    LARGE_INTEGER symTimeout;
 
     result = FALSE;
     faultCount = NULL;
@@ -651,10 +650,9 @@ BOOLEAN AVrfShouldFaultInject(
     // overrides to write expressions for an entire stack.
     //
 
-    status = AVrfSymGetSymbols(frames,
-                               count,
-                               &stackSymbols,
-                               &AVrfpFaultContext.SymTimeout);
+    symTimeout.QuadPart = (-10000LL * AVrfProperties.SymResolveTimeout);
+
+    status = AVrfSymGetSymbols(frames, count, &stackSymbols, &symTimeout);
     if (status == STATUS_DEVICE_NOT_READY)
     {
         //

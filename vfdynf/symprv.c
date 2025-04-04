@@ -5,8 +5,6 @@
 #include <delayld.h>
 #include <strsafe.h>
 
-#define VFDYNF_SYM_ABANDONED_THRESHOLD 500
-
 typedef union _VFDYNF_SYM_MODULE_ENUM_CONTEXT
 {
     struct
@@ -178,7 +176,7 @@ VOID AVrfpSymAbandonSymbolsRequest(
 
     WriteReleaseBoolean(&Sym->Symbols.Abandoned, TRUE);
 
-    if (abandoned == VFDYNF_SYM_ABANDONED_THRESHOLD)
+    if (abandoned == AVrfProperties.SymAbandonedThreshold)
     {
         AVrfDbgPrint(DPFLTR_WARNING_LEVEL,
                      "abandoned threshold reached %d",
@@ -669,7 +667,7 @@ NTSTATUS AVrfSymGetSymbols(
     *StackSymbols = NULL;
 
     abandoned = (ULONG)ReadAcquire(&AVrfpSymContext.CurrentAbandoned);
-    if (abandoned >= VFDYNF_SYM_ABANDONED_THRESHOLD)
+    if (abandoned >= AVrfProperties.SymAbandonedThreshold)
     {
         //
         // The number of queued an abandoned requests has reached a limit which

@@ -70,8 +70,6 @@ DbgPrintEx(DPFLTR_VERIFIER_ID,                                                \
 #define AVRF_ASSERT(_exp) ((void)0)
 #endif
 
-#define AVRF_TIMEOUT(ms) { .QuadPart = (-10000ll * (ms)) }
-
 FORCEINLINE
 VOID
 AVrfInitializeCriticalSection(
@@ -226,6 +224,8 @@ typedef struct _VFDYNF_PROPERTIES
     ULONG64 HeapReasonableAllocLimit;
     BOOLEAN EnableFaultsInLdrPath;
     BOOLEAN EnableWriteFuzzedDataChecks;
+    ULONG SymResolveTimeout;
+    ULONG SymAbandonedThreshold;
     WCHAR StopRegex[VFDYN_REGEX_MAX_LENGTH];
     WCHAR TypeIncludeRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_REGEX_MAX_LENGTH];
     WCHAR TypeExclusionsRegex[VFDYNF_FAULT_TYPE_COUNT][VFDYN_REGEX_MAX_LENGTH];
