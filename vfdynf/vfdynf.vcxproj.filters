@@ -26,8 +26,12 @@
     <ClInclude Include="hooks.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="delayld.h" />
+    <ClInclude Include="vfdynfapi.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="vfdynf.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vfdynf.def" />
   </ItemGroup>
 </Project>

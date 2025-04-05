@@ -19,6 +19,7 @@
 #include <assert.h>
 
 #include <pcre2_vfdynf.h>
+#include <vfdynfapi.h>
 
 #include <resource.h>
 
@@ -154,19 +155,9 @@ InterlockedExchangeAcquireBoolean(
                                                 (CHAR)Value);
 }
 
-#define VFDYNF_FAULT_TYPE_WAIT            0x00000001ul
-#define VFDYNF_FAULT_TYPE_HEAP            0x00000002ul
-#define VFDYNF_FAULT_TYPE_VMEM            0x00000004ul
-#define VFDYNF_FAULT_TYPE_REG             0x00000008ul
-#define VFDYNF_FAULT_TYPE_FILE            0x00000010ul
-#define VFDYNF_FAULT_TYPE_EVENT           0x00000020ul
-#define VFDYNF_FAULT_TYPE_SECTION         0x00000040ul
-#define VFDYNF_FAULT_TYPE_OLE             0x00000080ul
-#define VFDYNF_FAULT_TYPE_INPAGE          0x00000100ul
-#define VFDYNF_FAULT_TYPE_FUZZ_REG        0x00000200ul
-#define VFDYNF_FAULT_TYPE_FUZZ_FILE       0x00000400ul
-#define VFDYNF_FAULT_TYPE_FUZZ_MMAP       0x00000800ul
-#define VFDYNF_FAULT_TYPE_FUZZ_NET        0x00001000ul
+//
+// See vfdynfapi.h for VFDYNF_FAULT_TYPE_*
+//
 
 #define VFDYNF_FAULT_TYPE_INDEX_WAIT      0ul
 #define VFDYNF_FAULT_TYPE_INDEX_HEAP      1ul
@@ -284,6 +275,16 @@ typedef AVRF_MODULE_ENUM_CALLBACK* PAVRF_MODULE_ENUM_CALLBACK;
 BOOLEAN AVrfEnumLoadedModules(
     _In_ PAVRF_MODULE_ENUM_CALLBACK Callback,
     _In_opt_ PVOID Context
+    );
+
+typedef struct _VFDYNF_TLS
+{
+    ULONG SuppressFaultMask;
+} VFDYNF_TLS, *PVFDYNF_TLS;
+
+_Maybenull_
+PVFDYNF_TLS AVrfGetTls(
+    VOID
     );
 
 // stop.c
@@ -446,14 +447,6 @@ BOOLEAN AVrfIsCallerIncluded(
 BOOLEAN AVrfShouldFaultInject(
     _In_ ULONG FaultType,
     _In_opt_ _Maybenull_ PVOID CallerAddress
-    );
-
-VOID AVrfDisableCurrentThreadFaultInjection(
-    VOID
-    );
-
-VOID AVrfEnableCurrentThreadFaultInjection(
-    VOID
     );
 
 // stacktrk.c

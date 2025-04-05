@@ -36,6 +36,7 @@ typedef struct _VFDYNF_FAULT_STACK
 typedef struct _VFDYNF_FAULT_CONTEXT
 {
     BOOLEAN Initialized;
+    volatile ULONG SuppressFaultMask;
     ULONG ActiveSeed;
     ULONG TypeBase;
     RTL_CRITICAL_SECTION CriticalSection;
@@ -54,6 +55,7 @@ typedef struct _VFDYNF_FAULT_CONTEXT
 static VFDYNF_FAULT_CONTEXT AVrfpFaultContext =
 {
     .Initialized = FALSE,
+    .SuppressFaultMask = 0,
     .ActiveSeed = 0,
     .TypeBase = ULONG_MAX,
     .CriticalSection = { 0 },
@@ -383,25 +385,6 @@ BOOLEAN AVrfIsCallerIncluded(
     return context.Result;
 }
 
-VOID AVrfDisableCurrentThreadFaultInjection(
-    VOID
-    )
-{
-    AVrfEnterCriticalSection(&AVrfpFaultContext.CriticalSection);
-}
-
-VOID AVrfEnableCurrentThreadFaultInjection(
-    VOID
-    )
-{
-    //
-    // Could use TLS for this, but we're already preventing fault injection
-    // where we don't want it with the critical section, so hijack it instead.
-    //
-#pragma prefast(suppress : 26110)
-    AVrfLeaveCriticalSection(&AVrfpFaultContext.CriticalSection);
-}
-
 BOOLEAN AVrfpShouldFaultInjectCached(
     _In_ ULONG FaultType,
     _In_ ULONG StackHash,
@@ -560,6 +543,38 @@ VOID AVrfpRecordLastFaultStack(
     stack->FramesCount = FramesCount;
 }
 
+BOOLEAN AVrfpFaultTypeIsEnabled(
+    _In_ ULONG FaultType
+    )
+{
+    ULONG disabledFaultMask;
+    PVFDYNF_TLS tls;
+
+    if (!BooleanFlagOn(AVrfProperties.EnableFaultMask, FaultType))
+    {
+        return FALSE;
+    }
+
+    disabledFaultMask = ReadULongAcquire(&AVrfpFaultContext.SuppressFaultMask);
+    if (BooleanFlagOn(disabledFaultMask, FaultType))
+    {
+        return FALSE;
+    }
+
+    tls = AVrfGetTls();
+    if (!tls)
+    {
+        return FALSE;
+    }
+
+    if (BooleanFlagOn(tls->SuppressFaultMask, FaultType))
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 BOOLEAN AVrfShouldFaultInject(
     _In_ ULONG FaultType,
     _In_opt_ _Maybenull_ PVOID CallerAddress
@@ -589,11 +604,8 @@ BOOLEAN AVrfShouldFaultInject(
         goto Exit;
     }
 
-    if (!BooleanFlagOn(AVrfProperties.EnableFaultMask, FaultType))
+    if (!AVrfpFaultTypeIsEnabled(FaultType))
     {
-        //
-        // Fault type is not enabled.
-        //
         goto Exit;
     }
 
@@ -902,4 +914,52 @@ VOID AVrfFaultProcessDetach(
     }
 
     AVrfFreeStackTable(&AVrfpFaultContext.StackTable);
+}
+
+VOID NTAPI AVrfSuppressFaultInjection(
+    _In_ ULONG FaultMask
+    )
+{
+    InterlockedOrRelease((LONG volatile*)&AVrfpFaultContext.SuppressFaultMask,
+                         (LONG)FaultMask);
+}
+
+VOID NTAPI AVrfRestoreFaultInjection(
+    _In_ ULONG FaultMask
+    )
+{
+    InterlockedAndRelease((LONG volatile*)&AVrfpFaultContext.SuppressFaultMask,
+                          (LONG)(~FaultMask));
+}
+
+BOOLEAN NTAPI AVrfSuppressCurrentThreadFaultInjection(
+    _In_ ULONG FaultMask
+    )
+{
+    PVFDYNF_TLS tls;
+
+    tls = AVrfGetTls();
+    if (tls)
+    {
+        SetFlag(tls->SuppressFaultMask, FaultMask);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOLEAN NTAPI AVrfRestoreCurrentThreadFaultInjection(
+    _In_ ULONG FaultMask
+    )
+{
+    PVFDYNF_TLS tls;
+
+    tls = AVrfGetTls();
+    if (tls)
+    {
+        ClearFlag(tls->SuppressFaultMask, FaultMask);
+        return TRUE;
+    }
+
+    return FALSE;
 }

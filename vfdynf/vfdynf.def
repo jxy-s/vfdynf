@@ -1,0 +1,6 @@
+LIBRARY vfdynf.dll
+EXPORTS
+    AVrfSuppressFaultInjection
+    AVrfRestoreFaultInjection
+    AVrfSuppressCurrentThreadFaultInjection
+    AVrfRestoreCurrentThreadFaultInjection

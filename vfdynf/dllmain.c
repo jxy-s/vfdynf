@@ -969,9 +969,11 @@ BOOLEAN AVrfpProviderProcessAttach(
 {
     ULONG err;
 
+    AVrfLinkHooks();
+
     err = VerifierRegisterLayerEx(Module,
                                   &AVrfLayerDescriptor,
-                                  0);
+                                  AVRF_LAYER_FLAG_TLS_SLOT);
     if (err != ERROR_SUCCESS)
     {
         AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
@@ -992,14 +994,6 @@ BOOLEAN AVrfpProviderProcessAttach(
     }
 
     AVrfpInitModulesList();
-
-    if (!AVrfLinkHooks())
-    {
-        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to link hooks");
-
-        __debugbreak();
-        return FALSE;
-    }
 
     if (!AVrfSymProcessAttach())
     {
@@ -1058,6 +1052,59 @@ VOID AVrfpProviderProcessDetach(
     VerifierUnregisterLayer(Module, &AVrfLayerDescriptor);
 }
 
+_Maybenull_
+PVFDYNF_TLS AVrfGetTls(
+    VOID
+    )
+{
+    if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
+    {
+        return NULL;
+    }
+    else
+    {
+        return VerifierTlsGetValue(AVrfLayerDescriptor.TlsIndex);
+    }
+}
+
+VOID AVrfpInitializeTls(
+    VOID
+    )
+{
+    PVFDYNF_TLS tls;
+
+    if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
+    {
+        return;
+    }
+
+    tls = RtlAllocateHeap(RtlProcessHeap(),
+                          HEAP_ZERO_MEMORY,
+                          sizeof(VFDYNF_TLS));
+    if (tls)
+    {
+        VerifierTlsSetValue(AVrfLayerDescriptor.TlsIndex, tls);
+    }
+}
+
+VOID AVrfpCleanupTls(
+    VOID
+    )
+{
+    PVFDYNF_TLS tls;
+
+    if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
+    {
+        return;
+    }
+
+    tls = VerifierTlsGetValue(AVrfLayerDescriptor.TlsIndex);
+    if (tls)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, tls);
+    }
+}
+
 BOOL WINAPI DllMain(
     _In_ HMODULE Module,
     _In_ ULONG Reason,
@@ -1090,8 +1137,13 @@ BOOL WINAPI DllMain(
             break;
         }
         case DLL_THREAD_ATTACH:
+        {
+            AVrfpInitializeTls();
+            break;
+        }
         case DLL_THREAD_DETACH:
         {
+            AVrfpCleanupTls();
             break;
         }
     }

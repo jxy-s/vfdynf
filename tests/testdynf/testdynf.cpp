@@ -5,6 +5,13 @@
 #include <iostream>
 #include <assert.h>
 
+#include <vfdynfapi.h>
+
+static decltype(AVrfSuppressFaultInjection)* g_AVrfSuppressFaultInjection = nullptr;
+static decltype(AVrfRestoreFaultInjection)* g_AVrfRestoreFaultInjection = nullptr;
+static decltype(AVrfSuppressCurrentThreadFaultInjection)* g_AVrfSuppressCurrentThreadFaultInjection = nullptr;
+static decltype(AVrfRestoreCurrentThreadFaultInjection)* g_AVrfRestoreCurrentThreadFaultInjection = nullptr;
+
 #define LogPrintID(format, ...)                                               \
     printf("[%04x:%04x %04x] " format "\n",                                   \
            (USHORT)GetCurrentProcessId(),                                     \
@@ -570,11 +577,12 @@ RECURSE_TEST(7);
 RECURSE_TEST(8);
 RECURSE_TEST(9);
 
-#define CONCURRENCY              3
-#define LOOP_LIMIT               10
-#define ENABLE_TEST_TYPE_DEFAULT 1
-#define ENABLE_TEST_TYPE_RECURSE 1
-#define ENABLE_TEST_TYPE_STRESS  1
+#define CONCURRENCY               3
+#define LOOP_LIMIT                10
+#define ENABLE_TEST_TYPE_DEFAULT  1
+#define ENABLE_TEST_TYPE_RECURSE  1
+#define ENABLE_TEST_TYPE_STRESS   1
+#define ENABLE_TEST_TYPE_SUPPRESS 1
 
 #define DO_RECURSE_TEST(x) DoTestRecurse##x(i, i + (LOOP_LIMIT * x))
 
@@ -618,6 +626,42 @@ DWORD WINAPI DoTestStressWorker(PVOID Context)
         DO_RECURSE_TEST(8);
         DO_RECURSE_TEST(9);
     }
+    LogPrint("------------------------------------------------------------------");
+
+    return 0;
+}
+
+DWORD WINAPI DoSuppressThreadTestWorker(PVOID Context)
+{
+    LogPrint("----SUPPRESS THREAD-----------------------------------------------");
+
+    g_AVrfSuppressCurrentThreadFaultInjection(VFDYNF_FAULT_TYPE_ALL);
+
+    for (uint32_t i = 0; i < LOOP_LIMIT; i++)
+    {
+        DoTest(i);
+    }
+
+    g_AVrfRestoreCurrentThreadFaultInjection(VFDYNF_FAULT_TYPE_ALL);
+
+    LogPrint("------------------------------------------------------------------");
+
+    return 0;
+}
+
+DWORD WINAPI DoSuppressGlobalTestWorker(PVOID Context)
+{
+    LogPrint("----SUPPRESS GLOBAL-----------------------------------------------");
+
+    g_AVrfSuppressFaultInjection(VFDYNF_FAULT_TYPE_ALL);
+
+    for (uint32_t i = 0; i < LOOP_LIMIT; i++)
+    {
+        DoTest(i);
+    }
+
+    g_AVrfRestoreFaultInjection(VFDYNF_FAULT_TYPE_ALL);
+
     LogPrint("------------------------------------------------------------------");
 
     return 0;
@@ -676,10 +720,42 @@ void DoTestStress()
     DoWork(DoTestStressWorker);
 }
 
+void DoSuppressTest()
+{
+    DoWork(DoSuppressThreadTestWorker);
+    DoWork(DoSuppressGlobalTestWorker);
+    //
+    // N.B no matter what the threads do above make sure fault injection is
+    // restored.
+    //
+    g_AVrfRestoreFaultInjection(VFDYNF_FAULT_TYPE_ALL);
+}
+
+void LoadVFDYNFApi()
+{
+    HMODULE baseAddress;
+
+    baseAddress = GetModuleHandleW(L"vfdynf.dll");
+
+    assert(baseAddress);
+
+    g_AVrfSuppressFaultInjection = (decltype(g_AVrfSuppressFaultInjection))GetProcAddress(baseAddress, "AVrfSuppressFaultInjection");
+    g_AVrfRestoreFaultInjection = (decltype(g_AVrfRestoreFaultInjection))GetProcAddress(baseAddress, "AVrfRestoreFaultInjection");
+    g_AVrfSuppressCurrentThreadFaultInjection = (decltype(g_AVrfSuppressCurrentThreadFaultInjection))GetProcAddress(baseAddress, "AVrfSuppressCurrentThreadFaultInjection");
+    g_AVrfRestoreCurrentThreadFaultInjection = (decltype(g_AVrfRestoreCurrentThreadFaultInjection))GetProcAddress(baseAddress, "AVrfRestoreCurrentThreadFaultInjection");
+
+    assert(g_AVrfSuppressFaultInjection);
+    assert(g_AVrfSuppressCurrentThreadFaultInjection);
+    assert(g_AVrfSuppressCurrentThreadFaultInjection);
+    assert(g_AVrfRestoreCurrentThreadFaultInjection);
+}
+
 int main(int argc, const char* argv[])
 {
     UNREFERENCED_PARAMETER(argc);
     UNREFERENCED_PARAMETER(argv);
+
+    LoadVFDYNFApi();
 
     for (;; Sleep(300))
     {
@@ -693,6 +769,10 @@ int main(int argc, const char* argv[])
 
 #if ENABLE_TEST_TYPE_STRESS
         DoTestStress();
+#endif
+
+#if ENABLE_TEST_TYPE_SUPPRESS
+        DoSuppressTest();
 #endif
     }
 

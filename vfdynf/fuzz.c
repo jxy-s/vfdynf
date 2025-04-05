@@ -130,14 +130,14 @@ BOOLEAN NTAPI AVrfpFuzzRunOnceRoutine(
 {
     NTSTATUS status;
 
-    AVrfDisableCurrentThreadFaultInjection();
+    AVrfSuppressCurrentThreadFaultInjection(VFDYNF_FAULT_TYPE_ALL);
 
     status = Delay_BCryptGenRandom(NULL,
                                    AVrfpFuzzContext.Vector,
                                    VFDYNF_RAND_VECTOR_SIZE,
                                    BCRYPT_USE_SYSTEM_PREFERRED_RNG);
 
-    AVrfEnableCurrentThreadFaultInjection();
+    AVrfRestoreCurrentThreadFaultInjection(VFDYNF_FAULT_TYPE_ALL);
 
     if (!NT_SUCCESS(status))
     {
