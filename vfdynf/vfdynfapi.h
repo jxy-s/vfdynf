@@ -27,8 +27,6 @@ EXTERN_C_START
 #define VFDYNF_FAULT_TYPE_FUZZ_NET        0x00001000ul
 #define VFDYNF_FAULT_TYPE_ALL             0x00001FFFul
 
-EXTERN_C_END
-
 /**
  * \brief Runtime suppresses fault injection for the process.
  *
@@ -104,5 +102,7 @@ NTAPI
 AVrfRestoreCurrentThreadFaultInjection(
     _In_ ULONG FaultMask
     );
+
+EXTERN_C_END
 
 #endif
