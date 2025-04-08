@@ -26,6 +26,7 @@ VFDYNF_PROPERTIES AVrfProperties =
     .HeapReasonableAllocLimit = (1 << 30), // 1 GiB
     .EnableFaultsInLdrPath = FALSE,
     .EnableWriteFuzzedDataChecks = TRUE,
+    .SymResolvePriority = THREAD_PRIORITY_HIGHEST,
     .SymResolveTimeout = 1000,
     .SymAbandonedThreshold = 200,
     .TypeIncludeRegex = { 0 },
@@ -172,6 +173,18 @@ static AVRF_PROPERTY_DESCRIPTOR AVrfpPropertyDescriptors[] =
         L"Fuzzed data being written back to a system can cause corruption of "
         L"the system. A resilient program would be capable of detecting the "
         L"fuzzed corruption when reading and not write that back out.",
+        NULL
+    },
+    {
+        AVRF_PROPERTY_DWORD,
+        L"SymResolvePriority",
+        &AVrfProperties.SymResolvePriority,
+        sizeof(AVrfProperties.SymResolvePriority),
+        L"Configures the thread priority for symbol resolution worker thread. "
+        L"This thread has the potential to block all other threads in the "
+        L"process waiting on it to complete resolving symbols. It must take "
+        L"priority, this option defaults to THREAD_PRIORITY_HIGHEST (2) but it "
+        L"might be desirable to set this to THREAD_PRIORITY_TIME_CRITICAL (15).",
         NULL
     },
     {

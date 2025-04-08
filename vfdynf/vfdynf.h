@@ -215,6 +215,7 @@ typedef struct _VFDYNF_PROPERTIES
     ULONG64 HeapReasonableAllocLimit;
     BOOLEAN EnableFaultsInLdrPath;
     BOOLEAN EnableWriteFuzzedDataChecks;
+    ULONG SymResolvePriority;
     ULONG SymResolveTimeout;
     ULONG SymAbandonedThreshold;
     WCHAR StopRegex[VFDYN_REGEX_MAX_LENGTH];

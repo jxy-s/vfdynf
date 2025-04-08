@@ -561,7 +561,11 @@ NTSTATUS NTAPI AVrfpSymWorker(
     // This thread has the potential to block all other threads in the process
     // waiting on it to complete resolving symbols. It must take priority.
     //
-    threadPriority = THREAD_PRIORITY_HIGHEST;
+    // Set the priority based on what the user configures. This property
+    // defaults to THREAD_PRIORITY_HIGHEST. It's up to the user to choose if
+    // they need something higher or lower, like THREAD_PRIORITY_TIME_CRITICAL.
+    //
+    threadPriority = AVrfProperties.SymResolvePriority;
 
     NtSetInformationThread(NtCurrentThread(),
                            ThreadBasePriority,
