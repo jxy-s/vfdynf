@@ -232,7 +232,7 @@ Hook_NtQueryInformationFile(
             }
             break;
         }
-        case FileEndOfFileInfo:
+        case FileEndOfFileInformation:
         {
             if (AVrfHookShouldFaultInject(VFDYNF_FAULT_TYPE_FUZZ_FILE))
             {
