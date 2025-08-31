@@ -559,6 +559,49 @@ typedef struct _AVRF_RUN_ONCE_ASYNC_CONTEXT
     PAVRF_RUN_ONCE_ROUTINE Routine;
 } AVRF_RUN_ONCE_ASYNC_CONTEXT, *PAVRF_RUN_ONCE_ASYNC_CONTEXT;
 
+typedef
+NTSTATUS
+NTAPI
+RTL_FLS_ALLOC(
+    _In_ PFLS_CALLBACK_FUNCTION Callback,
+    _Out_ PULONG FlsIndex
+    );
+typedef RTL_FLS_ALLOC* PRTL_FLS_ALLOC;
+
+typedef
+NTSTATUS
+NTAPI
+RTL_FLS_GET_VALUE(
+    _In_ ULONG FlsIndex,
+    _Out_ PVOID* FlsData
+    );
+typedef RTL_FLS_GET_VALUE* PRTL_FLS_GET_VALUE;
+
+typedef
+NTSTATUS
+NTAPI
+RTL_FLS_SET_VALUE(
+    _In_ ULONG FlsIndex,
+    _In_ PVOID FlsData
+    );
+typedef RTL_FLS_SET_VALUE* PRTL_FLS_SET_VALUE;
+
+typedef struct _AVRF_TLS_FALLBACK
+{
+    ULONG FlsIndex;
+    PRTL_FLS_ALLOC RtlFlsAlloc;
+    PRTL_FLS_GET_VALUE RtlFlsGetValue;
+    PRTL_FLS_SET_VALUE RtlFlsSetValue;
+} AVRF_TLS_FALLBACK, *PAVRF_TLS_FALLBACK;
+
+AVRF_TLS_FALLBACK AVrfpTlsFallback =
+{
+    .FlsIndex = FLS_OUT_OF_INDEXES,
+    .RtlFlsAlloc = NULL,
+    .RtlFlsGetValue = NULL,
+    .RtlFlsSetValue = NULL,
+};
+
 NTSTATUS NTAPI AVrfpAsyncRunOnceRoutine(
     _In_ PVOID ThreadParameter
     )
@@ -976,6 +1019,169 @@ BOOLEAN AVrfpProviderProcessVerifier(
     return TRUE;
 }
 
+BOOLEAN AVrfpInitializeTls(
+    VOID
+    )
+{
+    PVFDYNF_TLS tls;
+    BOOL result;
+
+    tls = NULL;
+    result = FALSE;
+
+    if (AVrfLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES)
+    {
+        tls = RtlAllocateHeap(RtlProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(VFDYNF_TLS));
+        if (tls)
+        {
+            result = VerifierTlsSetValue(AVrfLayerDescriptor.TlsIndex, tls);
+        }
+
+        goto Exit;
+    }
+
+    if (AVrfpTlsFallback.FlsIndex != FLS_OUT_OF_INDEXES)
+    {
+        PRTL_FLS_SET_VALUE rtlFlsSetValue;
+
+        rtlFlsSetValue = AVrfpTlsFallback.RtlFlsSetValue;
+
+        AVRF_ASSERT(rtlFlsSetValue);
+
+        tls = RtlAllocateHeap(RtlProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(VFDYNF_TLS));
+        if (tls)
+        {
+            result = NT_SUCCESS(rtlFlsSetValue(AVrfpTlsFallback.FlsIndex, tls));
+        }
+
+        goto Exit;
+    }
+
+Exit:
+
+    if (!result)
+    {
+        if (tls)
+        {
+            RtlFreeHeap(RtlProcessHeap(), 0, tls);
+        }
+
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "TLS initialization failed");
+    }
+
+    return !!result;
+}
+
+_Maybenull_
+PVFDYNF_TLS AVrfGetTls(
+    VOID
+    )
+{
+    if (AVrfLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES)
+    {
+        return VerifierTlsGetValue(AVrfLayerDescriptor.TlsIndex);
+    }
+
+    if (AVrfpTlsFallback.FlsIndex != FLS_OUT_OF_INDEXES)
+    {
+        PRTL_FLS_GET_VALUE rtlFlsGetValue;
+        PVOID value;
+
+        rtlFlsGetValue = AVrfpTlsFallback.RtlFlsGetValue;
+
+        AVRF_ASSERT(rtlFlsGetValue);
+
+        if (NT_SUCCESS(rtlFlsGetValue(AVrfpTlsFallback.FlsIndex, &value)))
+        {
+            return value;
+        }
+    }
+
+    return NULL;
+}
+
+VOID AVrfpCleanupTls(
+    VOID
+    )
+{
+    PVFDYNF_TLS tls;
+
+    tls = AVrfGetTls();
+    if (tls)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, tls);
+    }
+}
+
+VOID NTAPI AVrfpFlsCallback(
+    _In_ PVOID FlsData
+    )
+{
+    if (FlsData)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, FlsData);
+    }
+}
+
+BOOLEAN AVrfpInitializeTlsFallback(
+    VOID
+    )
+{
+    static const UNICODE_STRING ntdllName = RTL_CONSTANT_STRING(L"ntdll.dll");
+    static const ANSI_STRING rtlFlsAllocName = RTL_CONSTANT_STRING("RtlFlsAlloc");
+    static const ANSI_STRING rtlFlsGetValueName = RTL_CONSTANT_STRING("RtlFlsGetValue");
+    static const ANSI_STRING rtlFlsSetValueName = RTL_CONSTANT_STRING("RtlFlsSetValue");
+    PVOID ntdll;
+    PRTL_FLS_ALLOC rtlFlsAlloc;
+
+    if (!NT_SUCCESS(LdrGetDllHandle(NULL,
+                                    NULL,
+                                    (PUNICODE_STRING)&ntdllName,
+                                    &ntdll)))
+    {
+        return FALSE;
+    }
+
+    if (!NT_SUCCESS(LdrGetProcedureAddress(ntdll,
+                                           (PANSI_STRING)&rtlFlsAllocName,
+                                           0,
+                                           (PVOID*)&AVrfpTlsFallback.RtlFlsAlloc)))
+    {
+        return FALSE;
+    }
+
+    if (!NT_SUCCESS(LdrGetProcedureAddress(ntdll,
+                                           (PANSI_STRING)&rtlFlsGetValueName,
+                                           0,
+                                           (PVOID*)&AVrfpTlsFallback.RtlFlsGetValue)))
+    {
+        return FALSE;
+    }
+
+    if (!NT_SUCCESS(LdrGetProcedureAddress(ntdll,
+                                           (PANSI_STRING)&rtlFlsSetValueName,
+                                           0,
+                                           (PVOID*)&AVrfpTlsFallback.RtlFlsSetValue)))
+    {
+        return FALSE;
+    }
+
+    rtlFlsAlloc = AVrfpTlsFallback.RtlFlsAlloc;
+
+    AVRF_ASSERT(rtlFlsAlloc);
+
+    if (!NT_SUCCESS(rtlFlsAlloc(AVrfpFlsCallback, &AVrfpTlsFallback.FlsIndex)))
+    {
+        return FALSE;
+    }
+
+    return AVrfpInitializeTls();
+}
+
 BOOLEAN AVrfpProviderProcessAttach(
     _In_ HMODULE Module
     )
@@ -1004,6 +1210,17 @@ BOOLEAN AVrfpProviderProcessAttach(
     if (!AVrfpLoadedAsVerifier)
     {
         return TRUE;
+    }
+
+    if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
+    {
+        if (!AVrfpInitializeTlsFallback())
+        {
+            AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to setup TLS");
+
+            __debugbreak();
+            return FALSE;
+        }
     }
 
     AVrfpInitModulesList();
@@ -1063,59 +1280,6 @@ VOID AVrfpProviderProcessDetach(
     AVrfpDeleteModuleList();
 
     VerifierUnregisterLayer(Module, &AVrfLayerDescriptor);
-}
-
-_Maybenull_
-PVFDYNF_TLS AVrfGetTls(
-    VOID
-    )
-{
-    if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
-    {
-        return NULL;
-    }
-    else
-    {
-        return VerifierTlsGetValue(AVrfLayerDescriptor.TlsIndex);
-    }
-}
-
-VOID AVrfpInitializeTls(
-    VOID
-    )
-{
-    PVFDYNF_TLS tls;
-
-    if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
-    {
-        return;
-    }
-
-    tls = RtlAllocateHeap(RtlProcessHeap(),
-                          HEAP_ZERO_MEMORY,
-                          sizeof(VFDYNF_TLS));
-    if (tls)
-    {
-        VerifierTlsSetValue(AVrfLayerDescriptor.TlsIndex, tls);
-    }
-}
-
-VOID AVrfpCleanupTls(
-    VOID
-    )
-{
-    PVFDYNF_TLS tls;
-
-    if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
-    {
-        return;
-    }
-
-    tls = VerifierTlsGetValue(AVrfLayerDescriptor.TlsIndex);
-    if (tls)
-    {
-        RtlFreeHeap(RtlProcessHeap(), 0, tls);
-    }
 }
 
 BOOL WINAPI DllMain(
