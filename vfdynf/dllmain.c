@@ -586,12 +586,58 @@ RTL_FLS_SET_VALUE(
     );
 typedef RTL_FLS_SET_VALUE* PRTL_FLS_SET_VALUE;
 
+typedef
+NTSTATUS
+NTAPI
+RTL_FLS_FREE(
+    _In_ ULONG FlsIndex
+    );
+typedef RTL_FLS_FREE* PRTL_FLS_FREE;
+
+typedef
+DWORD
+WINAPI
+FLS_ALLOC(
+    _In_opt_ PFLS_CALLBACK_FUNCTION lpCallback
+    );
+typedef FLS_ALLOC* PFLS_ALLOC;
+
+typedef
+PVOID
+WINAPI
+FLS_GET_VALUE(
+    _In_ DWORD dwFlsIndex
+    );
+typedef FLS_GET_VALUE* PFLS_GET_VALUE;
+
+typedef
+BOOL
+WINAPI
+FLS_SET_VALUE(
+    _In_ DWORD dwFlsIndex,
+    _In_opt_ PVOID lpFlsData
+    );
+typedef FLS_SET_VALUE* PFLS_SET_VALUE;
+
+typedef
+BOOL
+WINAPI
+FLS_FREE(
+    _In_ DWORD dwFlsIndex
+    );
+typedef FLS_FREE* PFLS_FREE;
+
 typedef struct _AVRF_TLS_FALLBACK
 {
     ULONG FlsIndex;
     PRTL_FLS_ALLOC RtlFlsAlloc;
     PRTL_FLS_GET_VALUE RtlFlsGetValue;
     PRTL_FLS_SET_VALUE RtlFlsSetValue;
+    PRTL_FLS_FREE RtlFlsFree;
+    PFLS_ALLOC FlsAlloc;
+    PFLS_GET_VALUE FlsGetValue;
+    PFLS_SET_VALUE FlsSetValue;
+    PFLS_FREE FlsFree;
 } AVRF_TLS_FALLBACK, *PAVRF_TLS_FALLBACK;
 
 AVRF_TLS_FALLBACK AVrfpTlsFallback =
@@ -600,7 +646,351 @@ AVRF_TLS_FALLBACK AVrfpTlsFallback =
     .RtlFlsAlloc = NULL,
     .RtlFlsGetValue = NULL,
     .RtlFlsSetValue = NULL,
+    .RtlFlsFree = NULL,
+    .FlsAlloc = NULL,
+    .FlsGetValue = NULL,
+    .FlsSetValue = NULL,
+    .FlsFree = NULL,
 };
+
+BOOLEAN AVrfpInitializeTls(
+    VOID
+    )
+{
+    PVFDYNF_TLS tls;
+    BOOL result;
+    ULONG flsIndex;
+
+    tls = NULL;
+    result = FALSE;
+
+    if (AVrfLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES)
+    {
+        tls = RtlAllocateHeap(RtlProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(VFDYNF_TLS));
+        if (!tls)
+        {
+            goto Exit;
+        }
+
+		result = VerifierTlsSetValue(AVrfLayerDescriptor.TlsIndex, tls);
+
+        goto Exit;
+    }
+
+    flsIndex = AVrfpTlsFallback.FlsIndex;
+
+    if (flsIndex != FLS_OUT_OF_INDEXES)
+    {
+        tls = RtlAllocateHeap(RtlProcessHeap(),
+                              HEAP_ZERO_MEMORY,
+                              sizeof(VFDYNF_TLS));
+        if (!tls)
+        {
+            goto Exit;
+        }
+
+        if (AVrfpTlsFallback.RtlFlsSetValue)
+        {
+            result = NT_SUCCESS(AVrfpTlsFallback.RtlFlsSetValue(flsIndex, tls));
+        }
+        else if (AVrfpTlsFallback.FlsSetValue)
+        {
+            result = AVrfpTlsFallback.FlsSetValue(flsIndex, tls);
+        }
+
+        goto Exit;
+    }
+
+Exit:
+
+    if (!result)
+    {
+        if (tls)
+        {
+            RtlFreeHeap(RtlProcessHeap(), 0, tls);
+        }
+
+        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "TLS initialization failed");
+    }
+
+    return !!result;
+}
+
+_Maybenull_
+PVFDYNF_TLS AVrfGetTls(
+    VOID
+    )
+{
+    ULONG flsIndex;
+
+    if (AVrfLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES)
+    {
+        return VerifierTlsGetValue(AVrfLayerDescriptor.TlsIndex);
+    }
+
+    flsIndex = AVrfpTlsFallback.FlsIndex;
+
+    if (flsIndex != FLS_OUT_OF_INDEXES)
+    {
+        if (AVrfpTlsFallback.RtlFlsGetValue)
+        {
+			PVOID value;
+
+            if (NT_SUCCESS(AVrfpTlsFallback.RtlFlsGetValue(flsIndex, &value)))
+            {
+                return value;
+            }
+        }
+        else if (AVrfpTlsFallback.FlsGetValue)
+        {
+            return AVrfpTlsFallback.FlsGetValue(flsIndex);
+        }
+    }
+
+    return NULL;
+}
+
+VOID AVrfpCleanupTls(
+    VOID
+    )
+{
+    PVFDYNF_TLS tls;
+
+    tls = AVrfGetTls();
+    if (tls)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, tls);
+    }
+}
+
+VOID NTAPI AVrfpFlsCallback(
+    _In_ PVOID FlsData
+    )
+{
+    if (FlsData)
+    {
+        RtlFreeHeap(RtlProcessHeap(), 0, FlsData);
+    }
+}
+
+BOOLEAN AVrfpInitializeTlsFallbackNTDLL(
+    VOID
+	)
+{
+    static const UNICODE_STRING ntdllName = RTL_CONSTANT_STRING(L"ntdll.dll");
+    static const ANSI_STRING rtlFlsAllocName = RTL_CONSTANT_STRING("RtlFlsAlloc");
+    static const ANSI_STRING rtlFlsGetValueName = RTL_CONSTANT_STRING("RtlFlsGetValue");
+    static const ANSI_STRING rtlFlsSetValueName = RTL_CONSTANT_STRING("RtlFlsSetValue");
+    static const ANSI_STRING rtlFlsFreeName = RTL_CONSTANT_STRING("RtlFlsFree");
+    NTSTATUS status;
+    PVOID ntdllDllBase;
+    PRTL_FLS_ALLOC rtlFlsAlloc;
+    PRTL_FLS_SET_VALUE rtlFlsSetValue;
+    PRTL_FLS_GET_VALUE rtlFlsGetValue;
+    PRTL_FLS_FREE rtlFlsFree;
+
+    status = LdrGetDllHandle(NULL,
+                             NULL,
+                             (PUNICODE_STRING)&ntdllName,
+                             &ntdllDllBase);
+    if (!NT_SUCCESS(status))
+    {
+        return FALSE;
+    }
+
+    status = LdrGetProcedureAddress(ntdllDllBase,
+                                    (PANSI_STRING)&rtlFlsAllocName,
+                                    0,
+                                    (PVOID*)&rtlFlsAlloc);
+    if (!NT_SUCCESS(status))
+    {
+        rtlFlsAlloc = NULL;
+    }
+
+    status = LdrGetProcedureAddress(ntdllDllBase,
+                                    (PANSI_STRING)&rtlFlsGetValueName,
+                                    0,
+                                    (PVOID*)&rtlFlsGetValue);
+    if (!NT_SUCCESS(status))
+    {
+        rtlFlsGetValue = NULL;
+    }
+
+    status = LdrGetProcedureAddress(ntdllDllBase,
+                                    (PANSI_STRING)&rtlFlsSetValueName,
+                                    0,
+                                    (PVOID*)&rtlFlsSetValue);
+    if (!NT_SUCCESS(status))
+    {
+        rtlFlsSetValue = NULL;
+    }
+
+    status = LdrGetProcedureAddress(ntdllDllBase,
+                                    (PANSI_STRING)&rtlFlsFreeName,
+                                    0,
+                                    (PVOID*)&rtlFlsFree);
+    if (!NT_SUCCESS(status))
+    {
+        rtlFlsFree = NULL;
+    }
+
+    if (!rtlFlsAlloc || !rtlFlsGetValue || !rtlFlsSetValue || !rtlFlsFree)
+    {
+        return FALSE;
+    }
+
+    if (!NT_SUCCESS(rtlFlsAlloc(AVrfpFlsCallback, &AVrfpTlsFallback.FlsIndex)))
+    {
+        AVrfpTlsFallback.FlsIndex = FLS_OUT_OF_INDEXES;
+        return FALSE;
+    }
+
+	AVrfpTlsFallback.RtlFlsAlloc = rtlFlsAlloc;
+	AVrfpTlsFallback.RtlFlsGetValue = rtlFlsGetValue;
+	AVrfpTlsFallback.RtlFlsSetValue = rtlFlsSetValue;
+	AVrfpTlsFallback.RtlFlsFree = rtlFlsFree;
+
+	if (AVrfpInitializeTls())
+	{
+		return TRUE;
+	}
+
+    rtlFlsFree(AVrfpTlsFallback.FlsIndex);
+
+    AVrfpTlsFallback.FlsIndex = FLS_OUT_OF_INDEXES;
+	AVrfpTlsFallback.RtlFlsAlloc = NULL;
+	AVrfpTlsFallback.RtlFlsGetValue = NULL;
+	AVrfpTlsFallback.RtlFlsSetValue = NULL;
+	AVrfpTlsFallback.RtlFlsFree = NULL;
+
+    return FALSE;
+}
+
+BOOLEAN AVrfpInitializeTlsFallbackKernel32(
+    _In_ PVOID Kernel32DllBase
+    )
+{
+    static const ANSI_STRING flsAllocName = RTL_CONSTANT_STRING("FlsAlloc");
+    static const ANSI_STRING flsGetValueName = RTL_CONSTANT_STRING("FlsGetValue");
+    static const ANSI_STRING flsSetValueName = RTL_CONSTANT_STRING("FlsSetValue");
+    static const ANSI_STRING flsFreeName = RTL_CONSTANT_STRING("FlsFree");
+    NTSTATUS status;
+    PFLS_ALLOC flsAlloc;
+    PFLS_SET_VALUE flsSetValue;
+    PFLS_GET_VALUE flsGetValue;
+    PFLS_FREE flsFree;
+
+    flsAlloc = NULL;
+    flsSetValue = NULL;
+    flsGetValue = NULL;
+    flsFree = NULL;
+
+	status = LdrGetProcedureAddress(Kernel32DllBase,
+									(PANSI_STRING)&flsAllocName,
+									0,
+									(PVOID*)&flsAlloc);
+	if (!NT_SUCCESS(status))
+	{
+		flsAlloc = NULL;
+	}
+
+	status = LdrGetProcedureAddress(Kernel32DllBase,
+									(PANSI_STRING)&flsSetValueName,
+									0,
+									(PVOID*)&flsSetValue);
+	if (!NT_SUCCESS(status))
+	{
+		flsSetValue = NULL;
+	}
+
+	status = LdrGetProcedureAddress(Kernel32DllBase,
+									(PANSI_STRING)&flsGetValueName,
+									0,
+									(PVOID*)&flsGetValue);
+	if (!NT_SUCCESS(status))
+	{
+		flsGetValue = NULL;
+	}
+
+	status = LdrGetProcedureAddress(Kernel32DllBase,
+									(PANSI_STRING)&flsFreeName,
+									0,
+									(PVOID*)&flsFree);
+	if (!NT_SUCCESS(status))
+	{
+		flsFree = NULL;
+	}
+
+    if (!flsAlloc || !flsGetValue || !flsSetValue || !flsFree)
+    {
+        return FALSE;
+    }
+
+    AVrfpTlsFallback.FlsIndex = flsAlloc(AVrfpFlsCallback);
+    if (AVrfpTlsFallback.FlsIndex == FLS_OUT_OF_INDEXES)
+    {
+        return FALSE;
+    }
+
+	AVrfpTlsFallback.FlsAlloc = flsAlloc;
+	AVrfpTlsFallback.FlsGetValue = flsGetValue;
+	AVrfpTlsFallback.FlsSetValue = flsSetValue;
+	AVrfpTlsFallback.FlsFree = flsFree;
+
+	if (AVrfpInitializeTls())
+	{
+		return TRUE;
+	}
+
+    flsFree(AVrfpTlsFallback.FlsIndex);
+
+    AVrfpTlsFallback.FlsIndex = FLS_OUT_OF_INDEXES;
+	AVrfpTlsFallback.FlsAlloc = NULL;
+	AVrfpTlsFallback.FlsGetValue = NULL;
+	AVrfpTlsFallback.FlsSetValue = NULL;
+	AVrfpTlsFallback.FlsFree = NULL;
+
+	return FALSE;
+}
+
+VOID AVrfpInitializeTlsFallbackKernel32AtDllLoad(
+    _In_z_ PCWSTR DllName,
+    _In_ PVOID DllBase
+	)
+{
+	static const UNICODE_STRING kernel32Name = RTL_CONSTANT_STRING(L"kernel32.dll");
+    UNICODE_STRING dllName;
+
+    //
+    // This fallback assumes that kernel32 will be loaded early by the main
+    // thread before other threads are created in the process. It should always
+    // be shortly after the verifier provider DLLs are initialized. As such, no
+    // synchronization is necessary on the FLS slot being allocated.
+    //
+    // The entry point will prefer using NTDLL FLS routines first, this exists
+    // as an additional fallback for down-level support.
+    //
+
+    if ((AVrfLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES) ||
+        (AVrfpTlsFallback.FlsIndex != FLS_OUT_OF_INDEXES))
+    {
+        return;
+    }
+
+	RtlInitUnicodeString(&dllName, DllName);
+
+	if (RtlEqualUnicodeString(&dllName, (PUNICODE_STRING)&kernel32Name, TRUE))
+	{
+		if (!AVrfpInitializeTlsFallbackKernel32(DllBase))
+		{
+			AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to setup TLS (kernel32)");
+
+			__debugbreak();
+		}
+	}
+}
 
 NTSTATUS NTAPI AVrfpAsyncRunOnceRoutine(
     _In_ PVOID ThreadParameter
@@ -906,6 +1296,7 @@ VOID NTAPI AVrfpDllLoadCallback(
     //
     UNREFERENCED_PARAMETER(Reserved);
 
+    AVrfpInitializeTlsFallbackKernel32AtDllLoad(DllName, DllBase);
     AVrfpTrackModule(DllName, DllBase, DllSize);
     AVrfSymDllLoad(DllName, DllBase, DllSize);
     AVrfLinkHooks();
@@ -1019,169 +1410,6 @@ BOOLEAN AVrfpProviderProcessVerifier(
     return TRUE;
 }
 
-BOOLEAN AVrfpInitializeTls(
-    VOID
-    )
-{
-    PVFDYNF_TLS tls;
-    BOOL result;
-
-    tls = NULL;
-    result = FALSE;
-
-    if (AVrfLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES)
-    {
-        tls = RtlAllocateHeap(RtlProcessHeap(),
-                              HEAP_ZERO_MEMORY,
-                              sizeof(VFDYNF_TLS));
-        if (tls)
-        {
-            result = VerifierTlsSetValue(AVrfLayerDescriptor.TlsIndex, tls);
-        }
-
-        goto Exit;
-    }
-
-    if (AVrfpTlsFallback.FlsIndex != FLS_OUT_OF_INDEXES)
-    {
-        PRTL_FLS_SET_VALUE rtlFlsSetValue;
-
-        rtlFlsSetValue = AVrfpTlsFallback.RtlFlsSetValue;
-
-        AVRF_ASSERT(rtlFlsSetValue);
-
-        tls = RtlAllocateHeap(RtlProcessHeap(),
-                              HEAP_ZERO_MEMORY,
-                              sizeof(VFDYNF_TLS));
-        if (tls)
-        {
-            result = NT_SUCCESS(rtlFlsSetValue(AVrfpTlsFallback.FlsIndex, tls));
-        }
-
-        goto Exit;
-    }
-
-Exit:
-
-    if (!result)
-    {
-        if (tls)
-        {
-            RtlFreeHeap(RtlProcessHeap(), 0, tls);
-        }
-
-        AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "TLS initialization failed");
-    }
-
-    return !!result;
-}
-
-_Maybenull_
-PVFDYNF_TLS AVrfGetTls(
-    VOID
-    )
-{
-    if (AVrfLayerDescriptor.TlsIndex != TLS_OUT_OF_INDEXES)
-    {
-        return VerifierTlsGetValue(AVrfLayerDescriptor.TlsIndex);
-    }
-
-    if (AVrfpTlsFallback.FlsIndex != FLS_OUT_OF_INDEXES)
-    {
-        PRTL_FLS_GET_VALUE rtlFlsGetValue;
-        PVOID value;
-
-        rtlFlsGetValue = AVrfpTlsFallback.RtlFlsGetValue;
-
-        AVRF_ASSERT(rtlFlsGetValue);
-
-        if (NT_SUCCESS(rtlFlsGetValue(AVrfpTlsFallback.FlsIndex, &value)))
-        {
-            return value;
-        }
-    }
-
-    return NULL;
-}
-
-VOID AVrfpCleanupTls(
-    VOID
-    )
-{
-    PVFDYNF_TLS tls;
-
-    tls = AVrfGetTls();
-    if (tls)
-    {
-        RtlFreeHeap(RtlProcessHeap(), 0, tls);
-    }
-}
-
-VOID NTAPI AVrfpFlsCallback(
-    _In_ PVOID FlsData
-    )
-{
-    if (FlsData)
-    {
-        RtlFreeHeap(RtlProcessHeap(), 0, FlsData);
-    }
-}
-
-BOOLEAN AVrfpInitializeTlsFallback(
-    VOID
-    )
-{
-    static const UNICODE_STRING ntdllName = RTL_CONSTANT_STRING(L"ntdll.dll");
-    static const ANSI_STRING rtlFlsAllocName = RTL_CONSTANT_STRING("RtlFlsAlloc");
-    static const ANSI_STRING rtlFlsGetValueName = RTL_CONSTANT_STRING("RtlFlsGetValue");
-    static const ANSI_STRING rtlFlsSetValueName = RTL_CONSTANT_STRING("RtlFlsSetValue");
-    PVOID ntdll;
-    PRTL_FLS_ALLOC rtlFlsAlloc;
-
-    if (!NT_SUCCESS(LdrGetDllHandle(NULL,
-                                    NULL,
-                                    (PUNICODE_STRING)&ntdllName,
-                                    &ntdll)))
-    {
-        return FALSE;
-    }
-
-    if (!NT_SUCCESS(LdrGetProcedureAddress(ntdll,
-                                           (PANSI_STRING)&rtlFlsAllocName,
-                                           0,
-                                           (PVOID*)&AVrfpTlsFallback.RtlFlsAlloc)))
-    {
-        return FALSE;
-    }
-
-    if (!NT_SUCCESS(LdrGetProcedureAddress(ntdll,
-                                           (PANSI_STRING)&rtlFlsGetValueName,
-                                           0,
-                                           (PVOID*)&AVrfpTlsFallback.RtlFlsGetValue)))
-    {
-        return FALSE;
-    }
-
-    if (!NT_SUCCESS(LdrGetProcedureAddress(ntdll,
-                                           (PANSI_STRING)&rtlFlsSetValueName,
-                                           0,
-                                           (PVOID*)&AVrfpTlsFallback.RtlFlsSetValue)))
-    {
-        return FALSE;
-    }
-
-    rtlFlsAlloc = AVrfpTlsFallback.RtlFlsAlloc;
-
-    AVRF_ASSERT(rtlFlsAlloc);
-
-    if (!NT_SUCCESS(rtlFlsAlloc(AVrfpFlsCallback, &AVrfpTlsFallback.FlsIndex)))
-    {
-        return FALSE;
-    }
-
-    return AVrfpInitializeTls();
-}
-
 BOOLEAN AVrfpProviderProcessAttach(
     _In_ HMODULE Module
     )
@@ -1214,12 +1442,25 @@ BOOLEAN AVrfpProviderProcessAttach(
 
     if (AVrfLayerDescriptor.TlsIndex == TLS_OUT_OF_INDEXES)
     {
-        if (!AVrfpInitializeTlsFallback())
-        {
-            AVrfDbgPuts(DPFLTR_ERROR_LEVEL, "failed to setup TLS");
+		//
+		// In certain application verifier configurations verifier does not
+        // provide a TLS index despite asking for it. This fallbacks back to use
+        // FLS which will not interfere with application verifier TLS tracking.
+        //
+        // The implementation here prefers to use NTDLL since it will be loaded
+        // before us. If that can not be resolved it will fall back again to
+        // kernel32 once it loads (which exported FLS much earlier than NTDLL).
+        //
 
-            __debugbreak();
-            return FALSE;
+        if (!AVrfpInitializeTlsFallbackNTDLL())
+        {
+            AVrfDbgPuts(DPFLTR_WARNING_LEVEL, "failed to setup TLS (NTDLL)");
+
+            //
+            // Not a critical failure. For down-level support we will try again
+            // later once kernel32 is loaded.
+            // See: AVrfpInitializeTlsFallbackKernel32
+            //
         }
     }
 
