@@ -46,7 +46,7 @@ VOID AVrfGuardToConvertToInPageError(
         return;
     }
 
-    mbi.Protect |= PAGE_GUARD;
+    SetFlag(mbi.Protect, PAGE_GUARD);
 
     status = NtProtectVirtualMemory(NtCurrentProcess(),
                                     &mbi.BaseAddress,
@@ -94,6 +94,10 @@ BOOLEAN AVrfpIsGuardedAddress(
     for (ULONG i = 0; i < AVrfpExceptContext.GuardEntryCount; i++)
     {
         PVFDYNF_GUARD_PAGE_ENTRY entry;
+        NTSTATUS status;
+        MEMORY_BASIC_INFORMATION mbi;
+        PVOID baseAddress;
+        PVOID endAddress;
         ULONG length;
 
         entry = &AVrfpExceptContext.GuardEntries[i];
@@ -106,6 +110,56 @@ BOOLEAN AVrfpIsGuardedAddress(
 
         result = TRUE;
 
+        //
+        // Clear PAGE_GUARD from all regions.
+        //
+
+        baseAddress = entry->BaseAddress;
+        endAddress = Add2Ptr(entry->BaseAddress, entry->RegionSize);
+
+        while (baseAddress < endAddress)
+        {
+            status = NtQueryVirtualMemory(NtCurrentProcess(),
+                                          baseAddress,
+                                          MemoryBasicInformation,
+                                          &mbi,
+                                          sizeof(mbi),
+                                          NULL);
+            if (!NT_SUCCESS(status))
+            {
+                AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                             "NtQueryVirtualMemory failed: 0x%08x",
+                             status);
+
+                __debugbreak();
+                break;
+            }
+
+            baseAddress = Add2Ptr(mbi.BaseAddress, mbi.RegionSize);
+
+            if (!FlagOn(mbi.Protect, PAGE_GUARD))
+            {
+                continue;
+            }
+
+            ClearFlag(mbi.Protect, PAGE_GUARD);
+
+            status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                            &mbi.BaseAddress,
+                                            &mbi.RegionSize,
+                                            mbi.Protect,
+                                            &mbi.Protect);
+            if (!NT_SUCCESS(status))
+            {
+                AVrfDbgPrint(DPFLTR_ERROR_LEVEL,
+                             "NtProtectVirtualMemory failed: 0x%08x",
+                             status);
+
+                __debugbreak();
+                break;
+            }
+        }
+
         AVrfpExceptContext.GuardEntryCount--;
 
         length = ((AVrfpExceptContext.GuardEntryCount - i) * sizeof(*entry));
@@ -115,7 +169,7 @@ BOOLEAN AVrfpIsGuardedAddress(
         //
         // Continue to ensure we clean up any other guard page entries for
         // the given address. The pages for the region are no longer guarded.
-        // So make sure we clean up any other stale entires.
+        // So make sure we clean up any other stale entries.
         //
     }
 
