@@ -1241,6 +1241,9 @@ Hook_Common_RegGetValueA(
     LSTATUS status;
     ULONG inputLength;
     ULONG type;
+    PCHAR outputString;
+    DWORD outputLength;
+    DWORD outputChars;
 
     AVRF_HOOK_CONTEXT();
 
@@ -1286,15 +1289,34 @@ Hook_Common_RegGetValueA(
         AVrfFuzzBuffer(pvData, inputLength, VFDYNF_FAULT_TYPE_INDEX_FUZZ_REG);
         AVrfFuzzSizeTruncateULong(pcbData);
 
-        if ((*pcbData >= sizeof(CHAR)) && (type == REG_SZ) || (type == REG_EXPAND_SZ))
-        {
-            ((PCHAR)pvData)[*pcbData - 1] = ANSI_NULL;
-        }
+        outputString = (PCHAR)pvData;
+        outputLength = *pcbData;
+        outputChars = outputLength / sizeof(CHAR);
 
-        if ((*pcbData >= (sizeof(CHAR) * 2)) && (type == REG_MULTI_SZ))
+        if ((type == REG_SZ) || (type == REG_EXPAND_SZ))
         {
-            ((PCHAR)pvData)[*pcbData - 1] = ANSI_NULL;
-            ((PCHAR)pvData)[*pcbData - 2] = ANSI_NULL;
+            if (outputLength >= sizeof(CHAR))
+            {
+                outputString[outputChars - 1] = ANSI_NULL;
+            }
+            else
+            {
+                *pcbData = sizeof(CHAR);
+                status = ERROR_MORE_DATA;
+            }
+        }
+        else if (type == REG_MULTI_SZ)
+        {
+            if (outputLength >= (sizeof(CHAR) * 2))
+            {
+                outputString[outputChars - 2] = ANSI_NULL;
+                outputString[outputChars - 1] = ANSI_NULL;
+            }
+            else
+            {
+                *pcbData = sizeof(CHAR) * 2;
+                status = ERROR_MORE_DATA;
+            }
         }
     }
 
@@ -1327,6 +1349,9 @@ Hook_Common_RegGetValueW(
     LSTATUS status;
     ULONG inputLength;
     ULONG type;
+    PWCHAR outputString;
+    DWORD outputLength;
+    DWORD outputChars;
 
     AVRF_HOOK_CONTEXT();
 
@@ -1376,21 +1401,40 @@ Hook_Common_RegGetValueW(
             (type == REG_MULTI_SZ))
         {
             AVrfFuzzSizeTruncateWideString(pcbData);
+
+            outputString = (PWCHAR)pvData;
+            outputLength = *pcbData;
+            outputChars = outputLength / sizeof(WCHAR);
+
+            if ((type == REG_SZ) || (type == REG_EXPAND_SZ))
+            {
+                if (outputLength >= sizeof(WCHAR))
+                {
+                    outputString[outputChars - 1] = UNICODE_NULL;
+                }
+                else
+                {
+                    *pcbData = sizeof(WCHAR);
+                    status = ERROR_MORE_DATA;
+                }
+            }
+            else // (type == REG_MULTI_SZ)
+            {
+                if (outputLength >= (sizeof(WCHAR) * 2))
+                {
+                    outputString[outputChars - 2] = UNICODE_NULL;
+                    outputString[outputChars - 1] = UNICODE_NULL;
+                }
+                else
+                {
+                    *pcbData = sizeof(WCHAR) * 2;
+                    status = ERROR_MORE_DATA;
+                }
+            }
         }
         else
         {
             AVrfFuzzSizeTruncateULong(pcbData);
-        }
-
-        if ((*pcbData >= sizeof(WCHAR)) && (type == REG_SZ) || (type == REG_EXPAND_SZ))
-        {
-            ((PWCHAR)pvData)[(*pcbData / sizeof(WCHAR)) - 1] = UNICODE_NULL;
-        }
-
-        if ((*pcbData >= (sizeof(WCHAR) * 2)) && (type == REG_MULTI_SZ))
-        {
-            ((PWCHAR)pvData)[(*pcbData / sizeof(WCHAR)) - 1] = UNICODE_NULL;
-            ((PWCHAR)pvData)[(*pcbData / sizeof(WCHAR)) - 2] = UNICODE_NULL;
         }
     }
 

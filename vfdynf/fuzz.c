@@ -711,18 +711,19 @@ BOOLEAN AVrfBufferIsPossiblyFuzzed(
     // system that is likely to cause corruption. So if someone read and
     // immediately copies the data to another region that isn't tracked we would
     // miss those cases. And as of now the FuzzedBuffer tracking is not reaped,
-    // it's purpose is only for debugging issues, that would have to change to
+    // its purpose is only for debugging issues, that would have to change to
     // have an accurate accounting to be relied upon here.
     //
     // The implementation here is not perfect but seemed like the most
     // reasonable choice at the time. The side affect is that we are effectively
     // not fuzzing the trailing part of the buffer when the
-    // AVrfProperties.EnableWriteFuzzedDataChecks property is enable. But we are
-    // however restricting this check to "large enough" buffers; expressly
+    // AVrfProperties.EnableWriteFuzzedDataChecks property is enabled. But we
+    // are however restricting this check to "large enough" buffers; expressly
     // looking for cases of large buffers (like strings) not being robustly
     // handled.
     //
-    // N.B. VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH is always >= VFDYNF_POSSIBLY_FUZZED_SENTINELS
+    // N.B. VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH is always >=
+    //      VFDYNF_POSSIBLY_FUZZED_SENTINELS
     //
 
     if (!Buffer || (Length < VFDYNF_POSSIBLY_FUZZED_MIN_LENGTH))
